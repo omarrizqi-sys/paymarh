@@ -101,7 +101,7 @@ Ils ne sont volontairement pas générés automatiquement depuis Prisma : le cli
 import type { Account, Company, ListResponse, Role, User } from '@paymarh/shared-types';
 
 async function chargerSocietes(): Promise<ListResponse<Company>> {
-  const reponse = await fetch(`${urlApi()}/companies`);
+  const reponse = await fetch(`${urlApi()}/societes`);
   return reponse.json() as Promise<ListResponse<Company>>;
 }
 ```

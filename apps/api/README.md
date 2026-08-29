@@ -89,8 +89,8 @@ Deux comportements qui surprennent et qui sont **volontaires** :
 | -------------------- | ------------- | ------------------------------------------------- |
 | `GET /health`        | aucune        | Témoin de santé. Ne lit ni la base ni le contexte |
 | `GET /accounts/me`   | `TenantGuard` | Le compte de l'utilisateur courant                |
-| `GET /companies`     | `TenantGuard` | Les sociétés de son compte                        |
-| `GET /companies/:id` | `TenantGuard` | Une société de son compte                         |
+| `GET /societes`     | `TenantGuard` | Les sociétés de son compte                        |
+| `GET /societes/:id` | `TenantGuard` | Une société de son compte                         |
 | `GET /users`         | `TenantGuard` | Les utilisateurs de son compte                    |
 | `GET /users/me`      | `TenantGuard` | L'utilisateur courant                             |
 
@@ -99,7 +99,7 @@ Deux comportements qui surprennent et qui sont **volontaires** :
 Le module 0 n'a **aucune authentification**. Un en-tête de développement tient lieu d'identité :
 
 ```bash
-curl http://localhost:3001/companies \
+curl http://localhost:3001/societes \
   -H "x-paymarh-user-id: <identifiant affiché par pnpm db:seed>"
 ```
 

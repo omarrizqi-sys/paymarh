@@ -164,7 +164,7 @@ pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm check:circ
 
 **L'API répond `401` sans en-tête `x-paymarh-user-id`.** Il n'y a aucune authentification au module 0 ; cet en-tête est un relais temporaire de développement. Sans contexte, on ne lit rien : on échoue fermé. Détails dans [`apps/api/README.md`](./apps/api/README.md).
 
-**L'API répond `403` au super-admin sur `GET /companies`.** Ce n'est pas un bogue, c'est le principe 4. Un `PLATFORM_ADMIN` n'a pas de compte de rattachement : le chemin de filtrage normal ne le mène nulle part. Son accès élargi passe par un chemin explicite, motivé et journalisé.
+**L'API répond `403` au super-admin sur `GET /societes`.** Ce n'est pas un bogue, c'est le principe 4. Un `PLATFORM_ADMIN` n'a pas de compte de rattachement : le chemin de filtrage normal ne le mène nulle part. Son accès élargi passe par un chemin explicite, motivé et journalisé.
 
 ---
 

@@ -142,7 +142,7 @@ Le module 0 n'a **aucune authentification**. Pour que l'API sache au nom de qui 
 curl http://localhost:3001/health
 
 # Les routes de données exigent une identité
-curl http://localhost:3001/companies \
+curl http://localhost:3001/societes \
   -H "x-paymarh-user-id: <identifiant affiché par le seed>"
 ```
 

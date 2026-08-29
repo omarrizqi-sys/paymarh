@@ -42,3 +42,21 @@ export interface ListResponse<T> {
   readonly items: readonly T[];
   readonly total: number;
 }
+
+/**
+ * Avertissement non bloquant accompagne d une reponse de succes.
+ */
+export interface ApiWarning {
+  readonly code: string;
+  readonly champ?: string;
+  readonly message: string;
+}
+
+/**
+ * Enveloppe standard : donnees + avertissements.
+ * Une reponse peut etre un succes avec des warnings (ex. RIB trop court).
+ */
+export interface ApiResponse<T> {
+  readonly data: T;
+  readonly warnings: readonly ApiWarning[];
+}

@@ -1,27 +1,36 @@
 import type { Timestamps, Uuid } from './common';
 
-/**
- * Company = la societe dont on produira la paie.
- *
- * Deuxieme niveau d isolation. Toute Company appartient obligatoirement a un
- * Account : `accountId` n est jamais nul.
- *
- * Le libelle legal est `raisonSociale` (le champ `name` du module 0 a ete
- * retire a l etape 1.1.b).
- */
-export interface Company extends Timestamps {
+/** Societe (fiche complete, exposee par l API /societes). */
+export interface Societe extends Timestamps {
   readonly id: Uuid;
   readonly accountId: Uuid;
   readonly codeDossier: string;
   readonly raisonSociale: string;
   readonly nomCommercial: string | null;
   readonly formeJuridiqueId: Uuid;
-  readonly etatDossier: 'EN_MONTAGE' | 'EN_PRODUCTION' | 'INACTIVE';
+  readonly activiteExercee: string | null;
+  readonly identifiantFiscal: string | null;
+  readonly registreCommerce: string | null;
+  readonly tribunalRegistreCommerce: string | null;
+  readonly dateCreation: string | null;
+  readonly dateCessationActivite: string | null;
+  readonly siteWeb: string | null;
   readonly regimeDeBase: 'NON_AGRICOLE';
   readonly periodicitePaie: 'MENSUEL';
+  readonly etatDossier: 'EN_MONTAGE' | 'EN_PRODUCTION' | 'INACTIVE';
   readonly moisDebutMontage: string;
   readonly moisDebutProduction: string;
   readonly dateInactivite: string | null;
-  /** Mois de paie en cours (AAAA-MM). Lecture seule cote API fiche. */
   readonly moisEnCours: string;
+  readonly signataireCivilite: string | null;
+  readonly signatairePrenom: string | null;
+  readonly signataireNom: string | null;
+  readonly signataireQualite: string | null;
+  readonly matriculePrefixe: string | null;
+  readonly matriculeLongueur: number;
+  readonly matriculeGenerationAuto: boolean;
+  readonly calculAutoAbsencesEntreesSorties: boolean;
 }
+
+/** @deprecated Utiliser Societe. Alias de transition module 0. */
+export type Company = Societe;

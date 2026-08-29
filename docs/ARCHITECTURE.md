@@ -117,13 +117,13 @@ Deux détails de conception qui comptent :
 - **On échoue fermé.** Sans contexte, on ne lit rien. Il n'existe aucun repli silencieux vers une requête non filtrée. Si `accountScope()` renvoyait `{}` au lieu de lever une erreur, la requête Prisma remonterait les données de **tous** les comptes : c'est exactement le scénario que les tests de `tenant-scope.spec.ts` interdisent.
 - **On répond 404, pas 403**, quand on demande une ressource appartenant à un autre compte. Répondre « interdit » révélerait l'existence de cette ressource chez un concurrent.
 
-_Démonstration :_ `modules/companies` et `modules/users`, et les tests `apps/api/test/isolation-multi-tenant.spec.ts`.
+_Démonstration :_ `modules/companies` et `modules/users`, et les tests `apps/api/test/isolation-multi-tenant.spec.ts` (service) et `apps/api/test/isolation-http.spec.ts` (HTTP réel).
 
 ### Principe 4 — Super-admin séparé, hors hiérarchie
 
 `PLATFORM_ADMIN` n'est **pas** un compte placé au-dessus des autres. C'est un rôle **distinct**, dont l'`accountId` est **nul par construction**.
 
-Le filtrage par tenant reste la règle par défaut **pour tout le monde, y compris le super-admin**. Concrètement, un `PLATFORM_ADMIN` qui appelle `GET /companies` reçoit une **erreur 403** : il n'a pas de compte de rattachement, donc le chemin normal ne le mène nulle part. C'est voulu, et c'est vérifié par les tests.
+Le filtrage par tenant reste la règle par défaut **pour tout le monde, y compris le super-admin**. Concrètement, un `PLATFORM_ADMIN` qui appelle `GET /societes` reçoit une **erreur 403** : il n'a pas de compte de rattachement, donc le chemin normal ne le mène nulle part. C'est voulu, et c'est vérifié par les tests.
 
 Son accès élargi passe par un **chemin explicite, motivé et tracé** : la fonction `crossAccountScope(context, { reason, accountId })`, qui exige un motif, refuse tout autre rôle, et doit être accompagnée d'un appel à `AuditService.record()` dans le même flux.
 

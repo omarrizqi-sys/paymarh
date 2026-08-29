@@ -87,7 +87,7 @@ Ce document fige les choix pris avant la première ligne de code métier. Les d�
 
 **Pourquoi.** L'alternative naturelle — un compte « au-dessus » qui voit tout — a un défaut majeur : l'accès total devient le **comportement par défaut** du super-admin, donc invisible et non tracé. Dans un SaaS de paie, l'éditeur a techniquement accès aux salaires de milliers de personnes ; la seule posture défendable est que cet accès soit _impossible par accident_ et _toujours tracé quand il est délibéré_.
 
-**Conséquence concrète, et volontaire :** un `PLATFORM_ADMIN` qui appelle `GET /companies` reçoit une **erreur 403**. Ce n'est pas un bogue. C'est le principe qui fonctionne.
+**Conséquence concrète, et volontaire :** un `PLATFORM_ADMIN` qui appelle `GET /societes` reçoit une **erreur 403**. Ce n'est pas un bogue. C'est le principe qui fonctionne.
 
 ### 8. Calcul monétaire en décimal exact
 

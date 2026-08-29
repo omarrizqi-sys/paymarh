@@ -71,9 +71,11 @@ Le **régime de base** est le régime général, non agricole. Attention : une f
 
 ### 3. Déclarer les établissements
 
-L'établissement principal est déjà créé. Complétez son nom, son adresse, sa ville, son ICE et sa taxe professionnelle.
+L'établissement principal est créé automatiquement avec la société. Son **adresse** et sa **ville** sont obligatoires dès cette création : PaymaRH n'accepte aucune valeur de remplacement du type « À compléter ». Le nom peut être pré-rempli avec la ville (ou la raison sociale à défaut) ; vous pouvez le modifier.
 
-Le nom de l'établissement est obligatoire : c'est lui qui apparaît dans les listes déroulantes quand vous affecterez vos salariés. La ville est proposée par défaut.
+Complétez ensuite l'ICE et la taxe professionnelle.
+
+Le nom de l'établissement est obligatoire : c'est lui qui apparaît dans les listes déroulantes quand vous affecterez vos salariés.
 
 L'ICE et la taxe professionnelle sont propres à chaque établissement. Ne recopiez pas ceux du siège sur un site secondaire.
 

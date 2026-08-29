@@ -5,10 +5,25 @@
  * back-office ne redeclarent la forme d un Account, d une Company ou d un
  * User. Voir README.md.
  */
-export type { Uuid, IsoDateTime, Timestamps, ListResponse } from './common';
+export type {
+  Uuid,
+  IsoDateTime,
+  Timestamps,
+  ListResponse,
+  ApiWarning,
+  ApiResponse,
+} from './common';
 export type { Role } from './role';
 export type { Account, AccountType } from './account';
-export type { Company } from './company';
+export type { Company, Societe } from './company';
+export type { Etablissement } from './etablissement';
+export type { CompteBancaire } from './compte-bancaire';
+export type {
+  ImpactSuppressionSociete,
+  ImpactSuppressionEtablissement,
+  ImpactSuppressionCompteBancaire,
+  ResultatSuppression,
+} from './impact-suppression';
 export type { User } from './user';
 export type { TenantContext, PlatformAccessReason } from './tenancy';
 export type { AuditLog } from './audit';
