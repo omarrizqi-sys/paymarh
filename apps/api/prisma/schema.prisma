@@ -1,12 +1,14 @@
 // ---------------------------------------------------------------------------
 // PaymaRH - Schema de donnees
 //
-// MODULE 0 : ce schema ne contient QUE le socle multi-tenant et les roles.
-// AUCUNE entite de paie (bulletin, rubrique, cotisation, absence, declaration)
-// ne doit apparaitre ici tant que le module metier correspondant n a pas ete
-// specifie.
+// MODULE 0 : socle multi-tenant (Account, Company, User, AuditLog, roles).
+// MODULE 1 (etape 1.1.a) : fiche societe, etablissements, comptes bancaires,
+//   historisation par moisEffet, tables de reference nationales.
 //
-// Hierarchie d isolation : Account -> Company -> (Salarie, plus tard).
+// AUCUNE entite salarie / bulletin / cotisation / organisme social ici.
+// AUCUN calcul de paie. Le moteur (payroll-engine/) reste vide.
+//
+// Hierarchie d isolation : Account -> Company -> Etablissement -> (Salarie).
 // ---------------------------------------------------------------------------
 
 // Depuis Prisma 7, le client est genere en TypeScript dans le projet (et non
@@ -23,7 +25,7 @@ datasource db {
 }
 
 // ---------------------------------------------------------------------------
-// Enumerations
+// Enumerations — socle
 // ---------------------------------------------------------------------------
 
 /// Nature du titulaire de l abonnement.
@@ -47,7 +49,58 @@ enum Role {
 }
 
 // ---------------------------------------------------------------------------
-// Modeles
+// Enumerations — fiche societe (module 1)
+// ---------------------------------------------------------------------------
+
+/// Regime CNSS de base de la societe.
+/// Une seule valeur pour l instant ; AGRICOLE viendra plus tard.
+/// Non historise : modification bloquee des qu un salarie existe (etape ulterieure).
+enum RegimeDeBase {
+  NON_AGRICOLE
+}
+
+/// Periodicite de production de la paie.
+/// Une seule valeur pour l instant ; d autres periodicites viendront plus tard.
+enum PeriodicitePaie {
+  MENSUEL
+}
+
+/// Cycle de vie du dossier de paie.
+/// « Archive » n existe pas dans PaymaRH (voir etape 3 / E2 de la spec).
+enum EtatDossier {
+  /// Reprise d historique : aucun bulletin definitif.
+  EN_MONTAGE
+  /// Production normale des bulletins.
+  EN_PRODUCTION
+  /// Existe toujours, consultable et editable, mais plus de bulletins apres dateInactivite.
+  INACTIVE
+}
+
+/// Les sept jours de la semaine (repos hebdomadaire, grille horaire).
+enum JourSemaine {
+  LUNDI
+  MARDI
+  MERCREDI
+  JEUDI
+  VENDREDI
+  SAMEDI
+  DIMANCHE
+}
+
+/// Etat d un compte bancaire societe.
+enum EtatCompteBancaire {
+  ACTIF
+  CLOTURE
+}
+
+/// Nature d un jour ferie de reference (date fixe vs calendrier lunaire).
+enum TypeJourFerie {
+  CIVIL
+  RELIGIEUX
+}
+
+// ---------------------------------------------------------------------------
+// Modeles — socle multi-tenant
 // ---------------------------------------------------------------------------
 
 /// Le "tenant" : titulaire de l abonnement PaymaRH.
@@ -65,20 +118,69 @@ model Account {
 
 /// La societe dont on produira la paie.
 /// Second niveau d isolation. Appartient TOUJOURS a un Account.
+/// Le libelle legal est `raisonSociale` (le champ `name` du module 0 a ete retire en 1.1.b).
 model Company {
   id        String   @id @default(uuid()) @db.Uuid
   accountId String   @db.Uuid
-  name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Supprimer un Account supprime ses societes : une Company orpheline n a
-  // aucun sens et deviendrait une donnee hors perimetre d isolation.
-  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  // --- Identification legale ---
+  /// Reference interne unique dans le compte (cabinet).
+  codeDossier               String
+  raisonSociale             String
+  nomCommercial             String?
+  formeJuridiqueId          String             @db.Uuid
+  activiteExercee           String?
+  /// Identifiants legaux en String pour preserver les zeros de tete.
+  identifiantFiscal         String?
+  registreCommerce          String?
+  tribunalRegistreCommerce  String?
+  dateCreation              DateTime?          @db.Date
+  dateCessationActivite     DateTime?          @db.Date
+  siteWeb                   String?
 
-  // Index sur accountId : le filtrage par tenant est la requete la plus
-  // frequente de toute l application, il doit etre indexe des le depart.
+  // --- Regime et cycle de vie ---
+  regimeDeBase              RegimeDeBase       @default(NON_AGRICOLE)
+  periodicitePaie           PeriodicitePaie    @default(MENSUEL)
+  etatDossier               EtatDossier
+  /// Mois au format AAAA-MM (texte, comparable / triable).
+  moisDebutMontage          String
+  moisDebutProduction       String
+  /// Obligatoire si etatDossier = INACTIVE ; doit etre > moisDebutProduction.
+  dateInactivite            String?
+  /// Mois de paie en cours du dossier (AAAA-MM). Sert d horodatage des
+  /// ecritures d historique. Initialise a moisDebutMontage. Avance par le
+  /// module 2 uniquement — aucun endpoint de modification ici.
+  moisEnCours               String
+
+  // --- Employeur signataire ---
+  signataireCivilite        String?
+  signatairePrenom          String?
+  signataireNom             String?
+  signataireQualite         String?
+
+  // --- Parametrage technique matricules / entrees-sorties ---
+  matriculePrefixe                      String?
+  matriculeLongueur                     Int      @default(5)
+  matriculeGenerationAuto               Boolean  @default(true)
+  calculAutoAbsencesEntreesSorties      Boolean  @default(true)
+
+  account        Account        @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  formeJuridique FormeJuridique @relation(fields: [formeJuridiqueId], references: [id], onDelete: Restrict)
+
+  etablissements             Etablissement[]
+  parametragesHistoriques    CompanyParametrageHistorique[]
+  comptesBancaires           CompteBancaire[]
+
+  @@unique([accountId, codeDossier])
+  /// Unicite par compte si renseigne ; plusieurs NULL autorises (PostgreSQL).
+  @@unique([accountId, identifiantFiscal])
+  /// Cible de la FK composite Etablissement(companyId, accountId) :
+  /// garantit que accountId denormalise reste aligne sur la societe.
+  @@unique([id, accountId])
   @@index([accountId])
+  @@index([formeJuridiqueId])
 }
 
 /// Un utilisateur du logiciel.
@@ -94,8 +196,6 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // onDelete: Cascade coherent avec Company : les utilisateurs d un compte
-  // disparaissent avec lui. Le super-admin (accountId nul) n est pas concerne.
   account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
 
   auditLogs AuditLog[]
@@ -104,10 +204,6 @@ model User {
 }
 
 /// Journal d audit.
-///
-/// Cree des le module 0 car la tracabilite des actions - en particulier les
-/// acces elargis du super-admin - est un principe fondateur. Le remplissage
-/// viendra avec les fonctionnalites.
 model AuditLog {
   id     String @id @default(uuid()) @db.Uuid
   userId String @db.Uuid
@@ -123,10 +219,250 @@ model AuditLog {
 
   createdAt DateTime @default(now())
 
-  // Restrict : on ne supprime jamais un utilisateur qui a laisse des traces
-  // d audit. La tracabilite prime sur le nettoyage des donnees.
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
   @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Tables de reference nationales (pas d accountId)
+// Maintenues par PLATFORM_ADMIN, lisibles par tous les comptes.
+// ---------------------------------------------------------------------------
+
+/// Forme juridique marocaine (SARL, SA, etc.).
+model FormeJuridique {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  companies Company[]
+}
+
+/// Banque marocaine proposee a la saisie des RIB.
+/// `codeBanque` (3 premiers chiffres du RIB) est prevu mais laisse vide pour l instant.
+model Banque {
+  id         String  @id @default(uuid()) @db.Uuid
+  nom        String
+  /// Ancien sigle conserve pour la recherche (ex. SGMB, BMCE).
+  ancienNom  String?
+  /// Trois premiers chiffres du RIB — a renseigner plus tard.
+  codeBanque String?
+  /// Couleur d affichage (hex, ex. #E2001A).
+  couleur    String
+
+  comptesBancaires CompteBancaire[]
+}
+
+/// Jour ferie national. Le `code` est stable a vie ; le libelle peut evoluer.
+/// Aucune date calendaire ici : la resolution (surtout lunaire) est le module 4.
+model JourFerie {
+  id            String        @id @default(uuid()) @db.Uuid
+  code          String        @unique
+  libelle       String
+  /// Reference textuelle (ex. "1er janvier", "1er Chawal") — pas une date.
+  referenceDate String
+  type          TypeJourFerie
+
+  etablissementsTravailles JourFerieTravaille[]
+}
+
+/// Type d heure de la grille (normale / majoree). Les taux reels viennent au module 5.
+model TypeHeure {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+  ordre   Int
+
+  horaireDefautLignes  HoraireDefautLigne[]
+  horaireMensuelLignes HoraireMensuelLigne[]
+}
+
+/// Type d exoneration societale (une seule a la fois, jamais de cumul).
+model TypeExoneration {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  parametrages CompanyParametrageHistorique[]
+}
+
+// ---------------------------------------------------------------------------
+// Etablissement
+// ---------------------------------------------------------------------------
+
+/// Lieu d exploitation d une societe.
+/// `accountId` est denormalise pour l unicite de l ICE par compte et le
+/// filtrage multi-tenant sans jointure. La FK composite vers
+/// Company(id, accountId) rend toute divergence impossible en base.
+model Etablissement {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  /// Denormalise depuis Company.accountId (isolation + unicite ICE).
+  accountId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nom                 String
+  /// Exactement un true par societe (index unique partiel en migration SQL).
+  estPrincipal        Boolean @default(false)
+  adresse             String
+  complementAdresse   String?
+  codePostal          String?
+  ville               String
+  pays                String  @default("MA")
+  /// ICE en String ; unique par accountId si renseigne (tous etablissements confondus).
+  ice                 String?
+  taxeProfessionnelle String?
+  telephone           String?
+  email               String?
+
+  company                 Company                          @relation(fields: [companyId, accountId], references: [id, accountId], onDelete: Cascade)
+  parametragesHistoriques EtablissementParametrageHistorique[]
+  comptesBancaires        CompteBancaireEtablissement[]
+
+  @@unique([accountId, ice])
+  @@index([companyId])
+  @@index([accountId])
+}
+
+// ---------------------------------------------------------------------------
+// Historisation par moisEffet (AAAA-MM)
+// Une ligne vaut a partir de son moisEffet jusqu au moisEffet de la suivante.
+// L utilisateur ne saisit jamais cette date (deduite en 1.1.b).
+// ---------------------------------------------------------------------------
+
+/// Parametres societaux historises (conges, exoneration).
+model CompanyParametrageHistorique {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  /// Mois a partir duquel cette ligne s applique (AAAA-MM). Cle avec companyId.
+  moisEffet String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Mois de cloture des conges payes (1 = janvier … 12 = decembre). Defaut 12.
+  moisClotureConges Int @default(12)
+
+  typeExonerationId    String? @db.Uuid
+  /// Obligatoire si une exoneration est choisie (controle applicatif en 1.1.b).
+  exonerationDateDebut String?
+  exonerationDateFin   String?
+
+  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  typeExoneration TypeExoneration? @relation(fields: [typeExonerationId], references: [id], onDelete: Restrict)
+
+  @@unique([companyId, moisEffet])
+  @@index([companyId])
+  @@index([typeExonerationId])
+}
+
+/// Parametres etablissement historises (duree, repos, teletravail, horaires, feries).
+model EtablissementParametrageHistorique {
+  id              String   @id @default(uuid()) @db.Uuid
+  etablissementId String   @db.Uuid
+  moisEffet       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  dureeHebdomadaire             Decimal     @default(44) @db.Decimal(8, 2)
+  jourReposHebdomadaire         JourSemaine @default(DIMANCHE)
+  /// Trois etats : true / false / null (non renseigne).
+  teletravailAutorise           Boolean?
+  indemniteTeletravailVersee    Boolean?
+  montantIndemniteTeletravail   Decimal?    @db.Decimal(14, 2)
+
+  etablissement        Etablissement         @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+  horaireDefautLignes  HoraireDefautLigne[]
+  horaireMensuelLignes HoraireMensuelLigne[]
+  joursFeriesTravailles JourFerieTravaille[]
+
+  @@unique([etablissementId, moisEffet])
+  @@index([etablissementId])
+}
+
+/// Une cellule de la grille horaire hebdomadaire (jour × type d heure).
+model HoraireDefautLigne {
+  id                                   String      @id @default(uuid()) @db.Uuid
+  etablissementParametrageHistoriqueId String      @db.Uuid
+  jourSemaine                          JourSemaine
+  typeHeureId                          String      @db.Uuid
+  nombreHeures                         Decimal     @db.Decimal(8, 2)
+
+  parametrage EtablissementParametrageHistorique @relation(fields: [etablissementParametrageHistoriqueId], references: [id], onDelete: Cascade)
+  typeHeure   TypeHeure                          @relation(fields: [typeHeureId], references: [id], onDelete: Restrict)
+
+  @@unique([etablissementParametrageHistoriqueId, jourSemaine, typeHeureId])
+  @@index([typeHeureId])
+}
+
+/// Heures mensuelles par type (saisies ou deduites de l hebdomadaire × 52/12).
+model HoraireMensuelLigne {
+  id                                   String  @id @default(uuid()) @db.Uuid
+  etablissementParametrageHistoriqueId String  @db.Uuid
+  typeHeureId                          String  @db.Uuid
+  nombreHeures                         Decimal @db.Decimal(8, 2)
+
+  parametrage EtablissementParametrageHistorique @relation(fields: [etablissementParametrageHistoriqueId], references: [id], onDelete: Cascade)
+  typeHeure   TypeHeure                          @relation(fields: [typeHeureId], references: [id], onDelete: Restrict)
+
+  @@unique([etablissementParametrageHistoriqueId, typeHeureId])
+  @@index([typeHeureId])
+}
+
+/// Jour ferie marque comme travaille pour un parametrage etablissement donne.
+model JourFerieTravaille {
+  etablissementParametrageHistoriqueId String @db.Uuid
+  jourFerieId                          String @db.Uuid
+
+  parametrage EtablissementParametrageHistorique @relation(fields: [etablissementParametrageHistoriqueId], references: [id], onDelete: Cascade)
+  jourFerie   JourFerie                          @relation(fields: [jourFerieId], references: [id], onDelete: Restrict)
+
+  @@id([etablissementParametrageHistoriqueId, jourFerieId])
+  @@index([jourFerieId])
+}
+
+// ---------------------------------------------------------------------------
+// Comptes bancaires
+// ---------------------------------------------------------------------------
+
+/// Compte bancaire de la societe (RIB / IBAN).
+/// Longueurs RIB/IBAN/BIC : avertissement API seulement, jamais contrainte DB.
+model CompteBancaire {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  libelle              String?
+  banqueId             String?              @db.Uuid
+  /// Saisie libre si la banque n est pas dans le referentiel.
+  banqueSaisieLibre    String?
+  rib                  String?
+  iban                 String?
+  bic                  String?
+  nomPayeur            String?
+  usageSalaires              Boolean @default(false)
+  usageCotisationsSociales   Boolean @default(false)
+  usageIR                    Boolean @default(false)
+  etat                 EtatCompteBancaire   @default(ACTIF)
+
+  company        Company                       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  banque         Banque?                       @relation(fields: [banqueId], references: [id], onDelete: Restrict)
+  etablissements CompteBancaireEtablissement[]
+
+  @@index([companyId])
+  @@index([banqueId])
+}
+
+/// Liaison « utilise par » entre un compte bancaire et un ou plusieurs etablissements.
+model CompteBancaireEtablissement {
+  compteBancaireId String @db.Uuid
+  etablissementId  String @db.Uuid
+
+  compteBancaire CompteBancaire @relation(fields: [compteBancaireId], references: [id], onDelete: Cascade)
+  etablissement  Etablissement  @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+
+  @@id([compteBancaireId, etablissementId])
+  @@index([etablissementId])
 }

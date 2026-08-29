@@ -8,7 +8,17 @@ import { accountScope } from '../../common/tenancy/tenant-scope.js';
 interface CompanyRow {
   id: string;
   accountId: string;
-  name: string;
+  codeDossier: string;
+  raisonSociale: string;
+  nomCommercial: string | null;
+  formeJuridiqueId: string;
+  etatDossier: 'EN_MONTAGE' | 'EN_PRODUCTION' | 'INACTIVE';
+  regimeDeBase: 'NON_AGRICOLE';
+  periodicitePaie: 'MENSUEL';
+  moisDebutMontage: string;
+  moisDebutProduction: string;
+  dateInactivite: string | null;
+  moisEnCours: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -22,18 +32,27 @@ function toCompany(row: CompanyRow): Company {
   return {
     id: row.id,
     accountId: row.accountId,
-    name: row.name,
+    codeDossier: row.codeDossier,
+    raisonSociale: row.raisonSociale,
+    nomCommercial: row.nomCommercial,
+    formeJuridiqueId: row.formeJuridiqueId,
+    etatDossier: row.etatDossier,
+    regimeDeBase: row.regimeDeBase,
+    periodicitePaie: row.periodicitePaie,
+    moisDebutMontage: row.moisDebutMontage,
+    moisDebutProduction: row.moisDebutProduction,
+    dateInactivite: row.dateInactivite,
+    moisEnCours: row.moisEnCours,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
 }
 
 /**
- * GRAINE - module societes.
+ * GRAINE - module societes (lecture).
  *
- * Aucune logique de paie ici : ce service existe au module 0 uniquement pour
- * DEMONTRER le filtrage multi-tenant sur une vraie table. Il est volontairement
- * en lecture seule.
+ * Etape 1.1.b etendra ce service avec les ecritures et les permissions.
+ * Ici on conserve la demonstration du filtrage multi-tenant.
  */
 @Injectable()
 export class CompaniesService {
@@ -45,11 +64,9 @@ export class CompaniesService {
   async findAll(): Promise<ListResponse<Company>> {
     const context = this.tenantContext.getOrThrow();
 
-    // Le `where` part TOUJOURS de accountScope() : c est ce qui garantit
-    // qu on ne voit que les societes de son propre compte.
     const rows = await this.prisma.company.findMany({
       where: accountScope(context),
-      orderBy: { name: 'asc' },
+      orderBy: { raisonSociale: 'asc' },
     });
 
     return { items: rows.map(toCompany), total: rows.length };
@@ -58,16 +75,11 @@ export class CompaniesService {
   async findOne(id: Uuid): Promise<Company> {
     const context = this.tenantContext.getOrThrow();
 
-    // `findFirst` et non `findUnique` : on veut que le filtre par compte
-    // fasse partie de la recherche elle-meme. Avec `findUnique({ id })`, on
-    // trouverait la societe d un AUTRE compte avant de pouvoir la refuser.
     const row = await this.prisma.company.findFirst({
       where: { ...accountScope(context), id },
     });
 
     if (!row) {
-      // 404 et non 403, deliberement : repondre "interdit" revelerait
-      // qu une societe portant cet identifiant existe chez un autre client.
       throw new NotFoundException(`Societe introuvable : ${id}`);
     }
 

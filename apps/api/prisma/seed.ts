@@ -1,20 +1,27 @@
 import { resolve } from 'node:path';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { config as chargerEnv } from 'dotenv';
+import { Decimal } from 'decimal.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
+import { heuresHebdomadairesVersMensuelles } from '../src/modules/companies/heures-mensuelles.js';
+import {
+  BANQUES,
+  FORMES_JURIDIQUES,
+  JOURS_FERIES,
+  TYPES_EXONERATION,
+  TYPES_HEURE,
+} from './reference-data.js';
 
 // ---------------------------------------------------------------------------
-// PaymaRH - Donnees de demonstration (module 0)
+// PaymaRH - Donnees de demonstration (module 0 + module 1 etape 1.1.a)
 //
-// Cree le strict minimum pour pouvoir manipuler le socle multi-tenant :
-//   - un compte de demonstration de type CABINET ;
-//   - une societe rattachee a ce compte ;
-//   - un super-admin plateforme, SANS compte de rattachement ;
-//   - un administrateur du compte de demonstration.
+// - tables de reference nationales (formes, banques, feries, types d heure,
+//   exoneration) ;
+// - un compte CABINET, un super-admin, un admin de compte ;
+// - une societe complete : 2 etablissements, 2 comptes bancaires, grille
+//   horaire 44 h, feries coches, 2 moisEffet d historique.
 //
-// AUCUNE donnee de paie. Le script est idempotent : on peut le relancer sans
-// creer de doublon.
-//
+// Idempotent : on peut relancer sans creer de doublon.
 // Lancement : pnpm db:seed
 // ---------------------------------------------------------------------------
 
@@ -31,13 +38,122 @@ if (!connectionString) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const NOM_COMPTE_DEMO = 'Cabinet de demonstration PaymaRH';
-const NOM_SOCIETE_DEMO = 'Societe de demonstration';
+const CODE_DOSSIER_DEMO = 'DEMO-001';
+const RAISON_SOCIALE_DEMO = 'Société de démonstration';
 const EMAIL_SUPER_ADMIN = 'super-admin@paymarh.local';
 const EMAIL_ADMIN_COMPTE = 'admin@cabinet-demo.local';
 
-async function main(): Promise<void> {
-  // 1. Le compte (tenant). `upsert` sur le nom n est pas possible faute de
-  //    contrainte d unicite : on cherche d abord, on cree si absent.
+async function seedReferences(): Promise<{
+  formeSarlId: string;
+  banqueAttijariId: string;
+  banqueBpId: string;
+  typeHeureNormaleId: string;
+  typeExonerationTahfizId: string;
+  jourFerieTravailId: string;
+  jourFerieTroneId: string;
+  jourFerieAidFitrId: string;
+}> {
+  for (const forme of FORMES_JURIDIQUES) {
+    await prisma.formeJuridique.upsert({
+      where: { code: forme.code },
+      update: { libelle: forme.libelle },
+      create: { code: forme.code, libelle: forme.libelle },
+    });
+  }
+
+  for (const banque of BANQUES) {
+    const existante = await prisma.banque.findFirst({ where: { nom: banque.nom } });
+    if (existante) {
+      await prisma.banque.update({
+        where: { id: existante.id },
+        data: {
+          ancienNom: banque.ancienNom,
+          couleur: banque.couleur,
+          // codeBanque laisse volontairement vide (spec X3).
+          codeBanque: null,
+        },
+      });
+    } else {
+      await prisma.banque.create({
+        data: {
+          nom: banque.nom,
+          ancienNom: banque.ancienNom,
+          codeBanque: null,
+          couleur: banque.couleur,
+        },
+      });
+    }
+  }
+
+  for (const jour of JOURS_FERIES) {
+    await prisma.jourFerie.upsert({
+      where: { code: jour.code },
+      update: {
+        libelle: jour.libelle,
+        referenceDate: jour.referenceDate,
+        type: jour.type,
+      },
+      create: {
+        code: jour.code,
+        libelle: jour.libelle,
+        referenceDate: jour.referenceDate,
+        type: jour.type,
+      },
+    });
+  }
+
+  for (const type of TYPES_HEURE) {
+    await prisma.typeHeure.upsert({
+      where: { code: type.code },
+      update: { libelle: type.libelle, ordre: type.ordre },
+      create: { code: type.code, libelle: type.libelle, ordre: type.ordre },
+    });
+  }
+
+  for (const type of TYPES_EXONERATION) {
+    await prisma.typeExoneration.upsert({
+      where: { code: type.code },
+      update: { libelle: type.libelle },
+      create: { code: type.code, libelle: type.libelle },
+    });
+  }
+
+  const formeSarl = await prisma.formeJuridique.findUniqueOrThrow({ where: { code: 'SARL' } });
+  const banqueAttijari = await prisma.banque.findFirstOrThrow({
+    where: { nom: 'Attijariwafa Bank' },
+  });
+  const banqueBp = await prisma.banque.findFirstOrThrow({
+    where: { nom: 'Banque Populaire' },
+  });
+  const typeHeureNormale = await prisma.typeHeure.findUniqueOrThrow({
+    where: { code: 'NORMALE' },
+  });
+  const tahfiz = await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } });
+  const jfTravail = await prisma.jourFerie.findUniqueOrThrow({
+    where: { code: 'JF_FETE_TRAVAIL' },
+  });
+  const jfTrone = await prisma.jourFerie.findUniqueOrThrow({ where: { code: 'JF_FETE_TRONE' } });
+  const jfAid = await prisma.jourFerie.findUniqueOrThrow({
+    where: { code: 'JF_AID_FITR_J1' },
+  });
+
+  console.log(
+    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s).`
+  );
+
+  return {
+    formeSarlId: formeSarl.id,
+    banqueAttijariId: banqueAttijari.id,
+    banqueBpId: banqueBp.id,
+    typeHeureNormaleId: typeHeureNormale.id,
+    typeExonerationTahfizId: tahfiz.id,
+    jourFerieTravailId: jfTravail.id,
+    jourFerieTroneId: jfTrone.id,
+    jourFerieAidFitrId: jfAid.id,
+  };
+}
+
+async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>): Promise<void> {
   const compteExistant = await prisma.account.findFirst({
     where: { name: NOM_COMPTE_DEMO },
   });
@@ -50,22 +166,386 @@ async function main(): Promise<void> {
 
   console.log(`Compte de demonstration : ${compte.name} (${compte.id})`);
 
-  // 2. Une societe rattachee a ce compte.
-  const societeExistante = await prisma.company.findFirst({
-    where: { accountId: compte.id, name: NOM_SOCIETE_DEMO },
+  let societe = await prisma.company.findFirst({
+    where: { accountId: compte.id, codeDossier: CODE_DOSSIER_DEMO },
   });
 
-  const societe =
-    societeExistante ??
-    (await prisma.company.create({
-      data: { accountId: compte.id, name: NOM_SOCIETE_DEMO },
-    }));
+  if (!societe) {
+    societe = await prisma.company.create({
+      data: {
+        accountId: compte.id,
+        codeDossier: CODE_DOSSIER_DEMO,
+        raisonSociale: RAISON_SOCIALE_DEMO,
+        nomCommercial: 'Demo PaymaRH',
+        formeJuridiqueId: refs.formeSarlId,
+        activiteExercee: 'Conseil en gestion de la paie',
+        identifiantFiscal: '123456789',
+        registreCommerce: '12345',
+        tribunalRegistreCommerce: 'Casablanca',
+        dateCreation: new Date('2019-03-15'),
+        siteWeb: 'https://demo.paymarh.local',
+        regimeDeBase: 'NON_AGRICOLE',
+        periodicitePaie: 'MENSUEL',
+        etatDossier: 'EN_PRODUCTION',
+        moisDebutMontage: '2025-01',
+        moisDebutProduction: '2025-07',
+        moisEnCours: '2025-07',
+        signataireCivilite: 'M.',
+        signatairePrenom: 'Karim',
+        signataireNom: 'Benali',
+        signataireQualite: 'Gérant',
+        matriculePrefixe: 'EMP',
+        matriculeLongueur: 5,
+        matriculeGenerationAuto: true,
+        calculAutoAbsencesEntreesSorties: true,
+      },
+    });
+  } else {
+    societe = await prisma.company.update({
+      where: { id: societe.id },
+      data: {
+        raisonSociale: RAISON_SOCIALE_DEMO,
+        formeJuridiqueId: refs.formeSarlId,
+        etatDossier: 'EN_PRODUCTION',
+        moisDebutMontage: '2025-01',
+        moisDebutProduction: '2025-07',
+        moisEnCours: '2025-07',
+      },
+    });
+  }
 
-  console.log(`Societe de demonstration : ${societe.name} (${societe.id})`);
+  console.log(`Societe de demonstration : ${societe.raisonSociale} (${societe.id})`);
 
-  // 3. Le super-admin plateforme : accountId VOLONTAIREMENT nul.
-  //    C est la traduction en donnees du principe "super-admin hors
-  //    hierarchie". Il n appartient a aucun compte client.
+  // --- Etablissements (exactement un principal) ---
+  let siege = await prisma.etablissement.findFirst({
+    where: { companyId: societe.id, estPrincipal: true },
+  });
+
+  if (!siege) {
+    siege = await prisma.etablissement.create({
+      data: {
+        companyId: societe.id,
+        accountId: compte.id,
+        nom: 'Siège Casablanca',
+        estPrincipal: true,
+        adresse: '12 Boulevard Zerktouni',
+        complementAdresse: '3e étage',
+        codePostal: '20000',
+        ville: 'Casablanca',
+        pays: 'MA',
+        ice: '001234567000012',
+        taxeProfessionnelle: 'TP-CASA-001',
+        telephone: '+212522000001',
+        email: 'siege@demo.paymarh.local',
+      },
+    });
+  }
+
+  let atelier = await prisma.etablissement.findFirst({
+    where: { companyId: societe.id, nom: 'Atelier Rabat' },
+  });
+
+  if (!atelier) {
+    atelier = await prisma.etablissement.create({
+      data: {
+        companyId: societe.id,
+        accountId: compte.id,
+        nom: 'Atelier Rabat',
+        estPrincipal: false,
+        adresse: '45 Avenue Mohammed V',
+        codePostal: '10000',
+        ville: 'Rabat',
+        pays: 'MA',
+        ice: '001234567000099',
+        taxeProfessionnelle: 'TP-RABAT-002',
+        telephone: '+212537000002',
+        email: 'atelier@demo.paymarh.local',
+      },
+    });
+  }
+
+  console.log(
+    `Etablissements : ${siege.nom} (principal), ${atelier.nom} (secondaire)`
+  );
+
+  // --- Historique societe (2 moisEffet) ---
+  await prisma.companyParametrageHistorique.upsert({
+    where: {
+      companyId_moisEffet: { companyId: societe.id, moisEffet: '2025-01' },
+    },
+    update: {
+      moisClotureConges: 12,
+      typeExonerationId: null,
+      exonerationDateDebut: null,
+      exonerationDateFin: null,
+    },
+    create: {
+      companyId: societe.id,
+      moisEffet: '2025-01',
+      moisClotureConges: 12,
+    },
+  });
+
+  await prisma.companyParametrageHistorique.upsert({
+    where: {
+      companyId_moisEffet: { companyId: societe.id, moisEffet: '2025-07' },
+    },
+    update: {
+      moisClotureConges: 6,
+      typeExonerationId: refs.typeExonerationTahfizId,
+      exonerationDateDebut: '2025-07',
+      exonerationDateFin: null,
+    },
+    create: {
+      companyId: societe.id,
+      moisEffet: '2025-07',
+      moisClotureConges: 6,
+      typeExonerationId: refs.typeExonerationTahfizId,
+      exonerationDateDebut: '2025-07',
+    },
+  });
+
+  // --- Historique etablissement principal (2 moisEffet) + grille + feries ---
+  const heuresHebdo = new Decimal(44);
+  const heuresMensuelles = heuresHebdomadairesVersMensuelles(heuresHebdo);
+
+  const paramJanvier = await upsertParamEtablissement(siege.id, '2025-01', {
+    dureeHebdomadaire: heuresHebdo,
+    jourReposHebdomadaire: 'DIMANCHE',
+    teletravailAutorise: false,
+    indemniteTeletravailVersee: null,
+    montantIndemniteTeletravail: null,
+  });
+
+  const paramJuillet = await upsertParamEtablissement(siege.id, '2025-07', {
+    dureeHebdomadaire: heuresHebdo,
+    jourReposHebdomadaire: 'DIMANCHE',
+    teletravailAutorise: true,
+    indemniteTeletravailVersee: true,
+    montantIndemniteTeletravail: new Decimal('500.00'),
+  });
+
+  await seedGrilleHoraire(paramJanvier.id, refs.typeHeureNormaleId, heuresHebdo, heuresMensuelles);
+  await seedGrilleHoraire(paramJuillet.id, refs.typeHeureNormaleId, heuresHebdo, heuresMensuelles);
+
+  // Feries travailles sur le parametrage de juillet (preuve de liaison).
+  for (const jourFerieId of [
+    refs.jourFerieTravailId,
+    refs.jourFerieTroneId,
+    refs.jourFerieAidFitrId,
+  ]) {
+    await prisma.jourFerieTravaille.upsert({
+      where: {
+        etablissementParametrageHistoriqueId_jourFerieId: {
+          etablissementParametrageHistoriqueId: paramJuillet.id,
+          jourFerieId,
+        },
+      },
+      update: {},
+      create: {
+        etablissementParametrageHistoriqueId: paramJuillet.id,
+        jourFerieId,
+      },
+    });
+  }
+
+  // Un parametrage minimal sur l atelier (un seul moisEffet).
+  await upsertParamEtablissement(atelier.id, '2025-07', {
+    dureeHebdomadaire: heuresHebdo,
+    jourReposHebdomadaire: 'DIMANCHE',
+    teletravailAutorise: null,
+    indemniteTeletravailVersee: null,
+    montantIndemniteTeletravail: null,
+  });
+
+  console.log(
+    `Historique : 2 moisEffet societe (2025-01, 2025-07), 2 moisEffet siege, heures mensuelles deduites = ${heuresMensuelles.toString()}`
+  );
+
+  // --- Comptes bancaires (usages differents) ---
+  let compteSalaires = await prisma.compteBancaire.findFirst({
+    where: { companyId: societe.id, libelle: 'Compte salaires' },
+  });
+
+  if (!compteSalaires) {
+    compteSalaires = await prisma.compteBancaire.create({
+      data: {
+        companyId: societe.id,
+        libelle: 'Compte salaires',
+        banqueId: refs.banqueAttijariId,
+        rib: '007780000123456789012345',
+        iban: 'MA64007780000123456789012345',
+        bic: 'BCMAMAMC',
+        nomPayeur: RAISON_SOCIALE_DEMO,
+        usageSalaires: true,
+        usageCotisationsSociales: false,
+        usageIR: false,
+        etat: 'ACTIF',
+      },
+    });
+  }
+
+  let compteCharges = await prisma.compteBancaire.findFirst({
+    where: { companyId: societe.id, libelle: 'Compte cotisations et IR' },
+  });
+
+  if (!compteCharges) {
+    compteCharges = await prisma.compteBancaire.create({
+      data: {
+        companyId: societe.id,
+        libelle: 'Compte cotisations et IR',
+        banqueId: refs.banqueBpId,
+        rib: '011780000987654321098765',
+        iban: 'MA64011780000987654321098765',
+        bic: 'BCPOMAMC',
+        nomPayeur: RAISON_SOCIALE_DEMO,
+        usageSalaires: false,
+        usageCotisationsSociales: true,
+        usageIR: true,
+        etat: 'ACTIF',
+      },
+    });
+  }
+
+  // Rattachements etablissements (E6 : pas d auto-attachement massif).
+  await prisma.compteBancaireEtablissement.upsert({
+    where: {
+      compteBancaireId_etablissementId: {
+        compteBancaireId: compteSalaires.id,
+        etablissementId: siege.id,
+      },
+    },
+    update: {},
+    create: { compteBancaireId: compteSalaires.id, etablissementId: siege.id },
+  });
+  await prisma.compteBancaireEtablissement.upsert({
+    where: {
+      compteBancaireId_etablissementId: {
+        compteBancaireId: compteSalaires.id,
+        etablissementId: atelier.id,
+      },
+    },
+    update: {},
+    create: { compteBancaireId: compteSalaires.id, etablissementId: atelier.id },
+  });
+  await prisma.compteBancaireEtablissement.upsert({
+    where: {
+      compteBancaireId_etablissementId: {
+        compteBancaireId: compteCharges.id,
+        etablissementId: siege.id,
+      },
+    },
+    update: {},
+    create: { compteBancaireId: compteCharges.id, etablissementId: siege.id },
+  });
+
+  console.log(
+    `Comptes bancaires : ${compteSalaires.libelle} (salaires), ${compteCharges.libelle} (cotisations + IR)`
+  );
+}
+
+async function upsertParamEtablissement(
+  etablissementId: string,
+  moisEffet: string,
+  data: {
+    dureeHebdomadaire: Decimal;
+    jourReposHebdomadaire: 'DIMANCHE';
+    teletravailAutorise: boolean | null;
+    indemniteTeletravailVersee: boolean | null;
+    montantIndemniteTeletravail: Decimal | null;
+  }
+) {
+  return prisma.etablissementParametrageHistorique.upsert({
+    where: {
+      etablissementId_moisEffet: { etablissementId, moisEffet },
+    },
+    update: {
+      dureeHebdomadaire: data.dureeHebdomadaire,
+      jourReposHebdomadaire: data.jourReposHebdomadaire,
+      teletravailAutorise: data.teletravailAutorise,
+      indemniteTeletravailVersee: data.indemniteTeletravailVersee,
+      montantIndemniteTeletravail: data.montantIndemniteTeletravail,
+    },
+    create: {
+      etablissementId,
+      moisEffet,
+      dureeHebdomadaire: data.dureeHebdomadaire,
+      jourReposHebdomadaire: data.jourReposHebdomadaire,
+      teletravailAutorise: data.teletravailAutorise,
+      indemniteTeletravailVersee: data.indemniteTeletravailVersee,
+      montantIndemniteTeletravail: data.montantIndemniteTeletravail,
+    },
+  });
+}
+
+/**
+ * Grille simple : 8 h normales du lundi au vendredi, 4 h le samedi, 0 le dimanche.
+ * Total = 44 h. Heures mensuelles deduites via 52/12 ceil.
+ */
+async function seedGrilleHoraire(
+  parametrageId: string,
+  typeHeureNormaleId: string,
+  heuresHebdo: Decimal,
+  heuresMensuelles: Decimal
+): Promise<void> {
+  const repartition: { jour: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE'; heures: string }[] =
+    [
+      { jour: 'LUNDI', heures: '8' },
+      { jour: 'MARDI', heures: '8' },
+      { jour: 'MERCREDI', heures: '8' },
+      { jour: 'JEUDI', heures: '8' },
+      { jour: 'VENDREDI', heures: '8' },
+      { jour: 'SAMEDI', heures: '4' },
+      { jour: 'DIMANCHE', heures: '0' },
+    ];
+
+  for (const ligne of repartition) {
+    await prisma.horaireDefautLigne.upsert({
+      where: {
+        etablissementParametrageHistoriqueId_jourSemaine_typeHeureId: {
+          etablissementParametrageHistoriqueId: parametrageId,
+          jourSemaine: ligne.jour,
+          typeHeureId: typeHeureNormaleId,
+        },
+      },
+      update: { nombreHeures: new Decimal(ligne.heures) },
+      create: {
+        etablissementParametrageHistoriqueId: parametrageId,
+        jourSemaine: ligne.jour,
+        typeHeureId: typeHeureNormaleId,
+        nombreHeures: new Decimal(ligne.heures),
+      },
+    });
+  }
+
+  await prisma.horaireMensuelLigne.upsert({
+    where: {
+      etablissementParametrageHistoriqueId_typeHeureId: {
+        etablissementParametrageHistoriqueId: parametrageId,
+        typeHeureId: typeHeureNormaleId,
+      },
+    },
+    update: { nombreHeures: heuresMensuelles },
+    create: {
+      etablissementParametrageHistoriqueId: parametrageId,
+      typeHeureId: typeHeureNormaleId,
+      nombreHeures: heuresMensuelles,
+    },
+  });
+
+  // Controle interne du seed : la somme hebdo doit coller a dureeHebdomadaire.
+  const somme = repartition.reduce(
+    (acc, l) => acc.plus(l.heures),
+    new Decimal(0)
+  );
+  if (!somme.equals(heuresHebdo)) {
+    throw new Error(
+      `Incoherence seed grille : somme=${somme.toString()} vs duree=${heuresHebdo.toString()}`
+    );
+  }
+}
+
+async function seedUtilisateurs(compteId: string): Promise<void> {
   const superAdmin = await prisma.user.upsert({
     where: { email: EMAIL_SUPER_ADMIN },
     update: { role: 'PLATFORM_ADMIN', accountId: null },
@@ -74,18 +554,33 @@ async function main(): Promise<void> {
 
   console.log(`Super-admin plateforme : ${superAdmin.email} (${superAdmin.id}) - accountId=null`);
 
-  // 4. L administrateur du compte de demonstration.
   const adminCompte = await prisma.user.upsert({
     where: { email: EMAIL_ADMIN_COMPTE },
-    update: { role: 'ACCOUNT_ADMIN', accountId: compte.id },
-    create: { email: EMAIL_ADMIN_COMPTE, role: 'ACCOUNT_ADMIN', accountId: compte.id },
+    update: { role: 'ACCOUNT_ADMIN', accountId: compteId },
+    create: { email: EMAIL_ADMIN_COMPTE, role: 'ACCOUNT_ADMIN', accountId: compteId },
   });
 
   console.log(`Administrateur de compte : ${adminCompte.email} (${adminCompte.id})`);
-
-  console.log('\nSeed termine. Aucune donnee de paie n a ete creee (module 0).');
   console.log("Pour interroger l'API en developpement, utilisez l'en-tete :");
   console.log(`  x-paymarh-user-id: ${adminCompte.id}`);
+}
+
+async function main(): Promise<void> {
+  const refs = await seedReferences();
+
+  const compteExistant = await prisma.account.findFirst({
+    where: { name: NOM_COMPTE_DEMO },
+  });
+  const compte =
+    compteExistant ??
+    (await prisma.account.create({
+      data: { name: NOM_COMPTE_DEMO, type: 'CABINET' },
+    }));
+
+  await seedSocieteDemo(refs);
+  await seedUtilisateurs(compte.id);
+
+  console.log('\nSeed termine (module 0 + fiche societe 1.1.a).');
 }
 
 main()
