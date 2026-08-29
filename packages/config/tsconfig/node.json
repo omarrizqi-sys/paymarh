@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "PaymaRH - application Node (API NestJS)",
+  "extends": "./base.json",
+  "compilerOptions": {
+    /* "Node16" plutot que l ancien "CommonJS"/"node10", deprecie depuis
+       TypeScript 6. Comme apps/api/package.json ne declare pas
+       "type": "module", Node16 emet bien du CommonJS : c est ce qu attend
+       NestJS. */
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "lib": ["ES2023"],
+    "types": ["node"],
+
+    /* NestJS repose sur les decorateurs et sur la lecture des types a
+       l'execution (injection de dependances). Ces deux options sont donc
+       obligatoires cote API. */
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Les fichiers TypeScript de l'API sont compiles vers dist/ par tsc ;
+       chaque fichier est traite isolement par les outils de test, d'ou
+       isolatedModules herite de la base. */
+    "declaration": false,
+    "sourceMap": true,
+    "removeComments": false
+  }
+}

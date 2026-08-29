@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# PaymaRH - Infrastructure de developpement local
+#
+# Un seul service au module 0 : PostgreSQL. Les identifiants sont lus depuis
+# le fichier .env de la racine (voir .env.example). Les valeurs par defaut
+# apres ":-" ne servent que de filet de securite en developpement.
+#
+#   Demarrer : pnpm db:up      (equivalent : docker compose up -d)
+#   Arreter  : pnpm db:down
+# ---------------------------------------------------------------------------
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: paymarh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-paymarh}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-paymarh_local_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-paymarh}
+    ports:
+      # Port hote configurable pour eviter un conflit avec un PostgreSQL local.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      # Volume nomme : les donnees survivent a un "docker compose down".
+      # Depuis PostgreSQL 18, l image officielle attend le point de montage a
+      # la racine /var/lib/postgresql (et non /var/lib/postgresql/data) : elle
+      # cree elle-meme un sous-dossier par version majeure, ce qui rend les
+      # montees de version possibles.
+      - paymarh-pgdata:/var/lib/postgresql
+    healthcheck:
+      # Permet a "docker compose up --wait" de savoir quand la base accepte
+      # reellement les connexions (et pas seulement quand le conteneur tourne).
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-paymarh} -d ${POSTGRES_DB:-paymarh}']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  paymarh-pgdata:
+    name: paymarh-pgdata

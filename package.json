@@ -1,0 +1,46 @@
+{
+  "name": "paymarh",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PaymaRH - logiciel de paie marocain (secteur prive), SaaS multi-societe. Monorepo.",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "dev:api": "pnpm --filter @paymarh/api dev",
+    "dev:back-office": "pnpm --filter @paymarh/back-office dev",
+    "build": "pnpm --recursive build",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "pnpm --recursive typecheck",
+    "check:circular": "madge --circular apps/api/src apps/back-office/src packages/shared-types/src",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:migrate": "pnpm --filter @paymarh/api db:migrate",
+    "db:seed": "pnpm --filter @paymarh/api db:seed",
+    "db:reset": "pnpm --filter @paymarh/api db:reset",
+    "db:studio": "pnpm --filter @paymarh/api db:studio"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@paymarh/config": "workspace:*",
+    "eslint": "^10.9.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
+    "madge": "^8.0.0",
+    "prettier": "^3.9.6",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}

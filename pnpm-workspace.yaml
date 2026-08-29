@@ -1,0 +1,28 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm bloque par defaut les scripts d installation des dependances (mesure de
+# securite). On autorise explicitement celles qui en ont legitimement besoin
+# pour telecharger ou compiler un binaire natif. Toute nouvelle entree ici est
+# une decision consciente : ne rien ajouter sans comprendre pourquoi.
+allowBuilds:
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - '@tanstack/react-table@9.2.4'
+  - '@tanstack/table-core@9.2.4'
+  - lucide-react@1.35.0
+
+# Une seule version de TypeScript pour tout le depot : on evite les
+# incoherences de compilation entre l API et le back-office.
+# 6.0.x est le point de compatibilite entre NestJS 12 (exige >= 6.0.0) et
+# typescript-eslint 8 (supporte < 6.1.0). Voir docs/adr/0001-fondations.md.
+overrides:
+  typescript: ~6.0.3

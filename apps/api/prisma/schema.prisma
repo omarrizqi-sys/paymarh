@@ -1,0 +1,132 @@
+// ---------------------------------------------------------------------------
+// PaymaRH - Schema de donnees
+//
+// MODULE 0 : ce schema ne contient QUE le socle multi-tenant et les roles.
+// AUCUNE entite de paie (bulletin, rubrique, cotisation, absence, declaration)
+// ne doit apparaitre ici tant que le module metier correspondant n a pas ete
+// specifie.
+//
+// Hierarchie d isolation : Account -> Company -> (Salarie, plus tard).
+// ---------------------------------------------------------------------------
+
+// Depuis Prisma 7, le client est genere en TypeScript dans le projet (et non
+// plus dans node_modules) et l URL de connexion vit dans prisma.config.ts.
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+  runtime      = "nodejs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enumerations
+// ---------------------------------------------------------------------------
+
+/// Nature du titulaire de l abonnement.
+enum AccountType {
+  /// Cabinet : gere la paie de plusieurs societes clientes.
+  CABINET
+  /// Entreprise : gere la paie de ses propres salaries.
+  ENTREPRISE
+}
+
+/// Roles utilisateurs. Doit rester aligne sur packages/shared-types/src/role.ts.
+enum Role {
+  /// Super-admin plateforme : HORS HIERARCHIE, accountId obligatoirement nul.
+  PLATFORM_ADMIN
+  /// Administrateur d un compte client.
+  ACCOUNT_ADMIN
+  /// Gestionnaire de paie.
+  MANAGER
+  /// Salarie : prevu pour le futur portail salarie, non utilise au module 0.
+  EMPLOYEE
+}
+
+// ---------------------------------------------------------------------------
+// Modeles
+// ---------------------------------------------------------------------------
+
+/// Le "tenant" : titulaire de l abonnement PaymaRH.
+/// Premier niveau d isolation, aucune donnee ne franchit sa frontiere.
+model Account {
+  id        String      @id @default(uuid()) @db.Uuid
+  name      String
+  type      AccountType
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  companies Company[]
+  users     User[]
+}
+
+/// La societe dont on produira la paie.
+/// Second niveau d isolation. Appartient TOUJOURS a un Account.
+model Company {
+  id        String   @id @default(uuid()) @db.Uuid
+  accountId String   @db.Uuid
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Supprimer un Account supprime ses societes : une Company orpheline n a
+  // aucun sens et deviendrait une donnee hors perimetre d isolation.
+  account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  // Index sur accountId : le filtrage par tenant est la requete la plus
+  // frequente de toute l application, il doit etre indexe des le depart.
+  @@index([accountId])
+}
+
+/// Un utilisateur du logiciel.
+model User {
+  id    String @id @default(uuid()) @db.Uuid
+  email String @unique
+
+  /// NULLABLE par conception : un PLATFORM_ADMIN n appartient a aucun compte
+  /// client. Pour tous les autres roles, ce champ est renseigne.
+  accountId String? @db.Uuid
+
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // onDelete: Cascade coherent avec Company : les utilisateurs d un compte
+  // disparaissent avec lui. Le super-admin (accountId nul) n est pas concerne.
+  account Account? @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  auditLogs AuditLog[]
+
+  @@index([accountId])
+}
+
+/// Journal d audit.
+///
+/// Cree des le module 0 car la tracabilite des actions - en particulier les
+/// acces elargis du super-admin - est un principe fondateur. Le remplissage
+/// viendra avec les fonctionnalites.
+model AuditLog {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+
+  /// Verbe de l action, en majuscules (ex. "READ_ACROSS_ACCOUNTS").
+  action String
+
+  /// Type de la ressource visee (ex. "Company").
+  targetType String
+
+  /// Identifiant de la ressource visee, nul si l action est globale.
+  targetId String?
+
+  createdAt DateTime @default(now())
+
+  // Restrict : on ne supprime jamais un utilisateur qui a laisse des traces
+  // d audit. La tracabilite prime sur le nettoyage des donnees.
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId])
+  @@index([createdAt])
+}

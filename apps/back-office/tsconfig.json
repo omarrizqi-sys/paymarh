@@ -1,0 +1,13 @@
+{
+  "extends": "@paymarh/config/tsconfig/react.json",
+  "compilerOptions": {
+    "plugins": [{ "name": "next" }],
+    // Alias attendu par shadcn/ui. Il reste cantonne au back-office : le code
+    // partage passe par le package @paymarh/shared-types, jamais par un alias.
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "dist"]
+}

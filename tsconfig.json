@@ -1,0 +1,8 @@
+{
+  // Configuration racine : sert de reference aux editeurs et aux outils
+  // (madge, Prettier). Chaque application possede son propre tsconfig.json
+  // qui etend l un des presets de packages/config/tsconfig/.
+  "extends": "./packages/config/tsconfig/base.json",
+  "files": [],
+  "include": []
+}

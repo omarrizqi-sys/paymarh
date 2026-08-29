@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.next
+coverage
+generated
+pnpm-lock.yaml
+*.tsbuildinfo
+
+# Migrations SQL generees par Prisma : ne jamais les reformater.
+apps/api/prisma/migrations
+
+# Regenere par Next.js a chaque build, avec son propre formatage.
+apps/back-office/next-env.d.ts

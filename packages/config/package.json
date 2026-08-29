@@ -1,0 +1,19 @@
+{
+  "name": "@paymarh/config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Configurations partagees du monorepo PaymaRH : TypeScript, ESLint, Prettier.",
+  "type": "module",
+  "exports": {
+    "./eslint": "./eslint/base.js",
+    "./prettier": "./prettier/index.js",
+    "./tsconfig/base.json": "./tsconfig/base.json",
+    "./tsconfig/node.json": "./tsconfig/node.json",
+    "./tsconfig/react.json": "./tsconfig/react.json"
+  },
+  "files": [
+    "eslint",
+    "prettier",
+    "tsconfig"
+  ]
+}

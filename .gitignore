@@ -1,0 +1,36 @@
+# Dependances
+node_modules/
+.pnpm-store/
+
+# Variables d'environnement : le .env reel ne doit JAMAIS etre versionne.
+# Seul .env.example (valeurs factices) est suivi par Git.
+.env
+.env.*
+!.env.example
+
+# Build
+dist/
+build/
+out/
+.next/
+.turbo/
+*.tsbuildinfo
+
+# Tests / couverture
+coverage/
+.vitest/
+
+# Prisma : client genere
+**/generated/prisma/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Systeme / editeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

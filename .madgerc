@@ -1,0 +1,20 @@
+{
+  "fileExtensions": ["ts", "tsx"],
+  "detectiveOptions": {
+    "ts": {
+      "skipTypeImports": true
+    },
+    "tsx": {
+      "skipTypeImports": true
+    }
+  },
+  "tsConfig": {
+    "compilerOptions": {
+      "baseUrl": ".",
+      "paths": {
+        "@/*": ["apps/back-office/src/*"]
+      }
+    }
+  },
+  "excludeRegExp": ["\\.d\\.ts$", "node_modules", "\\.next", "dist", "generated"]
+}
