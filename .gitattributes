@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# PaymaRH - Normalisation des fins de ligne.
+#
+# Prettier impose LF (endOfLine: 'lf', voir packages/config/prettier/index.js),
+# mais Windows positionne souvent core.autocrlf=true, ce qui convertit la copie
+# de travail en CRLF. Sans ce fichier, `pnpm format:check` echouerait sur la
+# totalite du depot apres un simple clone, et chaque poste produirait des diffs
+# sur des fichiers que personne n a modifies.
+#
+# On tranche donc ici, une fois pour toutes et independamment de la
+# configuration Git de chaque machine.
+# ---------------------------------------------------------------------------
+
+# Detection automatique du texte ; stockage dans Git ET copie de travail en LF.
+* text=auto eol=lf
+
+# Binaires : aucune conversion, elle les corromprait.
+# Anticipe les livrables PDF (voir apps/api/src/deliverables) et les visuels
+# du back-office, absents au module 0.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.ico   binary
+*.pdf   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.zip   binary
