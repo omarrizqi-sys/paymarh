@@ -8,13 +8,18 @@ import type {
   ApiResponse,
   ApiWarning,
   ImpactSuppressionSociete,
-  ListResponse,
+  ListResponseAvecOperations,
   ResultatSuppression,
+  RessourceAvecOperations,
   Societe,
   Uuid,
 } from '@paymarh/shared-types';
 import { AuditService } from '../../common/audit/audit.service.js';
 import { relancerConflitUnicite } from '../../common/errors/conflit-unicite.js';
+import {
+  operationsListeSocietes,
+  operationsSociete,
+} from '../../common/permissions/operations-ressource.js';
 import { assertPeutFaire } from '../../common/permissions/peut-faire.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
@@ -31,6 +36,7 @@ import {
 } from './gardes-metier.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
+import { enrichirSociete } from './enrichir-operations.js';
 import { toSociete } from './mappers.js';
 import {
   assertAlphabetique,
@@ -65,7 +71,7 @@ export class SocietesService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(): Promise<ApiResponse<ListResponse<Societe>>> {
+  async lister(): Promise<ApiResponse<ListResponseAvecOperations<Societe>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.lire');
 
@@ -74,14 +80,20 @@ export class SocietesService {
       orderBy: { raisonSociale: 'asc' },
     });
 
-    return ok({ items: rows.map(toSociete), total: rows.length });
+    return ok({
+      items: rows.map((row) =>
+        enrichirSociete(toSociete(row), operationsSociete(context, row.id))
+      ),
+      total: rows.length,
+      operations: operationsListeSocietes(context),
+    });
   }
 
-  async lire(id: Uuid): Promise<ApiResponse<Societe>> {
+  async lire(id: Uuid): Promise<ApiResponse<RessourceAvecOperations<Societe>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.lire', { companyId: id });
     const row = await this.trouverOu404(id);
-    return ok(toSociete(row));
+    return ok(enrichirSociete(toSociete(row), operationsSociete(context, id)));
   }
 
   async creer(dto: CreerSocieteDto): Promise<ApiResponse<Societe>> {

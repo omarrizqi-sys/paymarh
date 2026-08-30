@@ -42,6 +42,8 @@ Un établissement principal est créé automatiquement avec la société. Vous p
 
 ## Pas-à-pas
 
+Les écrans correspondants sont dans le back-office PaymaRH (`/societes`, `/societes/nouveau`, `/societes/:id`). Chaque rubrique de la fiche appelle l’API REST décrite dans la documentation technique du module 1.
+
 ### 1. Renseigner l'état du dossier
 
 Trois états sont possibles.
@@ -61,6 +63,8 @@ Si vous démarrez sans reprise d'historique, indiquez le même mois dans les deu
 
 ### 2. Identifier la société
 
+**Écran :** fiche société, rubrique *Identification*, ou formulaire de création.
+
 Le **code dossier** est votre référence interne. Il est obligatoire et unique. Dans un cabinet, il sert à retrouver rapidement chaque société cliente.
 
 La **raison sociale** et la **forme juridique** sont obligatoires.
@@ -70,6 +74,8 @@ Les identifiants légaux — identifiant fiscal, registre de commerce et son tri
 Le **régime de base** est le régime général, non agricole. Attention : une fois qu'un salarié existe, ce champ ne peut plus être modifié. Vérifiez-le avant de saisir votre premier salarié.
 
 ### 3. Déclarer les établissements
+
+**Écran :** fiche société, rubrique *Établissements* (liste, création, désignation du principal).
 
 L'établissement principal est créé automatiquement avec la société. Son **adresse** et sa **ville** sont obligatoires dès cette création : PaymaRH n'accepte aucune valeur de remplacement du type « À compléter ». Le nom peut être pré-rempli avec la ville (ou la raison sociale à défaut) ; vous pouvez le modifier.
 
@@ -83,6 +89,8 @@ Si votre siège déménage, vous pouvez désigner un autre établissement comme 
 
 ### 4. Paramétrer le temps de travail
 
+**Écran :** fiche société, rubrique *Établissements* → paramétrage de l’établissement sélectionné (durée hebdomadaire, grille horaire, heures mensuelles).
+
 La **durée hebdomadaire** est fixée à 44 heures par défaut.
 
 Le **repos hebdomadaire** est un seul jour, dimanche par défaut. C'est le jour qui déclenche les majorations renforcées.
@@ -93,11 +101,15 @@ La **grille horaire** répartit les heures sur la semaine, en distinguant heures
 
 ### 5. Cocher les jours fériés travaillés
 
+**Écran :** même paramétrage établissement — cases à cocher alimentées par le référentiel (libellé et référence de date, jamais de date réelle).
+
 La liste présente les onze fêtes civiles à date fixe et les sept journées religieuses. Cochez uniquement ceux que votre établissement travaille.
 
 Les fêtes religieuses suivent le calendrier lunaire. Vous n'avez pas de date à saisir : PaymaRH s'en charge.
 
 ### 6. Saisir les informations bancaires
+
+**Écran :** fiche société, rubrique *Informations bancaires*.
 
 Pour chaque compte, indiquez la banque, le RIB, éventuellement l'IBAN et le BIC.
 
@@ -108,6 +120,8 @@ Si vous avez plusieurs établissements, indiquez lesquels utilisent ce compte.
 Un compte fermé se met en **clôturé** plutôt que supprimé : il reste consultable pour les bulletins déjà produits.
 
 ### 7. Paramétrer les matricules
+
+**Écran :** fiche société, rubrique *Paramétrage technique*.
 
 Le **préfixe** s'ajoute devant les matricules générés automatiquement. La **longueur** détermine le remplissage par zéros : avec une longueur de 5, le premier matricule sera 00001.
 

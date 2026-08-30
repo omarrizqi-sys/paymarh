@@ -105,7 +105,7 @@ describe.skipIf(!prisma)('detachement comptes bancaires — suppression etabliss
     });
     expect(impact.status).toBe(200);
     const inventaire = extraireDonnees<{
-      comptesBancairesRattaches: Array<{ id: string; libelle: string | null }>;
+      comptesBancairesRattaches: { id: string; libelle: string | null }[];
       jetonConfirmation: string;
     }>(await lireJson(impact));
 

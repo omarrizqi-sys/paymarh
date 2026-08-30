@@ -27,7 +27,7 @@ describe('conflit-unicite', () => {
   });
 
   it('mappe explicitement chaque contrainte metier vers le bon champ', () => {
-    const cas: Array<[string, string]> = [
+    const cas: [string, string][] = [
       ['Company_accountId_codeDossier_key', 'codeDossier'],
       ['Company_accountId_identifiantFiscal_key', 'identifiantFiscal'],
       ['Etablissement_accountId_ice_key', 'ice'],

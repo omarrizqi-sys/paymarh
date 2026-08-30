@@ -8,9 +8,6 @@ import { creerAppHttp } from './support/app-http.js';
 import {
   appelerApi,
   creerSocieteHttp,
-  extraireCodeErreur,
-  extraireDonnees,
-  lireJson,
   nettoyerJournauxAudit,
 } from './support/http-client.js';
 

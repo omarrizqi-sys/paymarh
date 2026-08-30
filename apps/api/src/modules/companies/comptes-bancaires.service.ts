@@ -8,11 +8,12 @@ import type {
   ApiResponse,
   CompteBancaire,
   ImpactSuppressionCompteBancaire,
-  ListResponse,
+  ListResponseAvecOperations,
   ResultatSuppression,
   Uuid,
 } from '@paymarh/shared-types';
 import { AuditService } from '../../common/audit/audit.service.js';
+import { operationsCompteBancaire } from '../../common/permissions/operations-ressource.js';
 import { assertPeutFaire } from '../../common/permissions/peut-faire.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
@@ -24,6 +25,7 @@ import type {
 } from './dto/etablissement-compte.dto.js';
 import { compteBancaireUtiliseParBulletin } from './gardes-metier.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
+import { enrichirCompteBancaire } from './enrichir-operations.js';
 import { toCompteBancaire } from './mappers.js';
 import {
   assertChiffres,
@@ -39,11 +41,14 @@ export class ComptesBancairesService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(societeId: Uuid): Promise<ApiResponse<ListResponse<CompteBancaire>>> {
+  async lister(
+    societeId: Uuid
+  ): Promise<ApiResponse<ListResponseAvecOperations<CompteBancaire>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'compte-bancaire.lire', { companyId: societeId });
     await this.assurerSociete(societeId);
 
+    const ops = operationsCompteBancaire(context, societeId);
     const rows = await this.prisma.compteBancaire.findMany({
       where: { companyId: societeId },
       include: { etablissements: true },
@@ -55,7 +60,16 @@ export class ComptesBancairesService {
       warnings.push(avertissementAucunCompteSalaires());
     }
 
-    return ok({ items: rows.map(toCompteBancaire), total: rows.length }, warnings);
+    return ok(
+      {
+        items: rows.map((row) =>
+          enrichirCompteBancaire(toCompteBancaire(row), operationsCompteBancaire(context, societeId))
+        ),
+        total: rows.length,
+        operations: ops,
+      },
+      warnings
+    );
   }
 
   async creer(

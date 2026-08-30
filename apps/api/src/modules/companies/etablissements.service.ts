@@ -9,12 +9,14 @@ import type {
   ApiResponse,
   Etablissement,
   ImpactSuppressionEtablissement,
-  ListResponse,
+  ListResponseAvecOperations,
   ResultatSuppression,
+  RessourceAvecOperations,
   Uuid,
 } from '@paymarh/shared-types';
 import { AuditService } from '../../common/audit/audit.service.js';
 import { relancerConflitUnicite } from '../../common/errors/conflit-unicite.js';
+import { operationsEtablissement } from '../../common/permissions/operations-ressource.js';
 import { assertPeutFaire } from '../../common/permissions/peut-faire.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
@@ -28,6 +30,7 @@ import type {
 import { etablissementADesSalaries } from './gardes-metier.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
+import { enrichirEtablissement } from './enrichir-operations.js';
 import { toEtablissement } from './mappers.js';
 import {
   assertChiffres,
@@ -55,23 +58,34 @@ export class EtablissementsService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(societeId: Uuid): Promise<ApiResponse<ListResponse<Etablissement>>> {
+  async lister(
+    societeId: Uuid
+  ): Promise<ApiResponse<ListResponseAvecOperations<Etablissement>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'etablissement.lire', { companyId: societeId });
     await this.assurerSocieteDuCompte(societeId);
 
+    const ops = operationsEtablissement(context, societeId);
     const rows = await this.prisma.etablissement.findMany({
       where: { companyId: societeId, accountId: accountScope(context).accountId },
       orderBy: [{ estPrincipal: 'desc' }, { nom: 'asc' }],
     });
-    return ok({ items: rows.map(toEtablissement), total: rows.length });
+    return ok({
+      items: rows.map((row) =>
+        enrichirEtablissement(toEtablissement(row), operationsEtablissement(context, societeId))
+      ),
+      total: rows.length,
+      operations: ops,
+    });
   }
 
-  async lire(id: Uuid): Promise<ApiResponse<Etablissement>> {
+  async lire(id: Uuid): Promise<ApiResponse<RessourceAvecOperations<Etablissement>>> {
     const context = this.tenantContext.getOrThrow();
     const row = await this.trouverOu404(id);
     assertPeutFaire(context, 'etablissement.lire', { companyId: row.companyId });
-    return ok(toEtablissement(row));
+    return ok(
+      enrichirEtablissement(toEtablissement(row), operationsEtablissement(context, row.companyId))
+    );
   }
 
   async creer(
