@@ -37,6 +37,7 @@ import { controlerCoherenceGrilleHoraireDefaut } from './coherence-grille-horair
 import { toEtablissement } from './mappers.js';
 import {
   assertChiffres,
+  assertChampObligatoire,
   assertObligatoire,
   assertPresent,
   avertissementsIdentifiants,
@@ -274,18 +275,50 @@ export class EtablissementsService {
     });
     const moisEffet = societe.moisEnCours;
 
+    const paramExistant = await this.prisma.etablissementParametrageHistorique.findUnique({
+      where: {
+        etablissementId_moisEffet: { etablissementId: id, moisEffet },
+      },
+    });
+
     try {
-      assertPresent(dto.dureeHebdomadaire, 'dureeHebdomadaire');
-      assertPresent(dto.jourReposHebdomadaire, 'jourReposHebdomadaire');
-      if (dto.horaireDefautLignes) {
+      if (dto.dureeHebdomadaire !== undefined) {
+        assertChampObligatoire(dto.dureeHebdomadaire, 'dureeHebdomadaire');
+      } else if (!paramExistant) {
+        assertChampObligatoire(undefined, 'dureeHebdomadaire');
+      }
+
+      if (dto.jourReposHebdomadaire !== undefined) {
+        assertChampObligatoire(dto.jourReposHebdomadaire, 'jourReposHebdomadaire');
+      } else if (!paramExistant) {
+        assertChampObligatoire(undefined, 'jourReposHebdomadaire');
+      }
+
+      const dureeEffective =
+        dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString() ?? null;
+      const jourReposEffectif =
+        dto.jourReposHebdomadaire ?? paramExistant?.jourReposHebdomadaire ?? null;
+
+      if (dto.horaireDefautLignes?.length) {
+        if (!dureeEffective) {
+          throw new ValidationBloquanteError(
+            'CHAMP_OBLIGATOIRE',
+            'Ce champ est obligatoire.',
+            'dureeHebdomadaire'
+          );
+        }
         controlerCoherenceGrilleHoraireDefaut(dto.horaireDefautLignes, {
-          dureeHebdomadaire: dto.dureeHebdomadaire,
+          dureeHebdomadaire: dureeEffective,
           totalControleDeclare: dto.totalControle,
         });
       }
     } catch (erreur) {
       relancer(erreur);
     }
+
+    const dureeEnregistree =
+      dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString();
+    const jourReposEnregistre = dto.jourReposHebdomadaire ?? paramExistant?.jourReposHebdomadaire;
 
     const ligne = await this.prisma.$transaction(async (tx) => {
       const param = await tx.etablissementParametrageHistorique.upsert({
@@ -295,8 +328,8 @@ export class EtablissementsService {
         create: {
           etablissementId: id,
           moisEffet,
-          dureeHebdomadaire: new Decimal(dto.dureeHebdomadaire),
-          jourReposHebdomadaire: dto.jourReposHebdomadaire,
+          dureeHebdomadaire: new Decimal(dureeEnregistree!),
+          jourReposHebdomadaire: jourReposEnregistre!,
           teletravailAutorise: dto.teletravailAutorise ?? null,
           indemniteTeletravailVersee: dto.indemniteTeletravailVersee ?? null,
           montantIndemniteTeletravail: dto.montantIndemniteTeletravail
@@ -304,8 +337,12 @@ export class EtablissementsService {
             : null,
         },
         update: {
-          dureeHebdomadaire: new Decimal(dto.dureeHebdomadaire),
-          jourReposHebdomadaire: dto.jourReposHebdomadaire,
+          ...(dto.dureeHebdomadaire !== undefined
+            ? { dureeHebdomadaire: new Decimal(dto.dureeHebdomadaire) }
+            : {}),
+          ...(dto.jourReposHebdomadaire !== undefined
+            ? { jourReposHebdomadaire: dto.jourReposHebdomadaire }
+            : {}),
           teletravailAutorise: dto.teletravailAutorise,
           indemniteTeletravailVersee: dto.indemniteTeletravailVersee,
           montantIndemniteTeletravail:

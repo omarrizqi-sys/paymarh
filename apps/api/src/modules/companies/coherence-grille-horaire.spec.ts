@@ -66,4 +66,17 @@ describe('coherence grille horaire', () => {
       ValidationBloquanteError
     );
   });
+
+  it('verifie la coherence avec une duree de reference externe (ex. valeur deja enregistree)', () => {
+    const lignes = [
+      { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'MARDI', typeHeureId: 'a', nombreHeures: '8' },
+    ];
+    expect(() =>
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '44' })
+    ).toThrow(ValidationBloquanteError);
+    expect(
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '16' }).toString()
+    ).toBe('16');
+  });
 });

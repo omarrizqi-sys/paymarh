@@ -46,6 +46,7 @@ import {
   assertMoisAAAA_MM,
   assertObligatoire,
   assertPresent,
+  assertChampObligatoire,
   avertissementRaisonSocialeDoublon,
   avertissementRetourMontage,
   avertissementsIdentifiants,
@@ -122,7 +123,7 @@ export class SocietesService {
       assertChiffres(dto.registreCommerce, 'registreCommerce');
       assertChiffres(dto.etablissementPrincipal.ice, 'ice');
       assertChiffres(dto.etablissementPrincipal.codePostal, 'codePostal');
-      assertPresent(dto.matriculeLongueur, 'matriculeLongueur');
+      assertChampObligatoire(dto.matriculeLongueur, 'matriculeLongueur');
       assertPresent(dto.calculAutoAbsencesEntreesSorties, 'calculAutoAbsencesEntreesSorties');
 
       controlerCoherenceDossier({
@@ -252,7 +253,9 @@ export class SocietesService {
       assertAlphabetique(dto.tribunalRegistreCommerce ?? undefined, 'tribunalRegistreCommerce');
       assertChiffres(dto.identifiantFiscal ?? undefined, 'identifiantFiscal');
       assertChiffres(dto.registreCommerce ?? undefined, 'registreCommerce');
-      if (dto.matriculeLongueur !== undefined) assertPresent(dto.matriculeLongueur, 'matriculeLongueur');
+      if (dto.matriculeLongueur !== undefined) {
+        assertChampObligatoire(dto.matriculeLongueur, 'matriculeLongueur');
+      }
       if (dto.calculAutoAbsencesEntreesSorties !== undefined) {
         assertPresent(dto.calculAutoAbsencesEntreesSorties, 'calculAutoAbsencesEntreesSorties');
       }
@@ -434,7 +437,7 @@ export class SocietesService {
         exonerationDateDebut: dto.exonerationDateDebut ?? null,
         exonerationDateFin: dto.exonerationDateFin ?? null,
       });
-      assertPresent(dto.moisClotureConges, 'moisClotureConges');
+      assertChampObligatoire(dto.moisClotureConges, 'moisClotureConges');
     } catch (erreur) {
       relancerValidation(erreur);
     }

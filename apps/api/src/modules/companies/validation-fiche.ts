@@ -56,6 +56,16 @@ export function assertPresent<T>(valeur: T | null | undefined, champ: string): a
   }
 }
 
+/** Refuse null, undefined, chaine vide et zero — pour les champs obligatoires a valeur significative. */
+export function assertChampObligatoire(valeur: unknown, champ: string): void {
+  if (valeur === null || valeur === undefined || valeur === '') {
+    throw new ValidationBloquanteError('CHAMP_OBLIGATOIRE', 'Ce champ est obligatoire.', champ);
+  }
+  if (valeur === 0) {
+    throw new ValidationBloquanteError('CHAMP_OBLIGATOIRE', 'Ce champ est obligatoire.', champ);
+  }
+}
+
 export function assertMoisAAAA_MM(valeur: string, champ: string): void {
   if (!estMoisAAAA_MM(valeur)) {
     throw new ValidationBloquanteError(

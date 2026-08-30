@@ -121,13 +121,14 @@ export class HoraireMensuelLigneDto {
 }
 
 export class ParametrageEtablissementDto {
-  @IsDefined()
+  @IsOptional()
   @IsString()
-  dureeHebdomadaire!: string;
+  @IsNotEmpty()
+  dureeHebdomadaire?: string;
 
-  @IsDefined()
+  @IsOptional()
   @IsIn(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'])
-  jourReposHebdomadaire!: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
+  jourReposHebdomadaire?: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
 
   @IsOptional()
   @IsBoolean()
