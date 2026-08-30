@@ -67,6 +67,21 @@ describe('coherence grille horaire', () => {
     );
   });
 
+  it('accepte une ligne a zero heure (jour non travaille)', () => {
+    const lignes = [
+      { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'MARDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'MERCREDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'JEUDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'VENDREDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'SAMEDI', typeHeureId: 'a', nombreHeures: '4' },
+      { jourSemaine: 'DIMANCHE', typeHeureId: 'a', nombreHeures: '0' },
+    ];
+    expect(
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '44' }).toString()
+    ).toBe('44');
+  });
+
   it('verifie la coherence avec une duree de reference externe (ex. valeur deja enregistree)', () => {
     const lignes = [
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },

@@ -56,7 +56,8 @@ export function assertPresent<T>(valeur: T | null | undefined, champ: string): a
   }
 }
 
-/** Refuse null, undefined, chaine vide et zero — pour les champs obligatoires a valeur significative. */
+/** Refuse null, undefined, chaine vide et zero — pour les champs obligatoires a valeur significative.
+ *  Ne s applique pas aux heures de grille horaire ni aux montants (0 h / 0 MAD y sont valides). */
 export function assertChampObligatoire(valeur: unknown, champ: string): void {
   if (valeur === null || valeur === undefined || valeur === '') {
     throw new ValidationBloquanteError('CHAMP_OBLIGATOIRE', 'Ce champ est obligatoire.', champ);

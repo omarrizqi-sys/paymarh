@@ -206,4 +206,29 @@ describe('champs obligatoires — absent vs vide sur les ecritures HTTP', () => 
     const corps = (await reponse.json()) as Record<string, unknown>;
     expect(extraireCodeErreur(corps)).toBe('GRILLE_TOTAL_INCOHERENT');
   });
+
+  it('PUT parametrage etablissement : grille avec un jour a 0 h acceptee', async () => {
+    const reponse = await appelerApi(app, {
+      method: 'PUT',
+      chemin: `/etablissements/${etablissementId}/parametrage`,
+      utilisateurId: adminId,
+      body: {
+        dureeHebdomadaire: '44',
+        horaireDefautLignes: [
+          { jourSemaine: 'LUNDI', typeHeureId, nombreHeures: '8' },
+          { jourSemaine: 'MARDI', typeHeureId, nombreHeures: '8' },
+          { jourSemaine: 'MERCREDI', typeHeureId, nombreHeures: '8' },
+          { jourSemaine: 'JEUDI', typeHeureId, nombreHeures: '8' },
+          { jourSemaine: 'VENDREDI', typeHeureId, nombreHeures: '8' },
+          { jourSemaine: 'SAMEDI', typeHeureId, nombreHeures: '4' },
+          { jourSemaine: 'DIMANCHE', typeHeureId, nombreHeures: '0' },
+        ],
+      },
+    });
+
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as { data?: { horaireDefautLignes?: { nombreHeures: string; jourSemaine: string }[] } };
+    const dimanche = corps.data?.horaireDefautLignes?.find((l) => l.jourSemaine === 'DIMANCHE');
+    expect(dimanche?.nombreHeures).toBe('0');
+  });
 });
