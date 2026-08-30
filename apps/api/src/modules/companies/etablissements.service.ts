@@ -31,6 +31,7 @@ import { etablissementADesSalaries } from './gardes-metier.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
 import { enrichirEtablissement } from './enrichir-operations.js';
+import { controlerCoherenceGrilleHoraireDefaut } from './coherence-grille-horaire.js';
 import { toEtablissement } from './mappers.js';
 import {
   assertChiffres,
@@ -269,6 +270,10 @@ export class EtablissementsService {
       where: { id: etab.companyId },
     });
     const moisEffet = societe.moisEnCours;
+
+    if (dto.horaireDefautLignes) {
+      controlerCoherenceGrilleHoraireDefaut(dto.horaireDefautLignes, dto.totalControle);
+    }
 
     const ligne = await this.prisma.$transaction(async (tx) => {
       const param = await tx.etablissementParametrageHistorique.upsert({

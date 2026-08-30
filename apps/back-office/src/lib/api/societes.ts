@@ -5,11 +5,12 @@ import type {
   ResultatSuppression,
   RessourceAvecOperations,
   Societe,
+  SocieteListe,
 } from '@paymarh/shared-types';
 import { appelerApiGet, appelerApiMutation } from './client';
 
 export async function listerSocietes() {
-  return appelerApiGet<ListResponseAvecOperations<Societe>>('/societes');
+  return appelerApiGet<ListResponseAvecOperations<SocieteListe>>('/societes');
 }
 
 export async function lireSociete(id: string) {

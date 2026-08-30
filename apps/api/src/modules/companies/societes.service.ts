@@ -12,6 +12,7 @@ import type {
   ResultatSuppression,
   RessourceAvecOperations,
   Societe,
+  SocieteListe,
   Uuid,
 } from '@paymarh/shared-types';
 import { AuditService } from '../../common/audit/audit.service.js';
@@ -71,19 +72,23 @@ export class SocietesService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(): Promise<ApiResponse<ListResponseAvecOperations<Societe>>> {
+  async lister(): Promise<ApiResponse<ListResponseAvecOperations<SocieteListe>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.lire');
 
     const rows = await this.prisma.company.findMany({
       where: accountScope(context),
       orderBy: { raisonSociale: 'asc' },
+      include: {
+        _count: { select: { etablissements: true } },
+      },
     });
 
     return ok({
-      items: rows.map((row) =>
-        enrichirSociete(toSociete(row), operationsSociete(context, row.id))
-      ),
+      items: rows.map((row) => ({
+        ...enrichirSociete(toSociete(row), operationsSociete(context, row.id)),
+        nombreEtablissements: row._count.etablissements,
+      })),
       total: rows.length,
       operations: operationsListeSocietes(context),
     });

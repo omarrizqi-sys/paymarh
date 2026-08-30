@@ -1,20 +1,10 @@
-import { resolve } from 'node:path';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { calculerJetonConfirmation } from '../src/modules/companies/jeton-confirmation.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-1-1-b-${Date.now()}`;
 
-describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => {
+describe('API fiche societe — scenarios d integration', () => {
   let formeId: string;
   let compteId: string;
   let adminId: string;
@@ -22,7 +12,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   let autreCompteId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
     const forme = await prisma.formeJuridique.findFirstOrThrow();
     formeId = forme.id;
 
@@ -62,13 +51,10 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await prisma.account.deleteMany({ where: { name: { startsWith: PREFIXE } } });
-    await prisma.$disconnect();
   });
 
   async function creerSocieteComplete(code: string, ifiscal?: string) {
-    if (!prisma) throw new Error('prisma');
     return prisma.$transaction(async (tx) => {
       const societe = await tx.company.create({
         data: {
@@ -98,7 +84,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   }
 
   it('cree exactement un etablissement principal avec la societe', async () => {
-    if (!prisma) return;
     const societe = await creerSocieteComplete(`${PREFIXE}-princ`);
     const principaux = await prisma.etablissement.count({
       where: { companyId: societe.id, estPrincipal: true },
@@ -109,7 +94,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   });
 
   it('refuse un doublon d identifiant fiscal avec code VALEUR_INDISPONIBLE neutre', async () => {
-    if (!prisma) return;
     const ifiscal = `${PREFIXE}IF99`;
     await creerSocieteComplete(`${PREFIXE}-if1`, ifiscal);
     try {
@@ -129,7 +113,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   });
 
   it('refuse la suppression si le jeton d impact est obsolete', async () => {
-    if (!prisma) return;
     const societe = await creerSocieteComplete(`${PREFIXE}-jeton`);
 
     const inventaireInitial = {
@@ -161,7 +144,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   });
 
   it('ecrit le parametrage avec moisEnCours et lit l ancienne valeur sur un mois anterieur', async () => {
-    if (!prisma) return;
     const societe = await prisma.company.create({
       data: {
         accountId: compteId,
@@ -201,7 +183,6 @@ describe.skipIf(!prisma)('API fiche societe — scenarios d integration', () => 
   });
 
   it('designe un nouveau principal en laissant exactement un principal', async () => {
-    if (!prisma) return;
     const societe = await creerSocieteComplete(`${PREFIXE}-desig`);
     const secondaire = await prisma.etablissement.create({
       data: {

@@ -563,6 +563,8 @@ async function seedUtilisateurs(compteId: string): Promise<void> {
   console.log(`Administrateur de compte : ${adminCompte.email} (${adminCompte.id})`);
   console.log("Pour interroger l'API en developpement, utilisez l'en-tete :");
   console.log(`  x-paymarh-user-id: ${adminCompte.id}`);
+  console.log('Back-office : definissez NEXT_PUBLIC_PAYMARH_USER_ID avec la meme valeur.');
+  console.log('(Béquilles de developpement — pas une authentification. Bloquent toute mise en production.)');
 }
 
 async function main(): Promise<void> {

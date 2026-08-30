@@ -1,21 +1,11 @@
-import { resolve } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-iso-${Date.now()}`;
 
-describe.skipIf(!prisma)('isolation multi-tenant — appels HTTP reels', () => {
+describe('isolation multi-tenant — appels HTTP reels', () => {
   let app: INestApplication;
   let formeId: string;
   let compteAId: string;
@@ -24,8 +14,6 @@ describe.skipIf(!prisma)('isolation multi-tenant — appels HTTP reels', () => {
   let societeBId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     app = await creerAppHttp();
     await app.listen(0);
 
@@ -77,15 +65,11 @@ describe.skipIf(!prisma)('isolation multi-tenant — appels HTTP reels', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await app?.close();
     await prisma.account.deleteMany({ where: { name: { startsWith: PREFIXE } } });
-    await prisma.$disconnect();
   });
 
   it('renvoie 404 (pas 403) quand le compte A lit une societe du compte B', async () => {
-    if (!prisma) return;
-
     const reponse = await fetch(urlLocale(app, `/societes/${societeBId}`), {
       headers: { 'x-paymarh-user-id': utilisateurAId },
     });

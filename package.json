@@ -20,6 +20,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "vitest run",
+    "test:unit": "vitest run --project api-unit --project back-office",
     "test:watch": "vitest",
     "typecheck": "pnpm --recursive typecheck",
     "check:circular": "madge --circular apps/api/src apps/back-office/src packages/shared-types/src",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@paymarh/config": "workspace:*",
+    "@vitejs/plugin-react": "^6.1.1",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.11.0",

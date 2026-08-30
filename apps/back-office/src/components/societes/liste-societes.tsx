@@ -12,7 +12,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import type { FormeJuridique, Permission, RessourceAvecOperations, Societe } from '@paymarh/shared-types';
+import type { FormeJuridique, Permission, RessourceAvecOperations, SocieteListe } from '@paymarh/shared-types';
 import { libelleEtatDossier, formaterMoisAAAA_MM } from '@/lib/affichage/libelles';
 import { possedePermission } from '@/lib/permissions';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-export interface LigneSocieteListe extends RessourceAvecOperations<Societe> {
+export interface LigneSocieteListe extends RessourceAvecOperations<SocieteListe> {
   readonly libelleFormeJuridique: string;
-  readonly nombreEtablissements: number;
 }
 
 interface Props {

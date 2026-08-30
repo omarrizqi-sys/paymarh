@@ -103,7 +103,13 @@ curl http://localhost:3001/societes \
   -H "x-paymarh-user-id: <identifiant affiché par pnpm db:seed>"
 ```
 
-> **Ce n'est pas de l'authentification.** Le rôle et le compte ne sont jamais lus depuis la requête : seul l'identifiant l'est, et le reste est relu **en base**. Ce relais sera supprimé par le module d'authentification. Aucune mise en production n'est possible tant qu'il existe.
+> **Ce n'est pas de l'authentification.** Le rôle et le compte ne sont jamais lus depuis la requête : seul l'identifiant l'est, et le reste est relu **en base**. Ce relais sera supprimé par le module d'authentification. **Aucune mise en production n'est possible tant qu'il existe.**
+
+### Back-office : la même béquille, côté navigateur
+
+Le back-office transmet le même identifiant via la variable `NEXT_PUBLIC_PAYMARH_USER_ID` (`.env`), qui alimente l'en-tête `x-paymarh-user-id` dans `apps/back-office/src/lib/api/client.ts`.
+
+> **Béquille de développement — pas une authentification.** À remplacer par Auth.js. **Bloque toute mise en production tant qu'elle existe**, exactement comme l'en-tête côté API.
 
 Un second en-tête, `x-paymarh-company-id`, désigne la société active pour le filtrage de second niveau. Il n'est utilisé par aucune route au module 0.
 

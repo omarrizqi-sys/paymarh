@@ -1,3 +1,5 @@
+import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 // ---------------------------------------------------------------------------
@@ -16,18 +18,35 @@ export default defineConfig({
     projects: [
       {
         test: {
-          name: 'api',
+          name: 'api-unit',
           root: './apps/api',
           environment: 'node',
-          include: ['src/**/*.spec.ts', 'test/**/*.spec.ts'],
+          include: ['src/**/*.spec.ts'],
         },
       },
       {
+        test: {
+          name: 'api-integration',
+          root: './apps/api',
+          environment: 'node',
+          include: ['test/**/*.spec.ts'],
+          globalSetup: ['./test/global-setup.ts'],
+          globalTeardown: ['./test/global-teardown.ts'],
+        },
+      },
+      {
+        plugins: [react()],
+        resolve: {
+          alias: {
+            '@': resolve(import.meta.dirname, 'apps/back-office/src'),
+          },
+        },
         test: {
           name: 'back-office',
           root: './apps/back-office',
           environment: 'node',
           include: ['src/**/*.spec.{ts,tsx}'],
+          environmentMatchGlobs: [['**/*.spec.tsx', 'jsdom']],
         },
       },
     ],

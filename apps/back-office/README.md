@@ -100,6 +100,12 @@ Le fichier consigne les décisions déjà prises (forme de la session, articulat
 
 **Variable d'environnement :** `NEXT_PUBLIC_API_URL` (par défaut `http://localhost:3001`). Le préfixe `NEXT_PUBLIC_` est imposé par Next.js pour rendre une variable visible côté navigateur — n'y mettez donc jamais de secret.
 
+### Béquille de développement : `NEXT_PUBLIC_PAYMARH_USER_ID`
+
+En l'absence d'Auth.js, le back-office identifie l'appelant en envoyant l'en-tête `x-paymarh-user-id`, alimenté par `NEXT_PUBLIC_PAYMARH_USER_ID` dans `.env` (même uuid que celui affiché par `pnpm db:seed`).
+
+> **Béquille de développement — pas une authentification.** À remplacer par Auth.js. **Bloque toute mise en production tant qu'elle existe**, exactement comme l'en-tête côté API. Voir aussi `apps/api/README.md` et `docs/DEVELOPMENT.md` §6.
+
 ---
 
 ## Commandes

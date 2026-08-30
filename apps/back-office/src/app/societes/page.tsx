@@ -1,5 +1,4 @@
 import { listerSocietes } from '@/lib/api/societes';
-import { listerEtablissements } from '@/lib/api/etablissements';
 import { chargerReferentielsFiche } from '@/lib/api/referentiels';
 import { identifiantUtilisateurDev } from '@/lib/api/client';
 import {
@@ -24,16 +23,10 @@ export default async function PageListeSocietes() {
   try {
     const [{ data: liste }, refs] = await Promise.all([listerSocietes(), chargerReferentielsFiche()]);
 
-    const lignes: LigneSocieteListe[] = await Promise.all(
-      liste.items.map(async (s) => {
-        const etabs = await listerEtablissements(s.id);
-        return {
-          ...s,
-          libelleFormeJuridique: libelleForme(refs.formesJuridiques, s.formeJuridiqueId),
-          nombreEtablissements: etabs.data.total,
-        };
-      })
-    );
+    const lignes: LigneSocieteListe[] = liste.items.map((s) => ({
+      ...s,
+      libelleFormeJuridique: libelleForme(refs.formesJuridiques, s.formeJuridiqueId),
+    }));
 
     return (
       <div className="space-y-6">

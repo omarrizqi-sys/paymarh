@@ -1,32 +1,19 @@
-import { resolve } from 'node:path';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
+import { prisma } from './support/prisma-test.js';
 
 // ---------------------------------------------------------------------------
 // Tests d integration : contraintes d unicite et etablissement principal.
 // Necessitent PostgreSQL (Docker) et DATABASE_URL.
 // ---------------------------------------------------------------------------
 
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
-
 const PREFIXE = `test-1-1-a-${Date.now()}`;
 
-describe.skipIf(!prisma)('contraintes fiche societe (base reelle)', () => {
+describe('contraintes fiche societe (base reelle)', () => {
   let formeJuridiqueId: string;
   let compteAId: string;
   let compteBId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     const forme = await prisma.formeJuridique.findFirst();
     if (!forme) {
       throw new Error(
@@ -46,14 +33,10 @@ describe.skipIf(!prisma)('contraintes fiche societe (base reelle)', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
-    // Cascade : societes, etablissements, etc.
     await prisma.account.deleteMany({ where: { name: { startsWith: PREFIXE } } });
-    await prisma.$disconnect();
   });
 
   async function creerSociete(accountId: string, codeDossier: string, identifiantFiscal?: string) {
-    if (!prisma) throw new Error('prisma absent');
     return prisma.company.create({
       data: {
         accountId,
@@ -100,7 +83,6 @@ describe.skipIf(!prisma)('contraintes fiche societe (base reelle)', () => {
   });
 
   it('refuse un ICE en doublon dans le meme compte (tous etablissements)', async () => {
-    if (!prisma) return;
     const ice = `${PREFIXE}ICE000000001`;
     const soc1 = await creerSociete(compteAId, `${PREFIXE}-ICE-1`);
     const soc2 = await creerSociete(compteAId, `${PREFIXE}-ICE-2`);
@@ -133,7 +115,6 @@ describe.skipIf(!prisma)('contraintes fiche societe (base reelle)', () => {
   });
 
   it('autorise le meme ICE sur deux comptes differents', async () => {
-    if (!prisma) return;
     const ice = `${PREFIXE}ICE-PARTAGE01`;
     const socA = await creerSociete(compteAId, `${PREFIXE}-ICE-A`);
     const socB = await creerSociete(compteBId, `${PREFIXE}-ICE-B`);
@@ -164,7 +145,6 @@ describe.skipIf(!prisma)('contraintes fiche societe (base reelle)', () => {
   });
 
   it('garantit au plus un etablissement principal via l index partiel', async () => {
-    if (!prisma) return;
     const soc = await creerSociete(compteAId, `${PREFIXE}-PRINC`);
 
     await prisma.etablissement.create({

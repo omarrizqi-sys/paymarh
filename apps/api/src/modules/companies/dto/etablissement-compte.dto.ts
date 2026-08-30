@@ -146,6 +146,11 @@ export class ParametrageEtablissementDto {
   @Type(() => HoraireDefautLigneDto)
   horaireDefautLignes?: HoraireDefautLigneDto[];
 
+  /** Total de controle affiche cote client — recalcule et verifie par le serveur (ADR 0010). */
+  @IsOptional()
+  @IsString()
+  totalControle?: string;
+
   @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })

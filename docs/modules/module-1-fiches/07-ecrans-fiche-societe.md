@@ -109,7 +109,14 @@ Dans `.env` :
 - `NEXT_PUBLIC_API_URL=http://localhost:3001`
 - `NEXT_PUBLIC_PAYMARH_USER_ID=<uuid admin compte>` (affiché par `pnpm db:seed`)
 
-En-tête relais : `x-paymarh-user-id`.
+### Béquilles de développement (pas d'authentification)
+
+| Côté | Mécanisme | Fichier |
+| --- | --- | --- |
+| API (curl, tests HTTP) | En-tête `x-paymarh-user-id` | `apps/api/src/common/tenancy/tenant-context.middleware.ts` |
+| Back-office (navigateur) | Variable `NEXT_PUBLIC_PAYMARH_USER_ID` → même en-tête | `apps/back-office/src/lib/api/client.ts` |
+
+> **Béquilles de développement — pas une authentification.** À remplacer par Auth.js. **Bloquent toute mise en production tant qu'elles existent.**
 
 ---
 

@@ -1,9 +1,5 @@
-import { resolve } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { creerAppHttp } from './support/app-http.js';
 import {
   appelerApi,
@@ -12,25 +8,17 @@ import {
   lireJson,
   nettoyerJournauxAudit,
 } from './support/http-client.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-detach-${Date.now()}`;
 
-describe.skipIf(!prisma)('detachement comptes bancaires — suppression etablissement', () => {
+describe('detachement comptes bancaires — suppression etablissement', () => {
   let app: INestApplication;
   let formeId: string;
   let compteId: string;
   let adminId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     app = await creerAppHttp();
     await app.listen(0);
 
@@ -53,16 +41,12 @@ describe.skipIf(!prisma)('detachement comptes bancaires — suppression etabliss
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await nettoyerJournauxAudit(prisma, [adminId]);
     await app?.close();
     await prisma.account.deleteMany({ where: { name: PREFIXE } });
-    await prisma.$disconnect();
   });
 
   it('detache les comptes bancaires, les enumere dans l impact, et ne les supprime pas', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-SOC`,
       raisonSociale: 'Detachement RIB',

@@ -25,10 +25,10 @@ Le front **ne rejoue jamais** une règle métier :
 
 - Si un écran a besoin d’une nouvelle règle, **l’API doit l’exposer** (champ, code, permission) plutôt que de la coder dans React.
 - Les montants et durées passent par **decimal.js** ; `parseFloat` et `Math.round` restent interdits (ESLint).
-- Les tests `conformite-front.spec.ts` scannent le code source pour détecter les régressions.
+- Les tests d'intégration HTTP exigent PostgreSQL ; une base absente **fait échouer** `pnpm test` avec un message explicite (voir ADR 0010).
 
 ## Références
 
 - [04-api-fiche-societe.md](../modules/module-1-fiches/04-api-fiche-societe.md)
 - [06-validation-et-avertissements.md](../modules/module-1-fiches/06-validation-et-avertissements.md)
-- [07-ecrans-fiche-societe.md](../modules/module-1-fiches/07-ecrans-fiche-societe.md)
+- [ADR 0010 — Serveur source de vérité](./0010-serveur-source-de-verite.md)

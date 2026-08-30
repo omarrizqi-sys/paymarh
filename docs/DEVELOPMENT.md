@@ -104,7 +104,8 @@ pnpm dev:back-office   # back-office seul
 | `pnpm format`         | Reformate tous les fichiers                 |
 | `pnpm format:check`   | Vérifie le formatage sans rien modifier     |
 | `pnpm typecheck`      | Vérifie les types sans produire de fichiers |
-| `pnpm test`           | Lance tous les tests, une seule fois        |
+| `pnpm test`           | Lance **tous** les tests (unitaires + intégration HTTP). **Échoue** si PostgreSQL n'est pas démarré |
+| `pnpm test:unit`      | Tests unitaires uniquement (API + back-office), sans base de données                                  |
 | `pnpm test:watch`     | Relance les tests à chaque modification     |
 | `pnpm check:circular` | Détecte les imports circulaires             |
 
@@ -148,7 +149,13 @@ curl http://localhost:3001/societes \
 
 Sans cet en-tête, l'API répond **401**. C'est le comportement voulu : on échoue fermé.
 
-> Cet en-tête est un **relais de développement**, pas une authentification. Il sera supprimé et remplacé par Auth.js dans le module dédié.
+> Cet en-tête est un **relais de développement**, pas une authentification. Il sera supprimé et remplacé par Auth.js dans le module dédié. **Aucune mise en production n'est possible tant qu'il existe.**
+
+### Back-office : `NEXT_PUBLIC_PAYMARH_USER_ID`
+
+Le back-office envoie le même identifiant via la variable d'environnement `NEXT_PUBLIC_PAYMARH_USER_ID` (dans `.env`), qui alimente l'en-tête `x-paymarh-user-id` côté navigateur.
+
+> **Béquille de développement — pas une authentification.** À remplacer par Auth.js. **Bloque toute mise en production tant qu'elle existe**, exactement comme l'en-tête côté API.
 
 ---
 
@@ -181,6 +188,7 @@ git commit -m "Ajoute la fiche salarié"
 | `Nest can't resolve dependencies`    | Un `import type` sur une classe injectée        | Retirer le `type` : NestJS a besoin de l'import à l'exécution                     |
 | Port 3000 ou 3001 déjà utilisé       | Une instance tourne encore                      | Fermer l'autre terminal, ou changer `API_PORT` dans `.env`                        |
 | Erreurs bizarres après un `git pull` | Dépendances désynchronisées                     | `pnpm install` puis `pnpm --filter @paymarh/api db:generate`                      |
+| `PostgreSQL n'est pas demarre` (tests) | Docker arrêté                                 | `pnpm db:up` puis relancer `pnpm test`                                            |
 
 ### Repartir de zéro
 

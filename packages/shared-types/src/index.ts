@@ -16,6 +16,7 @@ export type {
 export type { Role } from './role';
 export type { Account, AccountType } from './account';
 export type { Company, Societe } from './company';
+export type { SocieteListe } from './societe-liste';
 export type { Etablissement } from './etablissement';
 export type { CompteBancaire } from './compte-bancaire';
 export type {

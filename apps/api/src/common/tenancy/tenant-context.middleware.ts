@@ -16,6 +16,10 @@ import { TenantContextService } from './tenant-context.service.js';
  * Ils seront SUPPRIMES et remplaces par la session Auth.js dans le module
  * dedie a l authentification. Aucune mise en production n est possible tant
  * que ce relais existe.
+ *
+ * Cote back-office, la variable NEXT_PUBLIC_PAYMARH_USER_ID alimente le meme
+ * en-tete (apps/back-office/src/lib/api/client.ts) — meme béquille, memes
+ * contraintes.
  */
 export const HEADER_USER_ID = 'x-paymarh-user-id';
 export const HEADER_COMPANY_ID = 'x-paymarh-company-id';

@@ -1,9 +1,5 @@
-import { resolve } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { creerAppHttp } from './support/app-http.js';
 import {
   appelerApi,
@@ -13,17 +9,11 @@ import {
   lireJson,
   nettoyerJournauxAudit,
 } from './support/http-client.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-audit-${Date.now()}`;
 
-describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
+describe('AuditLog — traces HTTP reelles', () => {
   let app: INestApplication;
   let formeId: string;
   let compteId: string;
@@ -31,8 +21,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   let platformId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     app = await creerAppHttp();
     await app.listen(0);
 
@@ -68,17 +56,13 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await nettoyerJournauxAudit(prisma, [adminId, platformId]);
     await app?.close();
     await prisma.user.deleteMany({ where: { email: { startsWith: PREFIXE } } });
     await prisma.account.deleteMany({ where: { name: PREFIXE } });
-    await prisma.$disconnect();
   });
 
   it('journalise la creation d une societe', async () => {
-    if (!prisma) return;
-
     const code = `${PREFIXE}-CREER`;
     const reponse = await appelerApi(app, {
       method: 'POST',
@@ -111,8 +95,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   it('journalise la modification d une societe', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-MOD`,
       raisonSociale: 'Avant modification',
@@ -141,8 +123,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   it('journalise le changement d etat du dossier', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-ETAT`,
       raisonSociale: 'Changement etat',
@@ -170,8 +150,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   it('journalise la designation d un nouvel etablissement principal', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-PRINC`,
       raisonSociale: 'Designation principal',
@@ -212,8 +190,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   it('journalise la suppression d une societe', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-SUPPR`,
       raisonSociale: 'Societe supprimee',
@@ -249,8 +225,6 @@ describe.skipIf(!prisma)('AuditLog — traces HTTP reelles', () => {
   });
 
   it('autorise le PLATFORM_ADMIN sur forcer-regime-de-base et journalise qui, quand, ancienne et nouvelle valeur', async () => {
-    if (!prisma) return;
-
     const societeId = await creerSocieteHttp(app, adminId, {
       codeDossier: `${PREFIXE}-REGIME`,
       raisonSociale: 'Regime de base',

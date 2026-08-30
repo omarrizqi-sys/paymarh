@@ -1,21 +1,11 @@
-import { resolve } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-uniq-${Date.now()}`;
 
-describe.skipIf(!prisma)('conflits d unicite — reponses HTTP neutres', () => {
+describe('conflits d unicite — reponses HTTP neutres', () => {
   let app: INestApplication;
   let formeId: string;
   let compteId: string;
@@ -23,8 +13,6 @@ describe.skipIf(!prisma)('conflits d unicite — reponses HTTP neutres', () => {
   const codeDossier = `${PREFIXE}-CD`;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     app = await creerAppHttp();
     await app.listen(0);
 
@@ -60,15 +48,11 @@ describe.skipIf(!prisma)('conflits d unicite — reponses HTTP neutres', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await app?.close();
     await prisma.account.deleteMany({ where: { name: PREFIXE } });
-    await prisma.$disconnect();
   });
 
   it('ne revele ni table, ni contrainte, ni valeur en conflit sur un doublon HTTP', async () => {
-    if (!prisma) return;
-
     const reponse = await fetch(urlLocale(app, '/societes'), {
       method: 'POST',
       headers: {

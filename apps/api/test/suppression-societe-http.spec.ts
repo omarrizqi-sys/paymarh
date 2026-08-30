@@ -1,9 +1,5 @@
-import { resolve } from 'node:path';
 import type { INestApplication } from '@nestjs/common';
-import { PrismaPg } from '@prisma/adapter-pg';
-import { config as chargerEnv } from 'dotenv';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { PrismaClient } from '../src/generated/prisma/client.js';
 import { creerAppHttp } from './support/app-http.js';
 import {
   appelerApi,
@@ -12,17 +8,11 @@ import {
   lireJson,
   nettoyerJournauxAudit,
 } from './support/http-client.js';
-
-chargerEnv({ path: resolve(import.meta.dirname, '..', '..', '..', '.env'), quiet: true });
-
-const connectionString = process.env.DATABASE_URL;
-const prisma = connectionString
-  ? new PrismaClient({ adapter: new PrismaPg({ connectionString }) })
-  : null;
+import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-suppr-${Date.now()}`;
 
-describe.skipIf(!prisma)('suppression societe — confirmation HTTP', () => {
+describe('suppression societe — confirmation HTTP', () => {
   let app: INestApplication;
   let formeId: string;
   let compteId: string;
@@ -30,8 +20,6 @@ describe.skipIf(!prisma)('suppression societe — confirmation HTTP', () => {
   let societeId: string;
 
   beforeAll(async () => {
-    if (!prisma) return;
-
     app = await creerAppHttp();
     await app.listen(0);
 
@@ -76,16 +64,12 @@ describe.skipIf(!prisma)('suppression societe — confirmation HTTP', () => {
   });
 
   afterAll(async () => {
-    if (!prisma) return;
     await nettoyerJournauxAudit(prisma, [adminId]);
     await app?.close();
     await prisma.account.deleteMany({ where: { name: PREFIXE } });
-    await prisma.$disconnect();
   });
 
   it('refuse DELETE sans jeton de confirmation', async () => {
-    if (!prisma) return;
-
     const reponse = await appelerApi(app, {
       method: 'DELETE',
       chemin: `/societes/${societeId}`,
@@ -98,8 +82,6 @@ describe.skipIf(!prisma)('suppression societe — confirmation HTTP', () => {
   });
 
   it('refuse DELETE avec un jeton obsolete apres changement d inventaire', async () => {
-    if (!prisma) return;
-
     const impact = await appelerApi(app, {
       method: 'GET',
       chemin: `/societes/${societeId}/impact-suppression`,
@@ -131,8 +113,6 @@ describe.skipIf(!prisma)('suppression societe — confirmation HTTP', () => {
   });
 
   it('accepte DELETE avec un jeton valide', async () => {
-    if (!prisma) return;
-
     const impact = await appelerApi(app, {
       method: 'GET',
       chemin: `/societes/${societeId}/impact-suppression`,
