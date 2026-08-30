@@ -1,0 +1,295 @@
+# PaymaRH — Spécification de la fiche société (v7, figée)
+
+> Version Markdown de `PaymaRH_Fiche_societe_v7.xlsx`, destinée à être lue par Cursor.
+> **Ce document fait foi en cas de divergence avec toute autre source.**
+
+
+---
+
+## Onglet : Légende
+
+PaymaRH — Fiche société v7 — VERSION FIGÉE  
+Objet — Fiche société consolidée, intégrant les réponses de la v3.  
+Base — v6 + relecture de l'étape 3 (points E1 à E10)  
+Statut — PHASE 1 TERMINÉE — étapes 1, 2 et 3 closes. La fiche société est figée. Reste à fournir : les codes banques (non bloquant).  
+Ce qui change depuis la v6  
+Vocabulaire — « Archivé » n'existe plus. Trois situations : active, inactive, supprimée (E2).  
+Unicité — Blocage conservé, mais message neutre qui ne révèle jamais la société en cause (E1).  
+Matricule — La longueur ne s'applique qu'à la génération automatique ; la saisie manuelle reste libre (E7).  
+Établissement principal — Un autre établissement peut être désigné principal (E8).  
+Nouvel onglet — « Étape 3 - Relecture » : les dix incohérences relevées et leur résolution.  
+Code couleur  
+Jaune — Point non tranché — en attente de décision.  
+Vert — Ajout ou modification depuis la v3.  
+Colonnes  
+Niveau — SOCIÉTÉ = porté par la personne morale. ÉTABLISSEMENT = porté par le lieu d'exploitation.  
+Héritable — OUI = la fiche salarié peut cocher « utiliser le paramétrage de la société » ou « de l'établissement » selon le niveau du champ (E4).  
+Historisé — OUI = les valeurs successives sont conservées par date d'effet, déduite du mois de paie en cours du dossier (décision V1).  
+À noter — Héritage et historisation sont indépendants. L'héritage dit QUI utilise la valeur ; l'historisation dit si on conserve les valeurs passées.  
+
+---
+
+## Onglet : Fiche société
+
+| Niveau | Rubrique | Sous-rubrique | Condition d'affichage | Question / Champ | Type de réponse | Obligatoire | Héritable | Historisé | Note / Règle |
+|---|---|---|---|---|---|---|---|---|---|
+| **ÉTAT DU DOSSIER** ||||||||||
+| SOCIÉTÉ | État du dossier |  |  | État du dossier | Bouton radio : en montage / en production / inactif | oui | non | non | « Archivé » n'existe pas dans PaymaRH. Inactive = la société existe toujours, reste consultable et éditable. Supprimée = elle disparaît, uniquement tant qu'aucun bulletin n'existe (E2). |
+| SOCIÉTÉ | État du dossier |  |  | Mois de début de montage | MM/AAAA | oui | non | non | Mois à partir duquel l'historique est ressaisi. Doit être ≤ mois de début de production. |
+| SOCIÉTÉ | État du dossier |  |  | Mois de début de production | MM/AAAA | oui | non | non | Premier mois de bulletins réellement produits par PaymaRH. |
+| SOCIÉTÉ | État du dossier |  | Si état = inactif | Date d'inactivité | MM/AAAA | oui | non | non | Postérieure au mois de début de production. Empêche la production de bulletins postérieurs à cette date. La société reste consultable ET éditable. |
+| **SOCIÉTÉ — PERSONNE MORALE** ||||||||||
+| SOCIÉTÉ | Identification |  |  | Code dossier | alphanumérique, saisie manuelle libre | oui | non | non | Unique dans le compte. BLOQUANT si doublon, avec un message neutre du type « cette valeur n'est pas disponible » : ne jamais nommer ni décrire la société en cause (E1). |
+| SOCIÉTÉ | Identification |  |  | Raison sociale | alphanumérique | oui | non | non | Avertissement si doublon dans le compte (non bloquant). |
+| SOCIÉTÉ | Identification |  |  | Nom commercial | alphanumérique | non | non | non |  |
+| SOCIÉTÉ | Identification |  |  | Forme juridique | liste (voir onglet Réf - Formes juridiques) | oui | non | non |  |
+| SOCIÉTÉ | Identification |  |  | Activité exercée | alphanumérique | non | non | non | Champ libre. Pas de code d'activité officiel. |
+| SOCIÉTÉ | Identification |  |  | N° Identifiant fiscal | texte, chiffres uniquement | non | non | non | BLOQUANT si doublon dans le compte, message neutre (E1). Stocké en texte (zéros de tête préservés). |
+| SOCIÉTÉ | Identification |  |  | N° Registre de commerce | texte, chiffres uniquement | non | non | non | Stocké en texte. |
+| SOCIÉTÉ | Identification |  |  | Tribunal du registre de commerce | alphabétique | non | non | non |  |
+| SOCIÉTÉ | Identification |  |  | Date de création | JJ/MM/AAAA | non | non | non |  |
+| SOCIÉTÉ | Identification |  |  | Date de cessation d'activité | JJ/MM/AAAA | non | non | non | Cessation (arrêt d'activité), et non cession. |
+| SOCIÉTÉ | Identification |  |  | Site web | alphanumérique | non | non | non |  |
+| SOCIÉTÉ | Identification |  |  | Régime de base obligatoire | Bouton radio : régime général (non agricole) / régime agricole | oui | non | non | Défaut : régime général. Modification BLOQUÉE dès qu'un salarié existe (D3), donc non historisé. Correction possible par le PLATFORM_ADMIN uniquement, tracée dans l'AuditLog (E5). |
+| SOCIÉTÉ | Identification |  |  | Périodicité de paie | liste : mensuel | oui | non | non | Une seule valeur possible aujourd'hui. |
+| SOCIÉTÉ | Employeur signataire |  |  | Civilité | liste des civilités | non | non | non |  |
+| SOCIÉTÉ | Employeur signataire |  |  | Prénom | alphabétique | non | non | non |  |
+| SOCIÉTÉ | Employeur signataire |  |  | Nom | alphabétique | non | non | non |  |
+| SOCIÉTÉ | Employeur signataire |  |  | Qualité | alphabétique | non | non | non |  |
+| SOCIÉTÉ | Congés payés |  |  | Mois de clôture des congés payés | liste des mois | oui (pré-rempli décembre) | non | oui | Non héritable par le salarié (T1) mais historisé au niveau société (X2) : utilisé au calcul des congés, un recalcul antérieur doit retrouver l'ancienne valeur. |
+| SOCIÉTÉ | Exonération |  |  | Exonération | liste (TAHFIZ, à compléter) — une seule à la fois | non | non | oui | Pas de cumul possible. La société porte l'éligibilité ; la fiche salarié désignera les bénéficiaires. |
+| SOCIÉTÉ | Exonération |  | Si une exonération est choisie | Date de début | MM/AAAA | oui | non | oui |  |
+| SOCIÉTÉ | Exonération |  | Si une exonération est choisie | Date de fin | MM/AAAA | non | non | oui |  |
+| SOCIÉTÉ | Paramétrage technique | Matricules salariés |  | Préfixe pour la numérotation automatique | alphanumérique | non | non | non | Si le préfixe change alors que des salariés existent : les anciens matricules ne bougent jamais, le compteur repart de 1 sur le nouveau préfixe. |
+| SOCIÉTÉ | Paramétrage technique | Matricules salariés |  | Longueur du matricule | numérique | oui | non | non | Défaut : 5. S'applique UNIQUEMENT à la génération automatique. La saisie manuelle reste libre en longueur, pour permettre la reprise de matricules venus d'un ancien logiciel (E7). |
+| SOCIÉTÉ | Paramétrage technique | Matricules salariés |  | Génération automatique à la création du salarié | case à cocher | non | non | non | Défaut : cochée. Cochée = pré-rempli MAIS modifiable. Décochée = champ vide, saisie obligatoire. L'incrément retient le plus grand matricule commençant par le préfixe, y compris supprimés et sortis ; jamais réutilisé. |
+| SOCIÉTÉ | Paramétrage technique | Entrées et sorties |  | Calcul automatique des absences pour entrées et sorties | Bouton radio : activé / désactivé | oui | non | non | Défaut : activé. La MÉTHODE de prorata relève du module 4 « méthodes ». |
+| **INFORMATIONS BANCAIRES — tableau répétable, niveau société** ||||||||||
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | Libellé | alphanumérique | non | non | non | Sert de titre au bloc. À défaut, afficher le nom de la banque. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | Banque | liste des banques avec saisie libre autorisée | non | non | non | Pré-remplie à partir des 3 premiers chiffres du RIB (décision W5). Incohérence signalée en avertissement. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | RIB | texte, chiffres uniquement | non | non | non | Longueur attendue 24. Avertissement seulement, jamais bloquant. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | IBAN | alphanumérique | non | non | non | Longueur attendue 28, préfixe MA. Avertissement seulement. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | BIC | alphanumérique | non | non | non | Longueur attendue 8 ou 11. Avertissement seulement. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | Nom payeur | alphanumérique | non | non | non |  |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | Utilisé par | liste des établissements, cases à cocher | non | non | non | Masqué quand la société n'a qu'un seul établissement (A6). À la création d'un second, les RIB existants restent rattachés au seul établissement d'origine (E6). |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | Usage | cases à cocher : salaires / cotisations sociales / IR | non | non | non | Cumulables. Aucune obligation de couvrir tous les usages. |
+| SOCIÉTÉ | Informations bancaires | RIB « N » |  | État | Bouton radio : actif / clôturé | oui | non | non | Défaut : actif. Un RIB clôturé reste consultable pour les bulletins déjà produits. Suppression possible tant qu'aucun bulletin ne l'a utilisé ; au-delà, clôture seulement (E9). |
+| SOCIÉTÉ | Informations bancaires |  |  | Bouton : ajouter un nouveau RIB | action |  |  |  | Crée un bloc identique. |
+| **ÉTABLISSEMENT — tableau répétable (principal auto-créé + secondaires)** ||||||||||
+| ÉTABLISSEMENT | Identification |  |  | Nom de l'établissement | alphanumérique | oui | non | non | Pré-rempli avec la ville par défaut. Distingue les établissements dans les listes déroulantes. |
+| ÉTABLISSEMENT | Identification |  |  | Établissement principal | oui / non | auto | non | non | Auto-créé à la création de la société. Non supprimable tant qu'il est principal. Un autre établissement peut être désigné principal ; l'ancien devient alors secondaire ordinaire et redevient supprimable si aucun salarié ne lui est rattaché (E8). |
+| ÉTABLISSEMENT | Identification |  |  | Adresse | alphanumérique | oui | non | non |  |
+| ÉTABLISSEMENT | Identification |  |  | Complément d'adresse | alphanumérique | non | non | non |  |
+| ÉTABLISSEMENT | Identification |  |  | Code postal | 5 chiffres | non | non | non |  |
+| ÉTABLISSEMENT | Identification |  |  | Ville | alphabétique | oui | non | non |  |
+| ÉTABLISSEMENT | Identification |  |  | Pays lieu d'activité | liste pays | non | non | non | Défaut : Maroc. |
+| ÉTABLISSEMENT | Identification |  |  | N° ICE | texte, chiffres uniquement | non | non | non | Par établissement. BLOQUANT si doublon dans le compte, tous établissements confondus, message neutre (E1). Longueur attendue 15, avertissement seulement. |
+| ÉTABLISSEMENT | Identification |  |  | N° Taxe professionnelle | texte, chiffres uniquement | non | non | non | Par établissement. |
+| ÉTABLISSEMENT | Identification |  |  | Téléphone | format téléphone | non | non | non |  |
+| ÉTABLISSEMENT | Identification |  |  | Email | format email | non | non | non |  |
+| ÉTABLISSEMENT | Durée de travail |  |  | Durée hebdomadaire de travail en heures | numérique | non | oui | oui | Défaut : 44. |
+| ÉTABLISSEMENT | Durée de travail |  |  | Repos hebdomadaire | liste, UN SEUL jour parmi les 7 | oui | oui | oui | Défaut : dimanche. Un seul jour au sens légal, celui qui déclenche les majorations renforcées. Les autres jours non travaillés se traduisent par 0 h dans la grille de l'annexe 1 et n'ont pas ce statut. |
+| ÉTABLISSEMENT | Horaires par défaut |  |  | Grille des horaires par défaut | voir onglet Annexe 1 - Horaires | non | oui | oui | Saisie manuelle au module 1. Le sélecteur de grille horaire existante sera branché au module 3. |
+| ÉTABLISSEMENT | Jours fériés travaillés |  |  | Jours fériés travaillés | cases à cocher, deux colonnes (civils / religieux) | non | oui | oui | Héritable par le salarié — confirmé (décision T1). Un jour férié ajouté ultérieurement arrive décoché pour toutes les sociétés existantes. |
+| ÉTABLISSEMENT | Télétravail |  |  | Télétravail autorisé au sein de l'établissement | Bouton radio : oui / non | non (aucune sélection possible) | oui | oui |  |
+| ÉTABLISSEMENT | Télétravail |  | Si télétravail autorisé = oui | L'employeur verse une indemnité de télétravail | Bouton radio : oui / non | non | oui | oui |  |
+| ÉTABLISSEMENT | Télétravail |  | Si indemnité = oui | Montant de l'indemnité par mois | montant | non | oui | oui | Facultatif : l'établissement pose le principe, le montant réel se fixe salarié par salarié, l'héritage servant à propager une valeur commune quand elle existe (E10, A4). Le traitement social et fiscal relève du module 4. |
+| ÉTABLISSEMENT |  |  |  | Bouton : ajouter un établissement secondaire | action |  |  |  | Crée un bloc de niveau ÉTABLISSEMENT uniquement. Les champs de niveau SOCIÉTÉ ne sont PAS dupliqués. |
+
+---
+
+## Onglet : Annexe 1 - Horaires
+
+Annexe 1 — Horaires par défaut de l'établissement  
+Niveau : ÉTABLISSEMENT · Héritable par le salarié : OUI · Historisé : OUI  
+Les lignes de majoration sont alimentées par le référentiel « heures » (module 5) et non écrites en dur.  
+Les quatre valeurs ci-dessous sont le contenu par défaut, modifiable si une société applique un taux plus favorable.  
+Au module 1 : saisie manuelle uniquement. Le sélecteur de grille horaire existante sera branché au module 3.  
+Un jour non travaillé se saisit à 0 h. Il n'est PAS le repos hebdomadaire, qui est désigné séparément dans la fiche.  
+Grille horaire — Sélection dans la liste des grilles existantes — EN ATTENTE module 3  
+HEURES HEBDOMADAIRES  
+Lundi — Mardi — Mercredi — Jeudi — Vendredi — Samedi — Dimanche — Total (calcul auto)  
+Total heures travaillées  
+dont heures normales  
+dont heures majorées 25 %  
+dont heures majorées 50 %  
+dont heures majorées 100 %  
+Total de contrôle  
+Le total de contrôle doit correspondre à la ligne « Total heures travaillées ».  
+HEURES MENSUELLES  
+Nombre d'heures  
+Heures normales  
+Heures majorées 25 %  
+Heures majorées 50 %  
+Heures majorées 100 %  
+Total  
+Conversion hebdomadaire → mensuel  
+Coefficient : 52 / 12.  
+Le résultat est arrondi à l'unité supérieure, puis reste modifiable par l'utilisateur.  
+L'utilisateur peut également saisir directement les heures mensuelles sans passer par l'hebdomadaire.  
+Rappel : les heures mensuelles servent de diviseur au taux horaire. Un arrondi supérieur augmente le diviseur et abaisse donc légèrement le taux horaire.  
+
+---
+
+## Onglet : Réf - Jours fériés
+
+| Code | Libellé | Référence de date | Type | Note |
+|---|---|---|---|---|
+| JF_NOUVEL_AN | Nouvel An | 1er janvier | Civil |  |
+| JF_MANIFESTE_INDEP | Manifeste de l'Indépendance | 11 janvier | Civil |  |
+| JF_NOUVEL_AN_AMAZIGH | Nouvel An amazigh | 14 janvier | Civil |  |
+| JF_FETE_TRAVAIL | Fête du Travail | 1er mai | Civil |  |
+| JF_FETE_TRONE | Fête du Trône | 30 juillet | Civil |  |
+| JF_OUED_EDDAHAB | Allégeance de l'Oued Eddahab | 14 août | Civil |  |
+| JF_REVOLUTION_ROI_PEUPLE | Révolution du Roi et du Peuple | 20 août | Civil |  |
+| JF_FETE_JEUNESSE | Fête de la Jeunesse | 21 août | Civil |  |
+| JF_FETE_UNITE | Fête de l'Unité | 31 octobre | Civil | Aïd Al Wahda. Première application en 2026 — le module 4 devra porter une année d'entrée en vigueur. |
+| JF_MARCHE_VERTE | Anniversaire de la Marche Verte | 6 novembre | Civil |  |
+| JF_FETE_INDEPENDANCE | Fête de l'Indépendance | 18 novembre | Civil |  |
+| JF_AID_FITR_J1 | Aïd el-Fitr — 1er jour | 1er Chawal | Religieux |  |
+| JF_AID_FITR_J2 | Aïd el-Fitr — 2e jour | 2 Chawal | Religieux |  |
+| JF_AID_ADHA_J1 | Aïd al-Adha — 1er jour | 10 Dou Al-Hijja | Religieux |  |
+| JF_AID_ADHA_J2 | Aïd al-Adha — 2e jour | 11 Dou Al-Hijja | Religieux |  |
+| JF_NOUVEL_AN_HEGIRE | Nouvel An hégirien | 1er Moharram | Religieux |  |
+| JF_AID_MAWLID_J1 | Aïd Al Mawlid — 1er jour | 12 Rabia Al-Awal | Religieux |  |
+| JF_AID_MAWLID_J2 | Aïd Al Mawlid — 2e jour | 13 Rabia Al-Awal | Religieux |  |
+| **Périmètre module 1 : libellés uniquement. Aucune date réelle, aucune règle de résolution des dates lunaires (module 4).** |||||
+| **Le code est stable et ne change jamais, même si le libellé évolue.** |||||
+| **Total : 11 fêtes civiles à date fixe + 7 journées religieuses (4 fêtes, dont 3 sur 2 jours).** |||||
+
+---
+
+## Onglet : Réf - Banques
+
+| Nom | Ancien nom (recherche) | Code banque (3 chiffres du RIB) | Couleur | Note |
+|---|---|---|---|---|
+| Al Akhdar Bank |  |  | #7CB342 | Couleur proposée — à remplacer par la charte officielle. |
+| Al Barid Bank |  |  | #FFD100 |  |
+| Arab Bank Maroc |  |  | #003366 |  |
+| Arreda |  |  | #A0522D | Fenêtre participative. Code banque inconnu à ce jour (X6). Couleur proposée. |
+| Attijariwafa Bank |  |  | #f58220 |  |
+| Bank Al Amal |  |  | #0072BC |  |
+| Bank Al Yousr |  |  | #00843D |  |
+| Bank Assafa |  |  | #006747 |  |
+| Bank of Africa (ex BMCE) | BMCE |  | #005BAA | Libellé d'affichage retenu en X4. |
+| Banque Populaire | BP |  | #2563eb |  |
+| BMCI BNP Paribas |  |  | #00965E |  |
+| BTI Bank |  |  | #003DA5 |  |
+| CFG Bank |  |  | #1f2937 |  |
+| CIH Bank |  |  | #E30613 |  |
+| Citibank Maghreb |  |  | #056DAE | Couleur proposée. |
+| Crédit Agricole du Maroc |  |  | #006633 |  |
+| Crédit du Maroc |  |  | #004B87 |  |
+| Dar Al Amane |  |  | #00857D | Fenêtre participative. Code banque inconnu à ce jour (X6). Couleur proposée. |
+| Najmah |  |  | #B8860B | Fenêtre participative. Code banque inconnu à ce jour (X6). Couleur proposée. |
+| Saham Bank (ex Société Générale) | SGMB |  | #E2001A | Libellé d'affichage retenu en X4. Changement de nom officialisé le 18 juin 2025. |
+| Umnia Bank |  |  | #8B1D82 |  |
+| **Table de référence nationale, maintenue par le PLATFORM_ADMIN, en lecture pour tous les comptes.** |||||
+| **Saisie libre autorisée si la banque ne figure pas dans la liste.** |||||
+| **Colonne « code banque » : champ prévu, valeurs à fournir (X3). Le pré-remplissage de la banque à la saisie du RIB s'activera une fois renseignée.** |||||
+| **CDG Capital volontairement écartée. Colonne « ancien nom » conservée pour la recherche (SGMB, BMCE) en plus du libellé affiché.** |||||
+
+---
+
+## Onglet : Réf - Formes juridiques
+
+| Code | Libellé |
+|---|---|
+| SARL | Société à responsabilité limitée |
+| SARLAU | Société à responsabilité limitée à associé unique |
+| SA | Société anonyme |
+| SAS | Société par actions simplifiée |
+| SNC | Société en nom collectif |
+| SCS | Société en commandite simple |
+| SCA | Société en commandite par actions |
+| GIE | Groupement d'intérêt économique |
+| SEP | Société en participation |
+| SUCC | Succursale de société étrangère |
+| COOP | Coopérative |
+| ASSO | Association |
+| EP | Établissement public |
+| EI | Entreprise individuelle |
+| AE | Auto-entrepreneur |
+| **Liste validée en v3 (champ rendu obligatoire). Compléter si besoin.** ||
+
+---
+
+## Onglet : Points ouverts
+
+| Réf | Sujet | Question | Ma recommandation | Réponse |
+|---|---|---|---|---|
+| **EN ATTENTE DE DONNÉES — non bloquant pour l'étape 2** |||||
+| X3 | Banques — codes | Les 3 chiffres du code banque restent à fournir. | Champ prévu dans la table. Le pré-remplissage s'activera dès que les valeurs seront saisies. | Champs prévus, valeurs à venir |
+| X6 | Banques — fenêtres participatives | Dar Al Amane, Najmah et Arreda ont-elles leur propre code banque ? | Champ laissé vide en attendant. | À déterminer plus tard |
+| **REPORTÉ À LA PHASE 2 (fiche salarié)** |||||
+| U1 | Héritage — granularité | Une case « utiliser le paramétrage société » globale, par bloc, ou par champ ? | Une case par paramètre héritable, avec un bouton « tout hériter » en haut de bloc. | Reporté phase 2 |
+| U2 | Héritage — affichage | Quand la case est cochée, affiche-t-on la valeur héritée ? | Oui, en grisé et non modifiable. | Reporté phase 2 |
+| T1b | Héritage — complétude | Vérifier que TOUT paramètre société utile au calcul est bien hérité ou historisé. | Contrôle à faire en fin de phase 2. | Reporté phase 2 |
+| **TRANCHÉ** |||||
+| V1 | Date d'effet | Comment déterminer la date d'effet d'une modification sans champ de saisie ? |  | Déduite du mois de paie en cours du dossier |
+| V2 | Repos hebdomadaire | Un ou plusieurs jours ? |  | Un seul jour, par défaut le dimanche |
+| V3 | Jour de marché | Faut-il mentionner le jour du souk ? |  | Notion abandonnée |
+| T1 | Héritage | Congés payés et jours fériés descendent-ils sur le salarié ? |  | Congés non, fériés oui |
+| W4 | Banques — CIH | Deux lignes CIH ? |  | Une seule ligne |
+| W5 | Banques — code | Renseigner le code banque ? |  | Oui, pour pré-remplir |
+| W6 | Banques — complétude | Banques manquantes ? |  | Ajoutées, sauf CDG Capital |
+| W8 | Code dossier | Obligatoire ? |  | Obligatoire |
+| W9 | Nom de l'établissement | Obligatoire ? |  | Obligatoire |
+| W10 | Forme juridique | Obligatoire ? |  | Obligatoire |
+| X1 | Repos hebdomadaire | Un seul jour désigné, les autres jours non travaillés à 0 h ? |  | Oui. Champ « désignation du repos légal » supprimé |
+| X2 | Congés payés | Historiser au niveau société bien que non hérité ? |  | Oui |
+| X4 | Banques — libellés | Format d'affichage des anciens noms ? |  | « Saham Bank (ex Société Générale) », « Bank of Africa (ex BMCE) » |
+| X5 | Banques — couleurs | Couleurs des banques ajoutées ? |  | Proposées, à valider ou remplacer |
+
+---
+
+## Onglet : Étape 2 - Conditions
+
+| Réf | Type | Règle constatée | Question à trancher | Réponse |
+|---|---|---|---|---|
+| **A — CONDITIONS D'AFFICHAGE** |||||
+| A1 | Affichage | État du dossier = inactif → affiche « Date d'inactivité », obligatoire. |  | Confirmé |
+| A2 | Affichage | Une exonération est choisie → affiche « Date de début » (obligatoire) et « Date de fin » (facultative). | Si l'exonération est retirée, ses dates sont-elles effacées ? | Non — on garde les dates |
+| A3 | Affichage | Télétravail autorisé = oui → affiche « L'employeur verse une indemnité ». |  | Confirmé |
+| A4 | Affichage | Indemnité de télétravail = oui → affiche « Montant par mois ». |  | Non — le montant reste facultatif |
+| A5 | Affichage | Génération automatique du matricule décochée → matricule en saisie obligatoire sur la fiche salarié. |  | Confirmé (effet en phase 2) |
+| A6 | Affichage | Le champ « Utilisé par » des RIB n'a de sens qu'avec plusieurs établissements. |  | Oui — masqué |
+| **B — TABLEAUX RÉPÉTABLES** |||||
+| B1 | Répétable | Établissement : 1 principal auto-créé + N secondaires. |  | Aucune limite |
+| B2 | Répétable | RIB : N blocs identiques. |  | Aucune limite |
+| **C — CONTRÔLES DE SAISIE** |||||
+| C0 | Type | Caractère non conforme au type du champ (un chiffre dans un champ alphabétique, une lettre dans un champ numérique). |  | BLOCAGE — règle générale, tous champs |
+| C1 | Cohérence | Mois de début de montage ≤ mois de début de production. |  | Blocage |
+| C2 | Cohérence | Date d'inactivité > mois de début de production. |  | Blocage |
+| C3 | Cohérence | Date de cessation d'activité ≥ date de création. |  | Blocage |
+| C4 | Cohérence | Exonération : date de fin ≥ date de début. |  | Blocage |
+| C5 | Unicité | Code dossier, identifiant fiscal, ICE en doublon dans le compte. Raison sociale en doublon. |  | Tranché : bloquant pour les trois premiers, avertissement pour la raison sociale |
+| C6 | Longueur | RIB 24, IBAN 28 (préfixe MA), BIC 8 ou 11, ICE 15. |  | Tranché : avertissement seulement |
+| C7 | Étanchéité | Aucun contrôle ni aucune alerte ne traverse la frontière d'une société. |  | Règle générale du produit — ne jamais révéler une donnée hors périmètre de l'utilisateur |
+| **D — CYCLE DE VIE ET COHÉRENCE** |||||
+| D1 | Cycle de vie | Retour de « en production » vers « en montage ». |  | Autorisé avec avertissement |
+| D1b | Cycle de vie | Les bulletins déjà produits lors d'un retour en montage. |  | Oui — intacts |
+| D2 | Cycle de vie | État « en montage ». |  | Bloque la production de bulletins définitifs |
+| D3 | Cohérence | Modification du régime de base alors que des salariés existent. |  | BLOCAGE. Conséquence : le régime n'est plus historisé |
+| D4 | Suppression | Suppression d'un établissement auquel un RIB est rattaché. |  | Détachement automatique du RIB, précédé d'un écran listant les RIB concernés + case d'acceptation |
+| D5 | Cohérence | Aucun RIB ne porte l'usage « salaires » au moment de produire une paie. |  | Avertissement |
+| D6 | Affichage | Pays lieu d'activité ≠ Maroc. |  | Le contrôle « code postal 5 chiffres » est levé |
+| D7 | Mise en page | Répartition des champs entre colonnes d'affichage. |  | Laissé au front. Repère d'ergonomie évoqué : Silae. Hors périmètre du module 1 |
+| D8 | Ordre | Ordre d'apparition des rubriques. |  | L'ordre actuel de l'onglet « Fiche société » est retenu |
+
+---
+
+## Onglet : Étape 3 - Relecture
+
+| Réf | Sujet | Incohérence ou trou relevé | Résolution |
+|---|---|---|---|
+| E1 | Unicité et étanchéité | Le blocage sur doublon d'identifiant fiscal ou d'ICE révélait l'existence d'une société hors du périmètre de l'utilisateur, en contradiction avec la règle d'étanchéité. | Blocage conservé, mais message neutre : « cette valeur n'est pas disponible ». Ne jamais nommer ni décrire la société en cause. |
+| E2 | Vocabulaire des états | « Archivé » et « inactif » recouvraient la même réalité. | « Archivé » disparaît du produit. Trois situations : ACTIVE (montage ou production) · INACTIVE (existe toujours, consultable et éditable, ne produit plus de bulletins postérieurs à la date d'inactivité) · SUPPRIMÉE (disparaît, uniquement tant qu'aucun bulletin n'existe). |
+| E3 | Cessation et inactivité | Deux dates proches sans règle de liaison. | Indépendantes. Une société peut cesser son activité et rester à traiter quelques mois (soldes de tout compte, dernières déclarations). |
+| E4 | Libellé de l'héritage | La case disait « utiliser le paramétrage société » alors que la plupart des paramètres héritables sont au niveau établissement. | Le libellé s'adapte au niveau réel du champ. |
+| E5 | Régime de base | Blocage à vie : une société créée avec le mauvais régime devenait incorrigible. | Le PLATFORM_ADMIN peut forcer la valeur, avec trace dans l'AuditLog. |
+| E6 | RIB et second établissement | Comportement du champ « Utilisé par » lorsqu'un second établissement apparaît. | Les RIB existants restent rattachés au seul établissement d'origine. Aucun rattachement automatique. |
+| E7 | Longueur du matricule | La longueur de 5 risquait de bloquer la reprise de matricules d'un ancien logiciel. | Elle ne s'applique qu'à la génération automatique. La saisie manuelle reste libre en longueur. |
+| E8 | Établissement principal | Aucune règle prévue pour le déménagement d'un siège. | Un autre établissement peut être désigné principal. L'ancien devient secondaire ordinaire, donc supprimable si aucun salarié ne lui est rattaché. |
+| E9 | Suppression d'un RIB | Seule la clôture était prévue. | Suppression possible tant qu'aucun bulletin ne l'a utilisé ; au-delà, clôture seulement. Même logique que partout ailleurs. |
+| E10 | Indemnité de télétravail | Montant facultatif au niveau établissement, sans règle de reprise. | L'établissement pose le principe ; le montant réel se fixe salarié par salarié. L'héritage sert à propager une valeur commune quand elle existe. |
