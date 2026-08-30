@@ -14,6 +14,7 @@ import {
 import { TenantGuard } from '../../common/tenancy/tenant.guard.js';
 import {
   CreerEtablissementDto,
+  DeduireHeuresMensuellesDto,
   ModifierEtablissementDto,
   ParametrageEtablissementDto,
 } from './dto/etablissement-compte.dto.js';
@@ -74,6 +75,14 @@ export class EtablissementsController {
     @Body() dto: ParametrageEtablissementDto
   ) {
     return this.etablissements.ecrireParametrage(id, dto);
+  }
+
+  @Post('etablissements/:id/deduire-heures-mensuelles')
+  deduireHeuresMensuelles(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: DeduireHeuresMensuellesDto
+  ) {
+    return this.etablissements.deduireHeuresMensuelles(id, dto);
   }
 
   @Delete('etablissements/:id')

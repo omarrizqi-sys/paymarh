@@ -51,6 +51,8 @@ describe('suppression societe — confirmation HTTP', () => {
         etatDossier: 'EN_MONTAGE',
         moisDebutMontage: '2025-01',
         moisDebutProduction: '2025-01',
+        matriculeLongueur: 5,
+        calculAutoAbsencesEntreesSorties: true,
         etablissementPrincipal: {
           nom: 'Siege',
           adresse: '1 rue Test',

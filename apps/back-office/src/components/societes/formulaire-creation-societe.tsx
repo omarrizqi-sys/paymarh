@@ -38,6 +38,8 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
       etatDossier: String(fd.get('etatDossier') ?? 'EN_PRODUCTION'),
       moisDebutMontage: String(fd.get('moisDebutMontage') ?? ''),
       moisDebutProduction: String(fd.get('moisDebutProduction') ?? ''),
+      matriculeLongueur: Number(fd.get('matriculeLongueur')),
+      calculAutoAbsencesEntreesSorties: fd.get('calculAutoAbsencesEntreesSorties') === 'true',
       etablissementPrincipal: {
         adresse: String(fd.get('adresse') ?? ''),
         ville: String(fd.get('ville') ?? ''),
@@ -150,6 +152,40 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           <div className="space-y-2">
             <Label htmlFor="nomEtablissement">Nom de l etablissement</Label>
             <Input id="nomEtablissement" name="nomEtablissement" />
+          </div>
+        </div>
+      </Rubrique>
+
+      <Rubrique titre="Parametrage technique" id="parametrage-technique">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="matriculeLongueur">Longueur du matricule *</Label>
+            <Input
+              id="matriculeLongueur"
+              name="matriculeLongueur"
+              type="number"
+              min={1}
+              max={20}
+              defaultValue={5}
+              required
+            />
+            <MessagesChamp champ="matriculeLongueur" erreur={erreurs.matriculeLongueur} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="calculAutoAbsencesEntreesSorties">Calcul auto absences E/S *</Label>
+            <Select
+              id="calculAutoAbsencesEntreesSorties"
+              name="calculAutoAbsencesEntreesSorties"
+              defaultValue="true"
+              required
+            >
+              <option value="true">Active</option>
+              <option value="false">Desactive</option>
+            </Select>
+            <MessagesChamp
+              champ="calculAutoAbsencesEntreesSorties"
+              erreur={erreurs.calculAutoAbsencesEntreesSorties}
+            />
           </div>
         </div>
       </Rubrique>

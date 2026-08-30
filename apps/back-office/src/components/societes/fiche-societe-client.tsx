@@ -69,6 +69,7 @@ export interface DonneesFicheSociete {
   readonly joursFeries: readonly JourFerie[];
   readonly typesHeures: readonly TypeHeure[];
   readonly typesExoneration: readonly TypeExoneration[];
+  readonly avertissementsInitiaux?: readonly ApiWarning[];
 }
 
 export function FicheSocieteClient({ initial }: { readonly initial: DonneesFicheSociete }) {
@@ -78,7 +79,9 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
   const [etablissements, setEtablissements] = useState(initial.etablissements);
   const [comptes, setComptes] = useState(initial.comptes);
   const [paramEtabs, setParamEtabs] = useState(initial.parametragesEtablissements);
-  const [avertissements, setAvertissements] = useState<readonly ApiWarning[]>([]);
+  const [avertissements, setAvertissements] = useState<readonly ApiWarning[]>(
+    initial.avertissementsInitiaux ?? []
+  );
   const [erreurs, setErreurs] = useState<Record<string, string>>({});
   const [erreurGlobale, setErreurGlobale] = useState<string | undefined>();
   const [envoi, setEnvoi] = useState(false);
@@ -88,6 +91,15 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
   const [suppression, setSuppression] = useState<
     { type: 'societe' } | { type: 'etablissement'; id: string } | { type: 'compte'; id: string } | null
   >(null);
+
+  function fusionnerAvertissements(
+    prev: readonly ApiWarning[],
+    nouveaux: readonly ApiWarning[]
+  ): readonly ApiWarning[] {
+    if (nouveaux.length === 0) return prev;
+    const codes = new Set(nouveaux.map((w) => w.code));
+    return [...prev.filter((w) => !codes.has(w.code)), ...nouveaux];
+  }
 
   const ops = societe.operations;
   const peutModifier = possedePermission(ops, 'societe.modifier');
@@ -133,7 +145,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
               .then((r) => {
                 setSociete(r.data);
                 setEtatCourant(r.data.etatDossier);
-                setAvertissements(r.warnings);
+                setAvertissements((prev) => fusionnerAvertissements(prev, r.warnings));
                 router.refresh();
               })
               .catch(gererErreur)
@@ -187,10 +199,25 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             setEnvoi(true);
             setErreurs({});
             const fd = new FormData(e.currentTarget);
-            void modifierSociete(societe.id, Object.fromEntries(fd.entries()))
+            void modifierSociete(societe.id, {
+              codeDossier: fd.get('codeDossier'),
+              raisonSociale: fd.get('raisonSociale'),
+              nomCommercial: fd.get('nomCommercial') || null,
+              formeJuridiqueId: fd.get('formeJuridiqueId'),
+              activiteExercee: fd.get('activiteExercee') || null,
+              identifiantFiscal: fd.get('identifiantFiscal') || null,
+              registreCommerce: fd.get('registreCommerce') || null,
+              tribunalRegistreCommerce: fd.get('tribunalRegistreCommerce') || null,
+              dateCreation: fd.get('dateCreation') || null,
+              dateCessationActivite: fd.get('dateCessationActivite') || null,
+              siteWeb: fd.get('siteWeb') || null,
+              moisDebutMontage: fd.get('moisDebutMontage'),
+              moisDebutProduction: fd.get('moisDebutProduction'),
+              regimeDeBase: fd.get('regimeDeBase'),
+            })
               .then((r) => {
                 setSociete(r.data);
-                setAvertissements(r.warnings);
+                setAvertissements((prev) => fusionnerAvertissements(prev, r.warnings));
                 router.refresh();
               })
               .catch(gererErreur)
@@ -199,27 +226,69 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           className="grid gap-4 sm:grid-cols-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="codeDossier">Code dossier</Label>
+            <Label htmlFor="codeDossier">Code dossier *</Label>
             <Input id="codeDossier" name="codeDossier" defaultValue={societe.codeDossier} disabled={!peutModifier} required />
             <MessagesChamp champ="codeDossier" erreur={erreurs.codeDossier} avertissements={avertissements} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="raisonSociale">Raison sociale</Label>
+            <Label htmlFor="raisonSociale">Raison sociale *</Label>
             <Input id="raisonSociale" name="raisonSociale" defaultValue={societe.raisonSociale} disabled={!peutModifier} required />
             <MessagesChamp champ="raisonSociale" erreur={erreurs.raisonSociale} avertissements={avertissements} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="formeJuridiqueId">Forme juridique</Label>
+            <Label htmlFor="nomCommercial">Nom commercial</Label>
+            <Input id="nomCommercial" name="nomCommercial" defaultValue={societe.nomCommercial ?? ''} disabled={!peutModifier} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="formeJuridiqueId">Forme juridique *</Label>
             <Select id="formeJuridiqueId" name="formeJuridiqueId" defaultValue={societe.formeJuridiqueId} disabled={!peutModifier}>
               {initial.formesJuridiques.map((f) => (
                 <option key={f.id} value={f.id}>{f.libelle}</option>
               ))}
             </Select>
           </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="activiteExercee">Activite exercee</Label>
+            <Input id="activiteExercee" name="activiteExercee" defaultValue={societe.activiteExercee ?? ''} disabled={!peutModifier} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="identifiantFiscal">Identifiant fiscal</Label>
             <Input id="identifiantFiscal" name="identifiantFiscal" defaultValue={societe.identifiantFiscal ?? ''} disabled={!peutModifier} inputMode="numeric" />
             <MessagesChamp champ="identifiantFiscal" erreur={erreurs.identifiantFiscal} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="registreCommerce">Registre de commerce</Label>
+            <Input id="registreCommerce" name="registreCommerce" defaultValue={societe.registreCommerce ?? ''} disabled={!peutModifier} inputMode="numeric" />
+            <MessagesChamp champ="registreCommerce" erreur={erreurs.registreCommerce} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="tribunalRegistreCommerce">Tribunal du registre</Label>
+            <Input id="tribunalRegistreCommerce" name="tribunalRegistreCommerce" defaultValue={societe.tribunalRegistreCommerce ?? ''} disabled={!peutModifier} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dateCreation">Date de creation</Label>
+            <Input id="dateCreation" name="dateCreation" type="date" defaultValue={societe.dateCreation?.slice(0, 10) ?? ''} disabled={!peutModifier} />
+            <MessagesChamp champ="dateCreation" erreur={erreurs.dateCreation} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dateCessationActivite">Date de cessation d activite</Label>
+            <Input id="dateCessationActivite" name="dateCessationActivite" type="date" defaultValue={societe.dateCessationActivite?.slice(0, 10) ?? ''} disabled={!peutModifier} />
+            <MessagesChamp champ="dateCessationActivite" erreur={erreurs.dateCessationActivite} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="siteWeb">Site web</Label>
+            <Input id="siteWeb" name="siteWeb" defaultValue={societe.siteWeb ?? ''} disabled={!peutModifier} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="regimeDeBase">Regime de base *</Label>
+            <Select id="regimeDeBase" name="regimeDeBase" defaultValue={societe.regimeDeBase} disabled={!peutModifier}>
+              <option value="NON_AGRICOLE">Regime general (non agricole)</option>
+            </Select>
+            <MessagesChamp champ="regimeDeBase" erreur={erreurs.regimeDeBase} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="periodicitePaie">Periodicite de paie</Label>
+            <Input id="periodicitePaie" name="periodicitePaie" value="Mensuel" disabled readOnly />
           </div>
           <div className="space-y-2">
             <Label htmlFor="moisDebutMontage">Mois debut montage</Label>
@@ -243,15 +312,33 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             e.preventDefault();
             if (!peutModifier) return;
             const fd = new FormData(e.currentTarget);
-            void modifierSociete(societe.id, Object.fromEntries(fd.entries()))
+            void modifierSociete(societe.id, {
+              signataireCivilite: fd.get('signataireCivilite') || null,
+              signatairePrenom: fd.get('signatairePrenom') || null,
+              signataireNom: fd.get('signataireNom') || null,
+              signataireQualite: fd.get('signataireQualite') || null,
+            })
               .then((r) => {
                 setSociete(r.data);
-                setAvertissements(r.warnings);
+                setAvertissements((prev) => fusionnerAvertissements(prev, r.warnings));
               })
               .catch(gererErreur);
           }}
           className="grid gap-4 sm:grid-cols-2"
         >
+          <div className="space-y-2">
+            <Label htmlFor="signataireCivilite">Civilite</Label>
+            <Select id="signataireCivilite" name="signataireCivilite" defaultValue={societe.signataireCivilite ?? ''} disabled={!peutModifier}>
+              <option value="">—</option>
+              <option value="M.">M.</option>
+              <option value="Mme">Mme</option>
+              <option value="Mlle">Mlle</option>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="signataireQualite">Qualite</Label>
+            <Input id="signataireQualite" name="signataireQualite" defaultValue={societe.signataireQualite ?? ''} disabled={!peutModifier} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="signatairePrenom">Prenom</Label>
             <Input id="signatairePrenom" name="signatairePrenom" defaultValue={societe.signatairePrenom ?? ''} disabled={!peutModifier} />
@@ -282,7 +369,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             })
               .then((r) => {
                 setParametrage(r.data);
-                setAvertissements(r.warnings);
+                setAvertissements((prev) => fusionnerAvertissements(prev, r.warnings));
               })
               .catch(gererErreur);
           }}
@@ -346,10 +433,11 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
               matriculePrefixe: fd.get('matriculePrefixe') || null,
               matriculeLongueur: Number(fd.get('matriculeLongueur')),
               matriculeGenerationAuto: fd.get('matriculeGenerationAuto') === 'on',
+              calculAutoAbsencesEntreesSorties: fd.get('calculAutoAbsencesEntreesSorties') === 'true',
             })
               .then((r) => {
                 setSociete(r.data);
-                setAvertissements(r.warnings);
+                setAvertissements((prev) => fusionnerAvertissements(prev, r.warnings));
               })
               .catch(gererErreur);
           }}
@@ -360,8 +448,27 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             <Input id="matriculePrefixe" name="matriculePrefixe" defaultValue={societe.matriculePrefixe ?? ''} disabled={!peutModifier} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="matriculeLongueur">Longueur</Label>
-            <Input id="matriculeLongueur" name="matriculeLongueur" type="number" defaultValue={societe.matriculeLongueur} disabled={!peutModifier} />
+            <Label htmlFor="matriculeLongueur">Longueur *</Label>
+            <Input id="matriculeLongueur" name="matriculeLongueur" type="number" min={1} max={20} defaultValue={societe.matriculeLongueur} disabled={!peutModifier} required />
+            <MessagesChamp champ="matriculeLongueur" erreur={erreurs.matriculeLongueur} avertissements={avertissements} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="calculAutoAbsencesEntreesSorties">Calcul auto absences E/S *</Label>
+            <Select
+              id="calculAutoAbsencesEntreesSorties"
+              name="calculAutoAbsencesEntreesSorties"
+              defaultValue={String(societe.calculAutoAbsencesEntreesSorties)}
+              disabled={!peutModifier}
+              required
+            >
+              <option value="true">Active</option>
+              <option value="false">Desactive</option>
+            </Select>
+            <MessagesChamp
+              champ="calculAutoAbsencesEntreesSorties"
+              erreur={erreurs.calculAutoAbsencesEntreesSorties}
+              avertissements={avertissements}
+            />
           </div>
           <div className="flex items-center gap-2">
             <Checkbox id="matriculeGenerationAuto" name="matriculeGenerationAuto" defaultChecked={societe.matriculeGenerationAuto} disabled={!peutModifier} />
@@ -381,7 +488,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         etablissements={etablissements}
         banques={initial.banques}
         onChange={setComptes}
-        onAvertissements={setAvertissements}
+        onAvertissements={(w) => setAvertissements((prev) => fusionnerAvertissements(prev, w))}
         onErreur={gererErreur}
         onSupprimer={(id) => setSuppression({ type: 'compte', id })}
       />
@@ -396,7 +503,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         onSelectEtab={setEtabSelectionne}
         onChangeEtab={setEtablissements}
         onChangeParam={setParamEtabs}
-        onAvertissements={setAvertissements}
+        onAvertissements={(w) => setAvertissements((prev) => fusionnerAvertissements(prev, w))}
         onErreur={gererErreur}
         onSupprimer={(id) => setSuppression({ type: 'etablissement', id })}
       />

@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsDefined,
   IsIn,
   IsInt,
   IsNotEmpty,
@@ -133,19 +134,19 @@ export class CreerSocieteDto {
   @IsString()
   matriculePrefixe?: string;
 
-  @IsOptional()
+  @IsDefined()
   @IsInt()
   @Min(1)
   @Max(20)
-  matriculeLongueur?: number;
+  matriculeLongueur!: number;
 
   @IsOptional()
   @IsBoolean()
   matriculeGenerationAuto?: boolean;
 
-  @IsOptional()
+  @IsDefined()
   @IsBoolean()
-  calculAutoAbsencesEntreesSorties?: boolean;
+  calculAutoAbsencesEntreesSorties!: boolean;
 
   @ValidateNested()
   @Type(() => EtablissementPrincipalDto)
@@ -239,7 +240,11 @@ export class ModifierSocieteDto {
 
   @IsOptional()
   @IsBoolean()
-  calculAutoAbsencesEntreesSorties?: boolean;
+  calculAutoAbsencesEntreesSorties?: boolean | null;
+
+  @IsOptional()
+  @IsIn(['NON_AGRICOLE'])
+  regimeDeBase?: 'NON_AGRICOLE';
 }
 
 export class ChangerEtatSocieteDto {
@@ -252,11 +257,11 @@ export class ChangerEtatSocieteDto {
 }
 
 export class ParametrageSocieteDto {
-  @IsOptional()
+  @IsDefined()
   @IsInt()
   @Min(1)
   @Max(12)
-  moisClotureConges?: number;
+  moisClotureConges!: number;
 
   @IsOptional()
   @IsUUID()

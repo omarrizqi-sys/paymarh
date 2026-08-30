@@ -20,18 +20,41 @@ describe('coherence grille horaire', () => {
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '7' },
       { jourSemaine: 'MARDI', typeHeureId: 'a', nombreHeures: '7' },
     ];
-    expect(controlerCoherenceGrilleHoraireDefaut(lignes, '14').toString()).toBe('14');
+    expect(
+      controlerCoherenceGrilleHoraireDefaut(lignes, { totalControleDeclare: '14' }).toString()
+    ).toBe('14');
   });
 
   it('refuse un totalControle qui ne correspond pas aux lignes', () => {
     const lignes = [{ jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '7' }];
-    expect(() => controlerCoherenceGrilleHoraireDefaut(lignes, '99')).toThrow(ValidationBloquanteError);
+    expect(() =>
+      controlerCoherenceGrilleHoraireDefaut(lignes, { totalControleDeclare: '99' })
+    ).toThrow(ValidationBloquanteError);
+  });
+
+  it('refuse une grille incoherente avec la duree hebdomadaire sans totalControle', () => {
+    const lignes = [
+      { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },
+      { jourSemaine: 'MARDI', typeHeureId: 'a', nombreHeures: '8' },
+    ];
+    expect(() =>
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '44' })
+    ).toThrow(ValidationBloquanteError);
     try {
-      controlerCoherenceGrilleHoraireDefaut(lignes, '99');
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '44' });
     } catch (e) {
-      expect(e).toBeInstanceOf(ValidationBloquanteError);
       expect((e as ValidationBloquanteError).code).toBe('GRILLE_TOTAL_INCOHERENT');
     }
+  });
+
+  it('accepte une grille dont le total correspond a la duree hebdomadaire', () => {
+    const lignes = [
+      { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '22' },
+      { jourSemaine: 'MARDI', typeHeureId: 'a', nombreHeures: '22' },
+    ];
+    expect(
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '44' }).toString()
+    ).toBe('44');
   });
 
   it('refuse les lignes en double', () => {
@@ -39,6 +62,8 @@ describe('coherence grille horaire', () => {
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '7' },
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },
     ];
-    expect(() => controlerCoherenceGrilleHoraireDefaut(lignes)).toThrow(ValidationBloquanteError);
+    expect(() => controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '15' })).toThrow(
+      ValidationBloquanteError
+    );
   });
 });

@@ -34,6 +34,7 @@ import type {
 } from './dto/societe.dto.js';
 import {
   societeADesBulletins,
+  societeADesSalaries,
 } from './gardes-metier.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
@@ -44,6 +45,7 @@ import {
   assertChiffres,
   assertMoisAAAA_MM,
   assertObligatoire,
+  assertPresent,
   avertissementRaisonSocialeDoublon,
   avertissementRetourMontage,
   avertissementsIdentifiants,
@@ -120,6 +122,8 @@ export class SocietesService {
       assertChiffres(dto.registreCommerce, 'registreCommerce');
       assertChiffres(dto.etablissementPrincipal.ice, 'ice');
       assertChiffres(dto.etablissementPrincipal.codePostal, 'codePostal');
+      assertPresent(dto.matriculeLongueur, 'matriculeLongueur');
+      assertPresent(dto.calculAutoAbsencesEntreesSorties, 'calculAutoAbsencesEntreesSorties');
 
       controlerCoherenceDossier({
         etatDossier: dto.etatDossier,
@@ -187,9 +191,9 @@ export class SocietesService {
             signataireNom: dto.signataireNom ?? null,
             signataireQualite: dto.signataireQualite ?? null,
             matriculePrefixe: dto.matriculePrefixe ?? null,
-            matriculeLongueur: dto.matriculeLongueur ?? 5,
+            matriculeLongueur: dto.matriculeLongueur,
             matriculeGenerationAuto: dto.matriculeGenerationAuto ?? true,
-            calculAutoAbsencesEntreesSorties: dto.calculAutoAbsencesEntreesSorties ?? true,
+            calculAutoAbsencesEntreesSorties: dto.calculAutoAbsencesEntreesSorties,
           },
         });
 
@@ -245,7 +249,22 @@ export class SocietesService {
       if (dto.moisDebutProduction) assertMoisAAAA_MM(dto.moisDebutProduction, 'moisDebutProduction');
       assertAlphabetique(dto.signatairePrenom ?? undefined, 'signatairePrenom');
       assertAlphabetique(dto.signataireNom ?? undefined, 'signataireNom');
+      assertAlphabetique(dto.tribunalRegistreCommerce ?? undefined, 'tribunalRegistreCommerce');
       assertChiffres(dto.identifiantFiscal ?? undefined, 'identifiantFiscal');
+      assertChiffres(dto.registreCommerce ?? undefined, 'registreCommerce');
+      if (dto.matriculeLongueur !== undefined) assertPresent(dto.matriculeLongueur, 'matriculeLongueur');
+      if (dto.calculAutoAbsencesEntreesSorties !== undefined) {
+        assertPresent(dto.calculAutoAbsencesEntreesSorties, 'calculAutoAbsencesEntreesSorties');
+      }
+      if (dto.regimeDeBase !== undefined && dto.regimeDeBase !== existante.regimeDeBase) {
+        if (societeADesSalaries(id)) {
+          throw new ValidationBloquanteError(
+            'REGIME_BLOQUE',
+            'Le regime de base ne peut plus etre modifie : des salaries existent dans la societe.',
+            'regimeDeBase'
+          );
+        }
+      }
       controlerCoherenceDossier({
         etatDossier: existante.etatDossier,
         moisDebutMontage: dto.moisDebutMontage ?? existante.moisDebutMontage,
@@ -309,6 +328,7 @@ export class SocietesService {
           siteWeb: dto.siteWeb,
           moisDebutMontage: dto.moisDebutMontage,
           moisDebutProduction: dto.moisDebutProduction,
+          regimeDeBase: dto.regimeDeBase,
           signataireCivilite: dto.signataireCivilite,
           signatairePrenom: dto.signatairePrenom,
           signataireNom: dto.signataireNom,
@@ -414,6 +434,7 @@ export class SocietesService {
         exonerationDateDebut: dto.exonerationDateDebut ?? null,
         exonerationDateFin: dto.exonerationDateFin ?? null,
       });
+      assertPresent(dto.moisClotureConges, 'moisClotureConges');
     } catch (erreur) {
       relancerValidation(erreur);
     }
@@ -426,7 +447,7 @@ export class SocietesService {
       create: {
         companyId: id,
         moisEffet,
-        moisClotureConges: dto.moisClotureConges ?? 12,
+        moisClotureConges: dto.moisClotureConges,
         typeExonerationId: dto.typeExonerationId ?? null,
         exonerationDateDebut: dto.exonerationDateDebut ?? null,
         exonerationDateFin: dto.exonerationDateFin ?? null,

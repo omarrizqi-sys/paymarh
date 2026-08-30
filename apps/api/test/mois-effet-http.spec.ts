@@ -118,6 +118,7 @@ describe('moisEffet — impose par le serveur', () => {
       body: {
         moisEffet: '2019-06',
         dureeHebdomadaire: '40',
+        jourReposHebdomadaire: 'DIMANCHE',
       },
     });
     expect(reponseRefus.status).toBe(400);
@@ -126,7 +127,7 @@ describe('moisEffet — impose par le serveur', () => {
       method: 'PUT',
       chemin: `/etablissements/${etablissement.id}/parametrage`,
       utilisateurId: adminId,
-      body: { dureeHebdomadaire: '42' },
+      body: { dureeHebdomadaire: '42', jourReposHebdomadaire: 'DIMANCHE' },
     });
     expect(reponseOk.status).toBe(200);
 

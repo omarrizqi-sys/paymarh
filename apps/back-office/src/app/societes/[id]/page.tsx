@@ -52,6 +52,7 @@ export default async function PageFicheSociete({ params }: Props) {
             ),
             etablissements: etabsRes.data.items,
             comptes: comptesRes.data.items,
+            avertissementsInitiaux: comptesRes.warnings,
             parametragesEtablissements: paramEtabs,
             formesJuridiques: refs.formesJuridiques,
             banques: refs.banques,

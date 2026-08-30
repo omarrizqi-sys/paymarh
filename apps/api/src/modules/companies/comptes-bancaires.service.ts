@@ -120,6 +120,8 @@ export class ComptesBancairesService {
       targetId: cree.id,
     });
 
+    await this.ajouterAvertissementCompteSalaires(societeId, warnings);
+
     return ok(toCompteBancaire(cree), warnings);
   }
 
@@ -182,6 +184,8 @@ export class ComptesBancairesService {
       targetId: id,
     });
 
+    await this.ajouterAvertissementCompteSalaires(existant.companyId, warnings);
+
     return ok(toCompteBancaire(maj), warnings);
   }
 
@@ -205,7 +209,23 @@ export class ComptesBancairesService {
       targetId: id,
     });
 
-    return ok(toCompteBancaire(maj));
+    const warnings: ReturnType<typeof avertissementAucunCompteSalaires>[] = [];
+    await this.ajouterAvertissementCompteSalaires(existant.companyId, warnings);
+
+    return ok(toCompteBancaire(maj), warnings);
+  }
+
+  private async ajouterAvertissementCompteSalaires(
+    companyId: string,
+    warnings: { code: string; message: string; champ?: string }[]
+  ): Promise<void> {
+    const actifs = await this.prisma.compteBancaire.findMany({
+      where: { companyId, etat: 'ACTIF' },
+      select: { usageSalaires: true },
+    });
+    if (!actifs.some((r) => r.usageSalaires)) {
+      warnings.push(avertissementAucunCompteSalaires());
+    }
   }
 
   async impactSuppression(

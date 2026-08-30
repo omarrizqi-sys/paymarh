@@ -85,6 +85,8 @@ export interface CorpsCreerSociete {
   readonly etatDossier: 'EN_MONTAGE' | 'EN_PRODUCTION' | 'INACTIVE';
   readonly moisDebutMontage: string;
   readonly moisDebutProduction: string;
+  readonly matriculeLongueur?: number;
+  readonly calculAutoAbsencesEntreesSorties?: boolean;
   readonly etablissementPrincipal: {
     readonly nom?: string;
     readonly adresse: string;
@@ -101,7 +103,11 @@ export async function creerSocieteHttp(
     method: 'POST',
     chemin: '/societes',
     utilisateurId,
-    body: corps,
+    body: {
+      matriculeLongueur: 5,
+      calculAutoAbsencesEntreesSorties: true,
+      ...corps,
+    },
   });
   expect(reponse.status).toBe(201);
   const json = await lireJson(reponse);

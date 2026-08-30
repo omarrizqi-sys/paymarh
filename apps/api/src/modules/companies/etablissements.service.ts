@@ -24,10 +24,12 @@ import { accountScope } from '../../common/tenancy/tenant-scope.js';
 import { ok } from './api-response.js';
 import type {
   CreerEtablissementDto,
+  DeduireHeuresMensuellesDto,
   ModifierEtablissementDto,
   ParametrageEtablissementDto,
 } from './dto/etablissement-compte.dto.js';
 import { etablissementADesSalaries } from './gardes-metier.js';
+import { heuresHebdomadairesVersMensuelles } from './heures-mensuelles.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
 import { enrichirEtablissement } from './enrichir-operations.js';
@@ -36,6 +38,7 @@ import { toEtablissement } from './mappers.js';
 import {
   assertChiffres,
   assertObligatoire,
+  assertPresent,
   avertissementsIdentifiants,
   ValidationBloquanteError,
 } from './validation-fiche.js';
@@ -271,8 +274,17 @@ export class EtablissementsService {
     });
     const moisEffet = societe.moisEnCours;
 
-    if (dto.horaireDefautLignes) {
-      controlerCoherenceGrilleHoraireDefaut(dto.horaireDefautLignes, dto.totalControle);
+    try {
+      assertPresent(dto.dureeHebdomadaire, 'dureeHebdomadaire');
+      assertPresent(dto.jourReposHebdomadaire, 'jourReposHebdomadaire');
+      if (dto.horaireDefautLignes) {
+        controlerCoherenceGrilleHoraireDefaut(dto.horaireDefautLignes, {
+          dureeHebdomadaire: dto.dureeHebdomadaire,
+          totalControleDeclare: dto.totalControle,
+        });
+      }
+    } catch (erreur) {
+      relancer(erreur);
     }
 
     const ligne = await this.prisma.$transaction(async (tx) => {
@@ -283,10 +295,8 @@ export class EtablissementsService {
         create: {
           etablissementId: id,
           moisEffet,
-          dureeHebdomadaire: dto.dureeHebdomadaire
-            ? new Decimal(dto.dureeHebdomadaire)
-            : new Decimal(44),
-          jourReposHebdomadaire: dto.jourReposHebdomadaire ?? 'DIMANCHE',
+          dureeHebdomadaire: new Decimal(dto.dureeHebdomadaire),
+          jourReposHebdomadaire: dto.jourReposHebdomadaire,
           teletravailAutorise: dto.teletravailAutorise ?? null,
           indemniteTeletravailVersee: dto.indemniteTeletravailVersee ?? null,
           montantIndemniteTeletravail: dto.montantIndemniteTeletravail
@@ -294,9 +304,7 @@ export class EtablissementsService {
             : null,
         },
         update: {
-          dureeHebdomadaire: dto.dureeHebdomadaire
-            ? new Decimal(dto.dureeHebdomadaire)
-            : undefined,
+          dureeHebdomadaire: new Decimal(dto.dureeHebdomadaire),
           jourReposHebdomadaire: dto.jourReposHebdomadaire,
           teletravailAutorise: dto.teletravailAutorise,
           indemniteTeletravailVersee: dto.indemniteTeletravailVersee,
@@ -365,6 +373,37 @@ export class EtablissementsService {
     });
 
     return ok(ligne);
+  }
+
+  async deduireHeuresMensuelles(
+    id: Uuid,
+    dto: DeduireHeuresMensuellesDto
+  ): Promise<ApiResponse<{ horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[] }>> {
+    const context = this.tenantContext.getOrThrow();
+    const etab = await this.trouverOu404(id);
+    assertPeutFaire(context, 'etablissement.modifier', { companyId: etab.companyId });
+
+    try {
+      assertPresent(dto.dureeHebdomadaire, 'dureeHebdomadaire');
+      controlerCoherenceGrilleHoraireDefaut(dto.horaireDefautLignes, {
+        dureeHebdomadaire: dto.dureeHebdomadaire,
+      });
+    } catch (erreur) {
+      relancer(erreur);
+    }
+
+    const parType = new Map<string, Decimal>();
+    for (const ligne of dto.horaireDefautLignes) {
+      const courant = parType.get(ligne.typeHeureId) ?? new Decimal(0);
+      parType.set(ligne.typeHeureId, courant.plus(ligne.nombreHeures || '0'));
+    }
+
+    const horaireMensuelLignes = [...parType.entries()].map(([typeHeureId, hebdo]) => ({
+      typeHeureId,
+      nombreHeures: heuresHebdomadairesVersMensuelles(hebdo).toString(),
+    }));
+
+    return ok({ horaireMensuelLignes });
   }
 
   async impactSuppression(

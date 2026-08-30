@@ -2,6 +2,7 @@ import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
+  IsDefined,
   IsIn,
   IsNotEmpty,
   IsOptional,
@@ -120,13 +121,13 @@ export class HoraireMensuelLigneDto {
 }
 
 export class ParametrageEtablissementDto {
-  @IsOptional()
+  @IsDefined()
   @IsString()
-  dureeHebdomadaire?: string;
+  dureeHebdomadaire!: string;
 
-  @IsOptional()
+  @IsDefined()
   @IsIn(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'])
-  jourReposHebdomadaire?: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
+  jourReposHebdomadaire!: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
 
   @IsOptional()
   @IsBoolean()
@@ -161,6 +162,17 @@ export class ParametrageEtablissementDto {
   @IsArray()
   @IsUUID('4', { each: true })
   joursFeriesTravaillesIds?: string[];
+}
+
+export class DeduireHeuresMensuellesDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => HoraireDefautLigneDto)
+  horaireDefautLignes!: HoraireDefautLigneDto[];
+
+  @IsDefined()
+  @IsString()
+  dureeHebdomadaire!: string;
 }
 
 export class CreerCompteBancaireDto {

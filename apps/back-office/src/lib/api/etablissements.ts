@@ -47,6 +47,17 @@ export async function lireParametrageEtablissement(id: string, mois: string) {
   );
 }
 
+export async function deduireHeuresMensuelles(
+  id: string,
+  donnees: { horaireDefautLignes: unknown[]; dureeHebdomadaire: string }
+) {
+  return appelerApiMutation<{ horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[] }>(
+    'POST',
+    `/etablissements/${id}/deduire-heures-mensuelles`,
+    donnees
+  );
+}
+
 export async function ecrireParametrageEtablissement(id: string, donnees: Record<string, unknown>) {
   return appelerApiMutation<ParametrageEtablissement>(
     'PUT',

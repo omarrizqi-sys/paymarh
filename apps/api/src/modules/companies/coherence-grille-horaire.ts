@@ -7,6 +7,11 @@ export interface LigneGrilleHoraireDefaut {
   readonly nombreHeures: string;
 }
 
+export interface OptionsCoherenceGrilleHoraire {
+  readonly totalControleDeclare?: string | null;
+  readonly dureeHebdomadaire?: string | null;
+}
+
 /** Somme des heures de la grille — seule source de verite cote serveur. */
 export function sommerGrilleHoraireDefaut(lignes: readonly LigneGrilleHoraireDefaut[]): Decimal {
   return lignes.reduce(
@@ -17,12 +22,12 @@ export function sommerGrilleHoraireDefaut(lignes: readonly LigneGrilleHoraireDef
 
 /**
  * Verifie la coherence interne de la grille horaire hebdomadaire.
- * Le total de controle est recalcule cote serveur ; un total declare par le client
- * n est jamais accepte tel quel (ADR 0010).
+ * Le total est toujours recalcule ; la duree hebdomadaire declaree est comparee
+ * des que la grille est fournie (ADR 0010).
  */
 export function controlerCoherenceGrilleHoraireDefaut(
   lignes: readonly LigneGrilleHoraireDefaut[],
-  totalControleDeclare?: string | null
+  options: OptionsCoherenceGrilleHoraire = {}
 ): Decimal {
   const cles = new Set<string>();
 
@@ -57,6 +62,28 @@ export function controlerCoherenceGrilleHoraireDefaut(
   }
 
   const totalCalcule = sommerGrilleHoraireDefaut(lignes);
+
+  const { dureeHebdomadaire, totalControleDeclare } = options;
+
+  if (dureeHebdomadaire != null && dureeHebdomadaire !== '') {
+    let duree: Decimal;
+    try {
+      duree = new Decimal(dureeHebdomadaire);
+    } catch {
+      throw new ValidationBloquanteError(
+        'GRILLE_TOTAL_INCOHERENT',
+        'La duree hebdomadaire declaree n est pas un nombre valide.',
+        'dureeHebdomadaire'
+      );
+    }
+    if (!totalCalcule.equals(duree)) {
+      throw new ValidationBloquanteError(
+        'GRILLE_TOTAL_INCOHERENT',
+        'Le total de controle ne correspond pas a la duree hebdomadaire declaree.',
+        'horaireDefautLignes'
+      );
+    }
+  }
 
   if (totalControleDeclare != null && totalControleDeclare !== '') {
     let totalDeclare: Decimal;

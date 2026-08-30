@@ -17,6 +17,7 @@ import {
 import { libelleJourSemaine } from '@/lib/affichage/libelles';
 import {
   creerEtablissement,
+  deduireHeuresMensuelles,
   designerPrincipal,
   ecrireParametrageEtablissement,
   modifierEtablissement,
@@ -89,6 +90,27 @@ export function SectionEtablissements({
     setMensuel(m);
     setJfCoches(new Set((p?.joursFeriesTravailles ?? []).map((j) => j.jourFerieId)));
   }, []);
+
+  const [deductionEnCours, setDeductionEnCours] = useState(false);
+
+  async function deduireDepuisHebdo(form: HTMLFormElement): Promise<void> {
+    if (!etab || !peutModifier) return;
+    const fd = new FormData(form);
+    setDeductionEnCours(true);
+    try {
+      const r = await deduireHeuresMensuelles(etab.id, {
+        horaireDefautLignes: serialiserGrille(grille, typesHeures),
+        dureeHebdomadaire: String(fd.get('dureeHebdomadaire') ?? param?.dureeHebdomadaire ?? '44'),
+      });
+      const m: Record<string, string> = {};
+      for (const l of r.data.horaireMensuelLignes) m[l.typeHeureId] = l.nombreHeures;
+      setMensuel(m);
+    } catch (err) {
+      onErreur(err);
+    } finally {
+      setDeductionEnCours(false);
+    }
+  }
 
   async function enregistrerParamEtab(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
@@ -189,11 +211,14 @@ export function SectionEtablissements({
               void modifierEtablissement(etab.id, {
                 nom: fd.get('nom'),
                 adresse: fd.get('adresse'),
+                complementAdresse: fd.get('complementAdresse') || null,
                 ville: fd.get('ville'),
                 pays: fd.get('pays'),
                 codePostal: fd.get('codePostal') || null,
                 ice: fd.get('ice') || null,
                 taxeProfessionnelle: fd.get('taxeProfessionnelle') || null,
+                telephone: fd.get('telephone') || null,
+                email: fd.get('email') || null,
               })
                 .then((r) => {
                   onChangeEtab(etablissements.map((x) => (x.id === etab.id ? r.data : x)));
@@ -210,6 +235,15 @@ export function SectionEtablissements({
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="adresse">Adresse</Label>
               <Input id="adresse" name="adresse" defaultValue={etab.adresse} disabled={!peutModifier} required />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="complementAdresse">Complement d adresse</Label>
+              <Input
+                id="complementAdresse"
+                name="complementAdresse"
+                defaultValue={etab.complementAdresse ?? ''}
+                disabled={!peutModifier}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="ville">Ville</Label>
@@ -229,6 +263,23 @@ export function SectionEtablissements({
             <div className="space-y-2">
               <Label htmlFor="ice">ICE</Label>
               <Input id="ice" name="ice" defaultValue={etab.ice ?? ''} disabled={!peutModifier} inputMode="numeric" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="taxeProfessionnelle">Taxe professionnelle</Label>
+              <Input
+                id="taxeProfessionnelle"
+                name="taxeProfessionnelle"
+                defaultValue={etab.taxeProfessionnelle ?? ''}
+                disabled={!peutModifier}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="telephone">Telephone</Label>
+              <Input id="telephone" name="telephone" defaultValue={etab.telephone ?? ''} disabled={!peutModifier} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" name="email" type="email" defaultValue={etab.email ?? ''} disabled={!peutModifier} />
             </div>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {peutModifier ? <Button type="submit">Enregistrer l etablissement</Button> : null}
@@ -260,7 +311,7 @@ export function SectionEtablissements({
 
           <Separator />
 
-          <form onSubmit={(e) => void enregistrerParamEtab(e)} className="space-y-6">
+          <form onSubmit={(e) => void enregistrerParamEtab(e)} className="space-y-6" id={`param-etab-${etab.id}`}>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="dureeHebdomadaire">Duree hebdomadaire (h)</Label>
@@ -349,9 +400,25 @@ export function SectionEtablissements({
             </div>
 
             <div>
-              <h4 className="mb-2 font-medium">Heures mensuelles par type</h4>
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <h4 className="font-medium">Heures mensuelles par type</h4>
+                {peutModifier ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={deductionEnCours}
+                    onClick={() => {
+                      const form = document.getElementById(`param-etab-${etab.id}`) as HTMLFormElement | null;
+                      if (form) void deduireDepuisHebdo(form);
+                    }}
+                  >
+                    {deductionEnCours ? 'Calcul en cours…' : 'Deduire depuis l hebdomadaire'}
+                  </Button>
+                ) : null}
+              </div>
               <p className="text-muted-foreground mb-2 text-xs">
-                Saisie directe ou valeurs deduites par l API a partir de l hebdomadaire.
+                Saisie directe ou valeurs deduites par l API a partir de l hebdomadaire (52/12).
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[...typesHeures].sort((a, b) => a.ordre - b.ordre).map((t) => (
