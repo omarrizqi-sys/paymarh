@@ -1,0 +1,3530 @@
+{
+  "source": {
+    "document": "Cahier des charges e-BDS mode EDI",
+    "emetteur": "CNSS - Direction des affiliés",
+    "version": "2",
+    "date": "2006-02",
+    "pages": 36
+  },
+  "constantes": {
+    "longueur_ligne": 260,
+    "fin_de_ligne": "LF",
+    "code_ascii_fin_ligne": 10,
+    "extension": ".txt"
+  },
+  "configuration": {
+    "ordre_periode_nom_fichier": {
+      "defaut": "AAAAMM",
+      "valeur": "AAAAMM",
+      "valeurs_possibles": [
+        "AAAAMM",
+        "MMAAAA"
+      ],
+      "description": "Ordre mois/année du segment {periode} dans les noms de fichiers (DS_*, DSC*, AFFEBDS_*). Basculer via ce paramètre sans modifier le code."
+    }
+  },
+  "fichiers": {
+    "preetabli": {
+      "modele_nom": "AFFEBDS_{numAFF}_{periode}.txt",
+      "enregistrements": [
+        "A00",
+        "A01",
+        "A02",
+        "A03"
+      ]
+    },
+    "ds_principale": {
+      "modele_nom": "DS_{numAFF}_{periode}.txt",
+      "enregistrements": [
+        "B00",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06"
+      ]
+    },
+    "ds_complementaire": {
+      "modele_nom": "DSC{N}_{numAFF}_{periode}.txt",
+      "enregistrements": [
+        "E00",
+        "E01",
+        "E02",
+        "E03",
+        "E04",
+        "E05",
+        "E06"
+      ]
+    }
+  },
+  "enregistrements": {
+    "A00": {
+      "libelle": "Nature du fichier communiqué",
+      "fichier": "preetabli",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Réservé »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "A00",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Identif_Transfert",
+          "designation": "Identifiant des informations à transférer (référence structurée)",
+          "type": "N",
+          "longueur": 14,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 17
+        },
+        {
+          "nom": "L_Cat",
+          "designation": "Catégorie des informations à transférer",
+          "type": "AN",
+          "longueur": 2,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "A0",
+          "debut": 18,
+          "fin": 19
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 241,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "a_verifier": true,
+          "debut": 20,
+          "fin": 260
+        }
+      ]
+    },
+    "A01": {
+      "libelle": "Entête Globale de l'émission",
+      "fichier": "preetabli",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Entête Globale de l'émission »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "A01",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Année et Mois de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "L_Raison_Sociale",
+          "designation": "Raison Sociale de l'affilié",
+          "type": "AN",
+          "longueur": 40,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 17,
+          "fin": 56
+        },
+        {
+          "nom": "L_Activité",
+          "designation": "Activité de l'affilié",
+          "type": "AN",
+          "longueur": 40,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 57,
+          "fin": 96
+        },
+        {
+          "nom": "L_Adresse",
+          "designation": "Adresse de l'affilié",
+          "type": "AN",
+          "longueur": 120,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 97,
+          "fin": 216
+        },
+        {
+          "nom": "L_Ville",
+          "designation": "Ville de l'affilié",
+          "type": "AN",
+          "longueur": 20,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 217,
+          "fin": 236
+        },
+        {
+          "nom": "C_Code_Postal",
+          "designation": "Code Postal",
+          "type": "AN",
+          "longueur": 6,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 237,
+          "fin": 242
+        },
+        {
+          "nom": "C_Code_Agence",
+          "designation": "Code de l'agence CNSS",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 243,
+          "fin": 244
+        },
+        {
+          "nom": "D_Date_Emission",
+          "designation": "Date de l'émission (AAAAMMJJ)",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 245,
+          "fin": 252
+        },
+        {
+          "nom": "D_Date_Exig",
+          "designation": "Date limite de retour des BDS et de paiement des cotisations (AAAAMMJJ)",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 253,
+          "fin": 260
+        }
+      ]
+    },
+    "A02": {
+      "libelle": "Détail Emission",
+      "fichier": "preetabli",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Détail Emission »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "A02",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Année et Mois de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Num_Assure",
+          "designation": "Numéro d'immatriculation de l'assuré",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 25
+        },
+        {
+          "nom": "L_Nom_Prenom",
+          "designation": "Nom et prénom de l'assuré",
+          "type": "AN",
+          "longueur": 60,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 26,
+          "fin": 85
+        },
+        {
+          "nom": "N_Enfants",
+          "designation": "Nombre des enfants donnant droit aux allocations familiales",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 86,
+          "fin": 87
+        },
+        {
+          "nom": "N_AF_A_Payer",
+          "designation": "Montant des allocations familiales dues au titre du mois, à payer (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 88,
+          "fin": 93
+        },
+        {
+          "nom": "N_AF_A_Deduire",
+          "designation": "Montant des allocations familiales perçues antérieurement en trop, à déduire (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 94,
+          "fin": 99
+        },
+        {
+          "nom": "N_AF_Net_A_Payer",
+          "designation": "Montant des allocations familiales net à payer (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 100,
+          "fin": 105
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 155,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 106,
+          "fin": 260
+        }
+      ]
+    },
+    "A03": {
+      "libelle": "Récapitulatif de l'Emission",
+      "fichier": "preetabli",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap de l'Emission »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "A03",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Année et Mois de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Enfants",
+          "designation": "Total des enfants donnant droit aux allocations familiales",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 28
+        },
+        {
+          "nom": "N_T_AF_A_Payer",
+          "designation": "Total des montants des allocations familiales dues au titre du mois, à payer (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 29,
+          "fin": 40
+        },
+        {
+          "nom": "N_T_AF_A_Deduire",
+          "designation": "Total des montants des allocations familiales perçu antérieurement en trop, à déduire (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 41,
+          "fin": 52
+        },
+        {
+          "nom": "N_T_AF_Net_A_Payer",
+          "designation": "Total des montants des allocations familiales net à payer (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 53,
+          "fin": 64
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 65,
+          "fin": 79
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 181,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 80,
+          "fin": 260
+        }
+      ]
+    },
+    "B00": {
+      "libelle": "Nature du fichier communiqué",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Réservé »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B00",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Identif_Transfert",
+          "designation": "Identifiant des informations à transférer (Cette valeur doit être identique à celle émise par la CNSS)",
+          "type": "N",
+          "longueur": 14,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 17
+        },
+        {
+          "nom": "L_Cat",
+          "designation": "Catégorie des informations à transférer",
+          "type": "AN",
+          "longueur": 2,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B0",
+          "debut": 18,
+          "fin": 19
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 241,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 20,
+          "fin": 260
+        }
+      ]
+    },
+    "B01": {
+      "libelle": "Entête Globale de la déclaration",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Entête Globale de la déclaration »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B01",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "L_Raison_Sociale",
+          "designation": "Raison Sociale de l'affilié",
+          "type": "N",
+          "longueur": 40,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 56
+        },
+        {
+          "nom": "L_Activité",
+          "designation": "Activité de l'affilié",
+          "type": "AN",
+          "longueur": 40,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 57,
+          "fin": 96
+        },
+        {
+          "nom": "L_Adresse",
+          "designation": "Adresse de l'affilié",
+          "type": "N",
+          "longueur": 120,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 97,
+          "fin": 216
+        },
+        {
+          "nom": "L_Ville",
+          "designation": "Ville de l'affilié",
+          "type": "N",
+          "longueur": 20,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 217,
+          "fin": 236
+        },
+        {
+          "nom": "C_Code_Postal",
+          "designation": "Code Postal",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 237,
+          "fin": 242
+        },
+        {
+          "nom": "C_Code_Agence",
+          "designation": "Code de l'agence",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 243,
+          "fin": 244
+        },
+        {
+          "nom": "D_Date_Emission",
+          "designation": "Date de l'émission (AAAAMMJJ)",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 245,
+          "fin": 252
+        },
+        {
+          "nom": "D_Date_Exig",
+          "designation": "Date limite de retour des BDS et de paiement des cotisations (AAAAMMJJ)",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 253,
+          "fin": 260
+        }
+      ]
+    },
+    "B02": {
+      "libelle": "Détail de la déclaration des salaires sur préétabli",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Détail de la déclaration des salaires sur préétabli »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B02",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Num_Assure",
+          "designation": "Numéro d'immatriculation de l'assuré",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 25
+        },
+        {
+          "nom": "L_Nom_Prenom",
+          "designation": "Nom et prénom de l'assuré",
+          "type": "AN",
+          "longueur": 60,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 26,
+          "fin": 85
+        },
+        {
+          "nom": "N_Enfants",
+          "designation": "Nombre des enfants donnant droit aux allocations familiales",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 86,
+          "fin": 87
+        },
+        {
+          "nom": "N_AF_A_Payer",
+          "designation": "Montant des allocations familiales dues au titre du mois, à payer (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 88,
+          "fin": 93
+        },
+        {
+          "nom": "N_AF_A_Deduire",
+          "designation": "Montant des allocations familiales perçues antérieurement en trop, à déduire (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 94,
+          "fin": 99
+        },
+        {
+          "nom": "N_AF_Net_A_Payer",
+          "designation": "Montant des allocations familiales net à payer (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 100,
+          "fin": 105
+        },
+        {
+          "nom": "N_AF_A_Reverser",
+          "designation": "Montant des allocations familiales à reverser (en centimes)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 106,
+          "fin": 111
+        },
+        {
+          "nom": "N_Jours_Declares",
+          "designation": "Nombre de jours déclarés",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 112,
+          "fin": 113
+        },
+        {
+          "nom": "N_Salaire_Reel",
+          "designation": "Salaire réel déclaré (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 114,
+          "fin": 126
+        },
+        {
+          "nom": "N_Salaire_Plaf",
+          "designation": "Salaire déclaré dans la limite du plafond (en centimes)",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 127,
+          "fin": 135
+        },
+        {
+          "nom": "L_Situation",
+          "designation": "Situation de l'assuré",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 136,
+          "fin": 137
+        },
+        {
+          "nom": "S_Ctr",
+          "designation": "Somme horizontale des rubriques suivantes",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 138,
+          "fin": 156
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 104,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 157,
+          "fin": 260
+        }
+      ]
+    },
+    "B03": {
+      "libelle": "Récapitulatif de la déclaration des salaires sur préétabli",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap de la déclaration des salaires sur préétabli »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B03",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Enfants",
+          "designation": "Total des enfants donnant droit aux allocations familiales",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 28
+        },
+        {
+          "nom": "N_T_AF_A_Payer",
+          "designation": "Total des montants des allocations familiales dues au titre du mois, à payer (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 29,
+          "fin": 40
+        },
+        {
+          "nom": "N_T_AF_A_Deduire",
+          "designation": "Total des montants des allocations familiales perçu antérieurement en trop, à déduire (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 41,
+          "fin": 52
+        },
+        {
+          "nom": "N_T_AF_Net_A_Payer",
+          "designation": "Total des montants des allocations familiales net à payer (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 53,
+          "fin": 64
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 65,
+          "fin": 79
+        },
+        {
+          "nom": "N_T_AF_A_Reverser",
+          "designation": "Total des montants des allocations familiales à reverser (en centimes)",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 80,
+          "fin": 91
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 92,
+          "fin": 97
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés (en centimes)",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 98,
+          "fin": 112
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 113,
+          "fin": 125
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 126,
+          "fin": 144
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 116,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 145,
+          "fin": 260
+        }
+      ]
+    },
+    "B04": {
+      "libelle": "Détail déclaration des salaires pour les Entrants",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Détail déclaration des salaires pour les Entrants »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B04",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Num_Assure",
+          "designation": "Numéro d'immatriculation de l'assuré",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 25
+        },
+        {
+          "nom": "L_Nom_Prenom",
+          "designation": "Nom et prénom de l'assuré",
+          "type": "AN",
+          "longueur": 60,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 26,
+          "fin": 85
+        },
+        {
+          "nom": "L_Num_CIN",
+          "designation": "N° de la Carte d'Identité Nationale de l'assuré",
+          "type": "AN",
+          "longueur": 8,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 86,
+          "fin": 93
+        },
+        {
+          "nom": "N_Nbr_Jours",
+          "designation": "Le nombre de jours travaillé par l'assuré",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 94,
+          "fin": 95
+        },
+        {
+          "nom": "N_Sal_Reel",
+          "designation": "Le salaire brut réel non plafonné (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 96,
+          "fin": 108
+        },
+        {
+          "nom": "N_Sal_Plaf",
+          "designation": "Le salaire plafonné (en centimes)",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 109,
+          "fin": 117
+        },
+        {
+          "nom": "S_Ctr",
+          "designation": "Somme horizontale des rubriques suivantes",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 118,
+          "fin": 136
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 124,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 137,
+          "fin": 260
+        }
+      ]
+    },
+    "B05": {
+      "libelle": "Récap de la déclaration des salaires entrants",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap de la déclaration des salaires entrants »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B05",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés entrants",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 37
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 38,
+          "fin": 43
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés (en centimes)",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 44,
+          "fin": 58
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 59,
+          "fin": 71
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 72,
+          "fin": 90
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 170,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 91,
+          "fin": 260
+        }
+      ]
+    },
+    "B06": {
+      "libelle": "Récapitulatif Globale de la déclaration des salaires",
+      "fichier": "ds_principale",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap Globale de la déclaration des salaires »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "valeur_fixe": "B06",
+          "debut": 1,
+          "fin": 3
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration (AAAAMM)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés (entrants + existants)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 37
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés (entrants + existants)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 38,
+          "fin": 43
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés (entrants + existants) (en centimes)",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 44,
+          "fin": 58
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond (entrants + existants) (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 59,
+          "fin": 71
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 72,
+          "fin": 90
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 170,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 91,
+          "fin": 260
+        }
+      ]
+    },
+    "E00": {
+      "libelle": "Nature du fichier communiqué",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Réservé »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E00"
+        },
+        {
+          "nom": "N_Identif_Transfert",
+          "designation": "Identifiant des informations à transférer (Cette valeur doit être identique à celle émise par la CNSS) pour la déclaration principale",
+          "type": "AN",
+          "longueur": 14,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 4,
+          "fin": 17
+        },
+        {
+          "nom": "L_Cat",
+          "designation": "Catégorie des informations à transférer",
+          "type": "AN",
+          "longueur": 2,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 18,
+          "fin": 19,
+          "valeur_fixe": "E[N]"
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone réservée",
+          "type": "AN",
+          "longueur": 241,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 20,
+          "fin": 260
+        }
+      ]
+    },
+    "E01": {
+      "libelle": "Entête Globale de la déclaration complémentaire",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Entête Globale de la déclaration complémentaire »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E01"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "L_Raison_Sociale",
+          "designation": "Raison Sociale de l'affilié",
+          "type": "N",
+          "longueur": 40,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 56
+        },
+        {
+          "nom": "L_Activite",
+          "designation": "Activité l'affilié",
+          "type": "AN",
+          "longueur": 40,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 57,
+          "fin": 96
+        },
+        {
+          "nom": "L_Adresse",
+          "designation": "Adresse de l'affilié",
+          "type": "N",
+          "longueur": 120,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 97,
+          "fin": 216
+        },
+        {
+          "nom": "L_Ville",
+          "designation": "Ville de l'affilié",
+          "type": "N",
+          "longueur": 20,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 217,
+          "fin": 236
+        },
+        {
+          "nom": "C_Code_Postal",
+          "designation": "Code Postal",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 237,
+          "fin": 242
+        },
+        {
+          "nom": "C_Code_Agence",
+          "designation": "Code de l'agence",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 243,
+          "fin": 244
+        },
+        {
+          "nom": "D_Date_Emission",
+          "designation": "Date de l'émission",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 245,
+          "fin": 252
+        },
+        {
+          "nom": "C_Date_Exig",
+          "designation": "Date limite de retour des BDS et de paiement des cotisations",
+          "type": "N",
+          "longueur": 8,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 253,
+          "fin": 260
+        }
+      ]
+    },
+    "E02": {
+      "libelle": "Détail de la déclaration des salaires sur préétabli",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Détail de la déclaration des salaires sur préétabli »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E02"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Num_Assure",
+          "designation": "Numéro d'immatriculation de l'assuré. Ce champ contient des espaces",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 25
+        },
+        {
+          "nom": "L_Nom_Prenom",
+          "designation": "Nom et prénom de l'assuré. Dans ce cas, ce champ sera renseigné par des espaces (vides)",
+          "type": "AN",
+          "longueur": 60,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 26,
+          "fin": 85
+        },
+        {
+          "nom": "N_Enfants",
+          "designation": "Nombre des enfants donnant droit aux allocations familiales. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 86,
+          "fin": 87
+        },
+        {
+          "nom": "N_AF_A_Payer",
+          "designation": "Montant des allocations familiales dues au titre du mois, à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 88,
+          "fin": 93
+        },
+        {
+          "nom": "N_AF_A_Deduire",
+          "designation": "Montant des allocations familiales perçu antérieurement en trop, à déduire du montant à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 94,
+          "fin": 99
+        },
+        {
+          "nom": "N_AF_Net_A_Payer",
+          "designation": "Montant des allocations familiales net à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 100,
+          "fin": 105
+        },
+        {
+          "nom": "N_AF_A_Reverser",
+          "designation": "Montant des allocations familiales à reverser. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 106,
+          "fin": 111
+        },
+        {
+          "nom": "N_Jours_Declares",
+          "designation": "Nombre de jours déclarés. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 112,
+          "fin": 113
+        },
+        {
+          "nom": "N_Salaire_Reel",
+          "designation": "Salaire réel déclaré. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 114,
+          "fin": 126
+        },
+        {
+          "nom": "N_Salaire_Plaf",
+          "designation": "Salaire déclaré dans la limite du plafond. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 127,
+          "fin": 135
+        },
+        {
+          "nom": "L_Situation",
+          "designation": "Situation de l'assuré. Dans ce cas, ce champ sera renseigné avec des espaces (vides)",
+          "type": "AN",
+          "longueur": 2,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 136,
+          "fin": 137
+        },
+        {
+          "nom": "S_Ctr",
+          "designation": "Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 138,
+          "fin": 156
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 104,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 157,
+          "fin": 260
+        }
+      ]
+    },
+    "E03": {
+      "libelle": "Récapitulatif de la déclaration des salaires sur préétabli",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap de la déclaration des salaires sur préétabli »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E03"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Enfants",
+          "designation": "Total des enfants donnant droit aux allocations familiales. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 28
+        },
+        {
+          "nom": "N_T_AF_A_Payer",
+          "designation": "Total des montants des allocations familiales dues au titre du mois, à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 29,
+          "fin": 40
+        },
+        {
+          "nom": "N_T_AF_A_Deduire",
+          "designation": "Total des montants des allocations familiales perçu antérieurement en trop, à déduire du montant à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 41,
+          "fin": 52
+        },
+        {
+          "nom": "N_T_AF_Net_A_Payer",
+          "designation": "Total des montants des allocations familiales net à payer. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 53,
+          "fin": 64
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 65,
+          "fin": 79
+        },
+        {
+          "nom": "N_T_AF_A_Reverser",
+          "designation": "Total des montants des allocations familiales à reverser. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 12,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 80,
+          "fin": 91
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 92,
+          "fin": 97
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 98,
+          "fin": 112
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 113,
+          "fin": 125
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés. Dans ce cas, ce champ sera renseigné avec des 0",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 126,
+          "fin": 144
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 116,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 145,
+          "fin": 260
+        }
+      ]
+    },
+    "E04": {
+      "libelle": "Détail déclaration complémentaire des salaires pour les Entrants",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Détail déclaration complémentaire des salaires pour les Entrants »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E04"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise. Dans ce cas, ce champ ne doit être renseigné par des espaces (vides)",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Num_Assure",
+          "designation": "Numéro d'immatriculation de l'assuré",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 25
+        },
+        {
+          "nom": "L_Nom_Prenom",
+          "designation": "Nom de l'assuré",
+          "type": "AN",
+          "longueur": 60,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 26,
+          "fin": 85
+        },
+        {
+          "nom": "L_Num_CIN",
+          "designation": "N° de la Carte d'Identité Nationale de l'assuré",
+          "type": "AN",
+          "longueur": 8,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 86,
+          "fin": 93
+        },
+        {
+          "nom": "N_Nbr_Jours",
+          "designation": "Le nombre de jours travaillé par l'assuré",
+          "type": "N",
+          "longueur": 2,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 94,
+          "fin": 95
+        },
+        {
+          "nom": "N_Sal_Reel",
+          "designation": "Le salaire brut réel non plafonné (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 96,
+          "fin": 108
+        },
+        {
+          "nom": "N_Sal_Plaf",
+          "designation": "Le salaire plafonné (en centimes)",
+          "type": "N",
+          "longueur": 9,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 109,
+          "fin": 117
+        },
+        {
+          "nom": "S_Ctr",
+          "designation": "Somme horizontale des rubriques suivantes : N_Num_Assure, N_Jours_Declares, N_Salaire_Reel, N_Salaire_Plaf",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 118,
+          "fin": 136
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 124,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 137,
+          "fin": 260
+        }
+      ]
+    },
+    "E05": {
+      "libelle": "Récap de la déclaration complémentaire des salaires entrants",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap de la déclaration complémentaire des salaires entrants »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E05"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés entrants",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 37
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 38,
+          "fin": 43
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés (en centimes)",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 44,
+          "fin": 58
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 59,
+          "fin": 71
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 72,
+          "fin": 90
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 170,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 91,
+          "fin": 260
+        }
+      ]
+    },
+    "E06": {
+      "libelle": "Récapitulatif Globale de la déclaration complémentaire des salaires",
+      "fichier": "ds_complementaire",
+      "champs": [
+        {
+          "nom": "L_Type_Enreg",
+          "designation": "Type Enregistrement « Récap Globale de la déclaration complémentaire des salaires »",
+          "type": "AN",
+          "longueur": 3,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 1,
+          "fin": 3,
+          "valeur_fixe": "E06"
+        },
+        {
+          "nom": "N_Num_Affilie",
+          "designation": "Numéro d'affiliation de l'entreprise",
+          "type": "N",
+          "longueur": 7,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 4,
+          "fin": 10
+        },
+        {
+          "nom": "L_Période",
+          "designation": "Mois et Année de la déclaration",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 11,
+          "fin": 16
+        },
+        {
+          "nom": "N_Nbr_Salaries",
+          "designation": "Nombre des salariés (entrants + existants)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 17,
+          "fin": 22
+        },
+        {
+          "nom": "N_T_Num_Imma",
+          "designation": "Total des numéros d'immatriculations",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 23,
+          "fin": 37
+        },
+        {
+          "nom": "N_T_Jours_Declares",
+          "designation": "Total des jours déclarés (entrants + existants)",
+          "type": "N",
+          "longueur": 6,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 38,
+          "fin": 43
+        },
+        {
+          "nom": "N_T_Salaire_Reel",
+          "designation": "Total des salaires réels déclarés (entrants + existants) (en centimes)",
+          "type": "N",
+          "longueur": 15,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 44,
+          "fin": 58
+        },
+        {
+          "nom": "N_T_Salaire_Plaf",
+          "designation": "Total des salaires déclarés dans la limite du plafond (entrants + existants) (en centimes)",
+          "type": "N",
+          "longueur": 13,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 59,
+          "fin": 71
+        },
+        {
+          "nom": "N_T_Ctr",
+          "designation": "Somme des Contrôles Horizontaux Déclarés",
+          "type": "N",
+          "longueur": 19,
+          "cadrage": "droite",
+          "remplissage": "zero",
+          "debut": 72,
+          "fin": 90
+        },
+        {
+          "nom": "L_filler",
+          "designation": "Zone initialisée à des « espaces »",
+          "type": "AN",
+          "longueur": 170,
+          "cadrage": "gauche",
+          "remplissage": "espace",
+          "debut": 91,
+          "fin": 260
+        }
+      ]
+    }
+  },
+  "situations": [
+    {
+      "code": "",
+      "libelle": "Non renseigné",
+      "rang": 0
+    },
+    {
+      "code": "SO",
+      "libelle": "Sortant",
+      "rang": 1
+    },
+    {
+      "code": "DE",
+      "libelle": "Décédé",
+      "rang": 2
+    },
+    {
+      "code": "IT",
+      "libelle": "Maternité",
+      "rang": 3
+    },
+    {
+      "code": "IL",
+      "libelle": "Maladie",
+      "rang": 4
+    },
+    {
+      "code": "AT",
+      "libelle": "Accident de Travail",
+      "rang": 5
+    },
+    {
+      "code": "CS",
+      "libelle": "Congé Sans salaire",
+      "rang": 6
+    },
+    {
+      "code": "MS",
+      "libelle": "Maintenu Sans Salaire",
+      "rang": 7
+    },
+    {
+      "code": "MP",
+      "libelle": "Maladie Professionnelle",
+      "rang": 8
+    }
+  ],
+  "regles": [
+    {
+      "id": "TRI-TYPE-ENREG",
+      "categorie": "format",
+      "portee": [
+        "A00",
+        "A01",
+        "A02",
+        "A03"
+      ],
+      "enonce": "Le fichier « préétabli est trié par : Le champ L_Type_Enreg croissant.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "TRI-NUM-ASSURE-PRE",
+      "categorie": "format",
+      "portee": [
+        "A02"
+      ],
+      "enonce": "Pour les enregistrements de type « Détail émission », les lignes sont triées par N_Num_Assure croissant.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "TRI-TYPE-BDS",
+      "categorie": "format",
+      "portee": [
+        "B00",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06"
+      ],
+      "enonce": "Le fichier « déclaration des salaires » doit être trié par : Le champ L_Type_Enreg croissant.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "TRI-NUM-ASSURE-BDS",
+      "categorie": "format",
+      "portee": [
+        "B02",
+        "B04"
+      ],
+      "enonce": "Pour les enregistrements de type « Détail déclaration des salaires sur préétabli » et de type « Détail déclaration des salaires pour les entrants » trier par N_Num_Assure croissant.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "BDS-NON-VIDE",
+      "categorie": "format",
+      "portee": [
+        "B00",
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06"
+      ],
+      "enonce": "Le contenu d'un fichier BDS ne peut pas être vide. Tous les types d'enregistrements doivent exister, même quand il n'y a pas d'informations à déclarer (ex : Nouvelle affiliation).",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "FMT-JOURS-MAX",
+      "categorie": "format",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Le nombre de jours (B02_N_Jours_Declares) doit être inférieur ou égal à 26.",
+      "formule": "B02_N_Jours_Declares <= 26",
+      "severite": "bloquante",
+      "code_erreur": "1122"
+    },
+    {
+      "id": "FMT-SITUATION-LISTE",
+      "categorie": "format",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Le code situation (B02_L_Situation) doit appartenir à la liste des valeurs « situation » : « » , « SO », « DE », « IT », « IL », « AT », « CS », « MS » , « MP ».",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "1422"
+    },
+    {
+      "id": "FMT-SALAIRE-PLAF-PERIODE",
+      "categorie": "format",
+      "portee": [
+        "B02",
+        "B04"
+      ],
+      "enonce": "Le « salaire plafonné » doit être plafonné en fonction du plafond en vigueur à la période à l'exception de la main d'œuvre occasionnelle.",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "1322"
+    },
+    {
+      "id": "FMT-SALAIRE-PLAF-LE-REEL",
+      "categorie": "format",
+      "portee": [
+        "B02",
+        "B04"
+      ],
+      "enonce": "Le salaire plafonné doit être inférieur ou égal au salaire réel.",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "942"
+    },
+    {
+      "id": "FMT-CS-MS-NULS",
+      "categorie": "format",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Pour les situations « CS » et « MS » le nombre de jours et les salaires réels et plafonnés doivent être nuls.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "FMT-SIT-VIDE-RENSEIGNE",
+      "categorie": "format",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Pour la situation « » le nombre de jours et les salaires réels et plafonnés doivent être renseignés.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "FMT-TRAVAIL-NORMAL",
+      "categorie": "format",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Si le salarié a travaillé normalement, la présence du nombre de jours et du salaire est obligatoire pour les enregistrements de type 3 et 4 et dans ce cas particulier le nombre de jours doit être inférieur ou égal à 26 et supérieur à zéro.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "FMT-SMIG",
+      "categorie": "format",
+      "portee": [
+        "B02",
+        "B04"
+      ],
+      "enonce": "Le contrôle sur le salaire prend en compte la valeur du SMIG en vigueur et le nombre de jours travaillés. En effet, si le salaire est inférieur au SMIG au prorata du nombre de jours déclaré -1, le portail doit signaler une erreur non bloquante .Exemples : - si le nombre de jours déclarés est 26, alors le salaire doit être supérieur strictement au (SMIG/26) * 25 en vigueur. - si le nombre de jour déclaré est 13, alors le salaire déclaré doit être supérieur strictement au SMIG/ 26 * 12. De manière général si n est le nombre de jours déclarés le salaire doit être supérieur strictement au SMIG en vigueur/26*(n-1).",
+      "formule": "N_Salaire_Reel > SMIG_mensuel_26j_centimes / 26 * (N_Jours_Declares - 1)",
+      "severite": "warning",
+      "code_erreur": "1622"
+    },
+    {
+      "id": "FMT-MDO",
+      "categorie": "format",
+      "portee": [
+        "B04"
+      ],
+      "enonce": "Pour la main d'œuvre occasionnelle (type d'enregistrement 5, Num_assuré) seul le salaire global est déclaré sans nombre de jours ni numéro d'immatriculation et le salaire plafonné doit être inférieur ou égale au salaire réel.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "TOT-A",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_Nbr_Salaries = le nombre des enregistrements de type « Détail de la déclaration des salaires sur préétabli » (L_Type_Enreg = 'B02').",
+      "formule": "B03_N_Nbr_Salaries = count(B02)",
+      "severite": "bloquante",
+      "code_erreur": "432"
+    },
+    {
+      "id": "TOT-B",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Enfants = Somme(B02_N_Enfants)",
+      "formule": "B03_N_T_Enfants = Somme(B02_N_Enfants)",
+      "severite": "bloquante",
+      "code_erreur": "532"
+    },
+    {
+      "id": "TOT-C",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_AF_A_Payer = Somme(B02_N_AF_A_Payer)",
+      "formule": "B03_N_T_AF_A_Payer = Somme(B02_N_AF_A_Payer)",
+      "severite": "bloquante",
+      "code_erreur": "632"
+    },
+    {
+      "id": "TOT-D",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_AF_A_Deduire = Somme(B02_N_AF_A_Deduire)",
+      "formule": "B03_N_T_AF_A_Deduire = Somme(B02_N_AF_A_Deduire)",
+      "severite": "bloquante",
+      "code_erreur": "732"
+    },
+    {
+      "id": "TOT-E",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_AF_Net_A_Payer = Somme(B02_N_AF_Net_A_Payer)",
+      "formule": "B03_N_T_AF_Net_A_Payer = Somme(B02_N_AF_Net_A_Payer)",
+      "severite": "bloquante",
+      "code_erreur": "832"
+    },
+    {
+      "id": "TOT-F",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Num_Imma = Somme(B02_N_Num_Imma)",
+      "formule": "B03_N_T_Num_Imma = Somme(B02_N_Num_Imma)",
+      "severite": "bloquante",
+      "code_erreur": "932"
+    },
+    {
+      "id": "TOT-G",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_AF_A_Reverser = Somme(B02_N_AF_A_Reverser)",
+      "formule": "B03_N_T_AF_A_Reverser = Somme(B02_N_AF_A_Reverser)",
+      "severite": "bloquante",
+      "code_erreur": "1032"
+    },
+    {
+      "id": "TOT-H",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Jours_Declares = Somme(B02_N_Jours_Declares)",
+      "formule": "B03_N_T_Jours_Declares = Somme(B02_N_Jours_Declares)",
+      "severite": "bloquante",
+      "code_erreur": "1132"
+    },
+    {
+      "id": "TOT-I",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Salaire_Reel = Somme(B02_N_Salaire_Reel)",
+      "formule": "B03_N_T_Salaire_Reel = Somme(B02_N_Salaire_Reel)",
+      "severite": "bloquante",
+      "code_erreur": "1232"
+    },
+    {
+      "id": "TOT-J",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Salaire_Plaf = Somme(B02_N_Salaire_Plaf)",
+      "formule": "B03_N_T_Salaire_Plaf = Somme(B02_N_Salaire_Plaf)",
+      "severite": "bloquante",
+      "code_erreur": "1332"
+    },
+    {
+      "id": "TOT-K",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
+      "formule": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
+      "severite": "bloquante",
+      "code_erreur": "1432"
+    },
+    {
+      "id": "TOT-L",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_Nbr_Salaries = le nombre des enregistrements de type « Détail de la déclaration des salaires pour les Entrants » (L_Type_Enreg = 'B04') ou égal à 0 si aucun entrant n'est déclaré (un enregistrement de type B04 existe et contient des valeurs nulles)",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "452"
+    },
+    {
+      "id": "TOT-M",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_T_Num_Imma = Somme(B04_ N_Num_Imma)",
+      "formule": "B05_N_T_Num_Imma = Somme(B04_N_Num_Imma)",
+      "severite": "bloquante",
+      "code_erreur": "552"
+    },
+    {
+      "id": "TOT-N",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_T_Jours_Declares = Somme(B04_N_Jours_Declares)",
+      "formule": "B05_N_T_Jours_Declares = Somme(B04_N_Nbr_Jours)",
+      "severite": "bloquante",
+      "code_erreur": "652"
+    },
+    {
+      "id": "TOT-O",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_T_Salaire_Reel = Somme(B04_N_Salaire_Reel)",
+      "formule": "B05_N_T_Salaire_Reel = Somme(B04_N_Sal_Reel)",
+      "severite": "bloquante",
+      "code_erreur": "752"
+    },
+    {
+      "id": "TOT-P",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_T_Salaire_Plaf = Somme(B04_N_Salaire_Plaf)",
+      "formule": "B05_N_T_Salaire_Plaf = Somme(B04_N_Sal_Plaf)",
+      "severite": "bloquante",
+      "code_erreur": "852"
+    },
+    {
+      "id": "TOT-Q",
+      "categorie": "total_vertical",
+      "portee": [
+        "B05"
+      ],
+      "enonce": "B05_N_T_Ctr = Somme(B04_S_Ctr)",
+      "formule": "B05_N_T_Ctr = Somme(B04_S_Ctr)",
+      "severite": "bloquante",
+      "code_erreur": "952"
+    },
+    {
+      "id": "TOT-R",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_Nbr_Salaries = B03_N_Nbr_Salaries + B05_N_Nbr_Salaries",
+      "formule": "B06_N_Nbr_Salaries = B03_N_Nbr_Salaries + B05_N_Nbr_Salaries",
+      "severite": "bloquante",
+      "code_erreur": "462"
+    },
+    {
+      "id": "TOT-S",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_T_Num_Imma = B03_N_T_Num_Imma + B05_ N_ T_Num_Imma",
+      "formule": "B06_N_T_Num_Imma = B03_N_T_Num_Imma + B05_N_T_Num_Imma",
+      "severite": "bloquante",
+      "code_erreur": "562"
+    },
+    {
+      "id": "TOT-T",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_T_Jours_Declares = B03_N_T_Jours_Declares + B05_N_T_Jours_Declares",
+      "formule": "B06_N_T_Jours_Declares = B03_N_T_Jours_Declares + B05_N_T_Jours_Declares",
+      "severite": "bloquante",
+      "code_erreur": "662"
+    },
+    {
+      "id": "TOT-U",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_T_Salaire_Reel = B03_N_T_Salaire_Reel + B05_N_T_Salaire_Reel",
+      "formule": "B06_N_T_Salaire_Reel = B03_N_T_Salaire_Reel + B05_N_T_Salaire_Reel",
+      "severite": "bloquante",
+      "code_erreur": "762"
+    },
+    {
+      "id": "TOT-V",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_T_Salaire_Plaf = B03_N_T_Salaire_Plaf + B05_N_T_Salaire_Plaf",
+      "formule": "B06_N_T_Salaire_Plaf = B03_N_T_Salaire_Plaf + B05_N_T_Salaire_Plaf",
+      "severite": "bloquante",
+      "code_erreur": "862"
+    },
+    {
+      "id": "TOT-W",
+      "categorie": "total_vertical",
+      "portee": [
+        "B06"
+      ],
+      "enonce": "B06_N_T_Ctr = B03_N_T_Ctr + B05_N_T_Ctr",
+      "formule": "B06_N_T_Ctr = B03_N_T_Ctr + B05_N_T_Ctr",
+      "severite": "bloquante",
+      "code_erreur": "962"
+    },
+    {
+      "id": "SOM-X",
+      "categorie": "somme_horizontale",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "B02_S_Ctr = B02_N_Num_Assure + B02_N_AF_A_Reverser + B02_N_Jours_Declares + B02_N_Salaire_Reel + B02_N_Salaire_Plaf + Rang de (B02_L_Situation)",
+      "formule": "B02_S_Ctr = B02_N_Num_Assure + B02_N_AF_A_Reverser + B02_N_Jours_Declares + B02_N_Salaire_Reel + B02_N_Salaire_Plaf + Rang(B02_L_Situation)",
+      "severite": "bloquante",
+      "code_erreur": "1522"
+    },
+    {
+      "id": "SOM-Y",
+      "categorie": "total_vertical",
+      "portee": [
+        "B03"
+      ],
+      "enonce": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
+      "formule": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
+      "severite": "bloquante",
+      "code_erreur": "1432"
+    },
+    {
+      "id": "SOM-Z",
+      "categorie": "somme_horizontale",
+      "portee": [
+        "B04"
+      ],
+      "enonce": "B04_S_Ctr = B04_N_Num_Assure + B04_N_Jours_Declares + B04_N_Salaire_Reel + B04_N_Salaire_Plaf",
+      "formule": "B04_S_Ctr = B04_N_Num_Assure + B04_N_Nbr_Jours + B04_N_Sal_Reel + B04_N_Sal_Plaf",
+      "severite": "bloquante",
+      "code_erreur": "1042"
+    },
+    {
+      "id": "COH-DOUBLON-IMMA",
+      "categorie": "coherence",
+      "portee": [
+        "B02",
+        "B04"
+      ],
+      "enonce": "Le BDS ne doit pas contenir des doublons pour un numéro d'immatriculé. Ce contrôle ne s'applique pas aux n° d'immatriculés vides ou égales à 0 contenus dans les enregistrements de type 5 (Salariés entrants).",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "428"
+    },
+    {
+      "id": "COH-UNICITE-CIN",
+      "categorie": "coherence",
+      "portee": [
+        "B04"
+      ],
+      "enonce": "Au niveau des entrants, le numéro de CIN doit être unique dans une TD. Le contrôle d'unicité se fait en supprimant les espaces et ne tient pas compte des minuscules et majuscules.",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "448"
+    },
+    {
+      "id": "COH-PERIODE-UNIQUE",
+      "categorie": "coherence",
+      "portee": [
+        "B01",
+        "B02",
+        "B03",
+        "B04",
+        "B05",
+        "B06"
+      ],
+      "enonce": "La période du BDS doit être unique dans le fichier BDS et doit être égale à la période du BDS qui a été choisie par l'utilisateur pour cette déclaration (l'utilisateur choisi d'abord la période avant de déposer son fichier BDS).",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "COH-AF-REVERSER-SO-DE",
+      "categorie": "coherence",
+      "portee": [
+        "B02"
+      ],
+      "enonce": "Dans le cas des situations Sorti et Décédé, l'AF à reverser doit être égale à l'AF net à payer.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "COH-B04-SANS-ENTRANT",
+      "categorie": "coherence",
+      "portee": [
+        "B04"
+      ],
+      "enonce": "Dans le cas ou l'affilié n'a aucun entrant à déclarer. Un seul enregistrement de type B04 doit être créé en spécifiant la période, le numéro d'affilié et en mentionnant 9 espaces vides ' ' dans le champ B04_ N_Num_Assure. Les autres informations doivent être égales à Zéro si le type est N et égales à des espaces si le type est AN.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "COH-TD-COMP-UNICITE-IMMA",
+      "categorie": "coherence",
+      "portee": [
+        "E04"
+      ],
+      "enonce": "Contrôle de l'unicité du numéro imma pour une période : Le N° d'immatriculation déclaré dans une TD complementaire ne doit pas figurer dans la TD principale ou dans une autre TD complémentaire concernant la même période.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "COH-TD-COMP-UNICITE-CIN",
+      "categorie": "coherence",
+      "portee": [
+        "E04"
+      ],
+      "enonce": "Contrôle de l'unicité du numéro CIN pour une période : en cas d'absence d'un N°imma, Le N° CIN déclaré dans une TD complémentaire ne doit pas ficgurer dans la TD principale ou dans une autre TD complémentaire concernant la même période.",
+      "formule": null,
+      "severite": "bloquante"
+    },
+    {
+      "id": "COH-E05-SANS-ENTRANT",
+      "categorie": "coherence",
+      "portee": [
+        "E05"
+      ],
+      "enonce": "Une DS complémentaire ne peut pas être sans entrants",
+      "formule": null,
+      "severite": "bloquante",
+      "code_erreur": "1152"
+    }
+  ],
+  "codes_erreur": [
+    {
+      "code": "2",
+      "portee": "B00/E00",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "102",
+      "portee": "B00/E00",
+      "description": "Type d'enregistrement doit être égal à \"B00 /E00\".",
+      "severite": "bloquante"
+    },
+    {
+      "code": "202",
+      "portee": "B00/E00",
+      "description": "Identifiant des informations à transférer doit correspondre à celui du BDS/AF préétabli :[A00_N_Identif_Transfert]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "302",
+      "portee": "B00/E00",
+      "description": "Catégorie des informations à transférer doit être égale à \"B0/E[N]\".",
+      "severite": "bloquante"
+    },
+    {
+      "code": "12",
+      "portee": "B01/E01",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "112",
+      "portee": "B01/E01",
+      "description": "Type d'enregistrement doit être égal à \"B01/ E01\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "212",
+      "portee": "B01/E01",
+      "description": "Numéro d'affiliation de l'entreprise doit être égal à:[A01_ N_Num_Affilie].",
+      "severite": "bloquante"
+    },
+    {
+      "code": "312",
+      "portee": "B01/E01",
+      "description": "Période de la déclaration doit être égale à :[ A01_ L_Période]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "412",
+      "portee": "B01/E01",
+      "description": "Raison sociale doit être égale à :[ A01_L_Raison_Sociale]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "512",
+      "portee": "B01/E01",
+      "description": "Activité doit être égale à :[ A01_ L_Activité]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "612",
+      "portee": "B01/E01",
+      "description": "Adresse doit être égale à :[ A01_ L_Adresse]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "712",
+      "portee": "B01/E01",
+      "description": "Ville doit être égale à :[ A01_ L_Ville]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "812",
+      "portee": "B01/E01",
+      "description": "Code postale doit être égal à :[ A01_ C_Code_Postal]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "912",
+      "portee": "B01/E01",
+      "description": "Code de l'agence doit être égal à :[ A01_ C_Code_Agence]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1012",
+      "portee": "B01/E01",
+      "description": "Date d'émission de la déclaration doit être égale à :[ A01_ D_Date_Emission]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1112",
+      "portee": "B01/E01",
+      "description": "Date d'exigibilité de la déclaration doit être égale à :[ A01_ D_Date_Exig]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "22",
+      "portee": "B02/E02",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "122",
+      "portee": "B02/E02",
+      "description": "Type d'enregistrement doit être égal à \"B02 / E02\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "222",
+      "portee": "B02/E02",
+      "description": "Numéro d'affiliation de l'entreprise doit être égal à:[ A02_ N_Num_Affilie]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "322",
+      "portee": "B02/E02",
+      "description": "Période de la déclaration doit être égale à :[ A02_ L_Période]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "422",
+      "portee": "B02",
+      "description": "Assuré ne figurant pas dans le BDS/AF préétabli:[ A02_ N_Num_Assure]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-422",
+      "portee": "B02",
+      "description": "Assure doit être dans le même ordre que le BDS/AF préétabli :",
+      "severite": "bloquante"
+    },
+    {
+      "code": "428",
+      "portee": "B02",
+      "description": "Déclaration de salaire en double : [B04_nom_prenom]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-428",
+      "portee": "B02",
+      "description": "Assuré figure dans le BDS/AF et ne figure pas dans la DS reçue :[ A02_ N_Num_Assure]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1822",
+      "portee": "E02",
+      "description": "Numéro d'immatriculation de l'assuré doit être égale à 9 espaces",
+      "severite": "bloquante"
+    },
+    {
+      "code": "522",
+      "portee": "B02",
+      "description": "Nom et prénom doit correspondre à celui du BDS/AF préétabli : [A02_ L_Nom_Prenom]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "622",
+      "portee": "B02",
+      "description": "Nombre d'enfants doit correspondre à celui du BDS/AF préétabli :[ A02_ N_Enfants]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "722",
+      "portee": "B02",
+      "description": "Montant des allocations familiales doit correspondre à celui du BDS/AF préétabli :[ A02_ N_AF_A_Payer]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "822",
+      "portee": "B02",
+      "description": "Montant des allocations familiales perçu antérieurement en trop, à déduire du montant à payer doit correspondre à celui du BDS/AF préétabli :[ A02_ N_AF_A_Deduire]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "922",
+      "portee": "B02",
+      "description": "Montant des allocations familiales net à payer doit correspondre à celui du BDS/AF préétabli [A02_ N_AF_Net_A_Payer]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1022",
+      "portee": "B02",
+      "description": "Montant des allocations familiales à reverser doit être numérique et inférieur ou égal au montant AF net à payer :[A02_ N_AF_Net_A_Payer]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1122",
+      "portee": "B02",
+      "description": "Nombre de jours déclarés doit être de valeur [SI!= « » ? nulle :non nulle et inférieur ou égale à 26]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-1122",
+      "portee": "B02",
+      "description": "Nombre de jours déclarés doit être de valeur nulle",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1222",
+      "portee": "B02",
+      "description": "Salaire réel doit être de valeur supérieur à 0",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-1222",
+      "portee": "B02",
+      "description": "Salaire réel doit être de valeur nulle",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1322",
+      "portee": "B02",
+      "description": "Salaire déclaré dans la limite du plafond doit être égale à : [valeur du salaire plafonné en vigueur pour cette période]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1622",
+      "portee": "B02",
+      "description": "Salaire réel et le nombre de jours déclarés ne respectent pas le SMIG en vigueur. Veuillez vérifier que les valeurs saisies sont en centimes!",
+      "severite": "warning"
+    },
+    {
+      "code": "1422",
+      "portee": "B02",
+      "description": "Code situation doit être égal soit à (\" \",\"SO\",\"DE\",\"IT\",\"IL\",\"AT\",\"CS\",\"MS\",\"MP\")",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1522",
+      "portee": "B02/E03",
+      "description": "Somme horizontale est erronée",
+      "severite": "bloquante"
+    },
+    {
+      "code": "32",
+      "portee": "B03/E03",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "132",
+      "portee": "B03/E03",
+      "description": "Type d'enregistrement doit être égal à \"B03/ E03\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "232",
+      "portee": "B03/E03",
+      "description": "Numéro d'affiliation de l'entreprise doit être égal à:[ A0 3_ N_Num_Affilie].",
+      "severite": "bloquante"
+    },
+    {
+      "code": "332",
+      "portee": "B03/E03",
+      "description": "Période de la déclaration doit être égale à :[ A03_ L_Période",
+      "severite": "bloquante"
+    },
+    {
+      "code": "432",
+      "portee": "B03",
+      "description": "Nombre des salariés déclarés doit correspondre à celui des salariés émis dans le BDS/AF préétabli : [A03_ N_Nbr_Salaries]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "532",
+      "portee": "B03",
+      "description": "Total des enfants donnant droit aux allocations familiales devrait être égal à :[ A03_ N_T_Enfants]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "632",
+      "portee": "B03",
+      "description": "Total des montants des allocations familiales dues au titre du mois, à payer doit être égal à :[ A03_ N_T_AF_A_Payer]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "732",
+      "portee": "B03",
+      "description": "Total des montants des allocations familiales perçu antérieurement en trop, à déduire du montant à payer est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "832",
+      "portee": "B03/E03",
+      "description": "Total des montants des allocations familiales net à payer est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "932",
+      "portee": "B03/E03",
+      "description": "Total des numéros d'immatriculations est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1032",
+      "portee": "B03/E03",
+      "description": "Total des montants des allocations familiales à reverser est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1132",
+      "portee": "B03/E03",
+      "description": "Total des jours déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1232",
+      "portee": "B03/E03",
+      "description": "Total des salaires réels déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1332",
+      "portee": "B03/E03",
+      "description": "Total des salaires déclarés dans la limite du plafond est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1432",
+      "portee": "B03/E03",
+      "description": "Somme des Contrôles Horizontaux Déclarés est erronée",
+      "severite": "bloquante"
+    },
+    {
+      "code": "42",
+      "portee": "B04/E04",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "142",
+      "portee": "B04/E04",
+      "description": "Type d'enregistrement doit être égal à \"B04\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "242",
+      "portee": "B04/E04",
+      "description": "Numéro d'affiliation de l'entreprise doit être égal à:[ A01_ N_Num_Affilie]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "342",
+      "portee": "B04/E04",
+      "description": "Période de la déclaration doit être égale à :[ A01_ L_Période]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "442",
+      "portee": "B04/E04",
+      "description": "Numéro d'immatriculation erroné : [B04_N_Num_Assure]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "448",
+      "portee": "B04/E04",
+      "description": "Déclaration de salaire en double pour l'assuré entrant :[ B04_N_Num_Assure] [ B04_N_Nom_prenom ] /[ E04_N_Num_Assure] [ E04_N_Nom_prenom ]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-442",
+      "portee": "B04/E04",
+      "description": "WARNING: Afin de sauvegarder les droits de vos employés vous etes tenus de les immatriculer et de les déclarer sous leurs numéros d'immatriculations . Nom/Prénom : [B04_nom_prenom] /[E04_nom_prenom]",
+      "severite": "warning"
+    },
+    {
+      "code": "542",
+      "portee": "B04/E04",
+      "description": "Nom /Prénom doit être fournit pour l'assuré entrant et composé de caractères alphanumériques.. la liste des caractères acceptés.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-542",
+      "portee": "B04/E04",
+      "description": "Nom /Prénom ne doit pas être renseigné.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "642",
+      "portee": "B04/E04",
+      "description": "N° de la Carte d'Identité Nationale doit être fournit pour l'assuré entrant et composé de caractères alphanumériques. Nom/Prénom : [B04_L_Nom_Prenom] /[E04_L_Nom_Prenom] la liste des caractères acceptés.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-642",
+      "portee": "B04/E04",
+      "description": "N° de la Carte d'Identité Nationale ne doit pas être renseigné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "742",
+      "portee": "B04/E04",
+      "description": "Nombre de jours déclarés doit être de valeur supérieur à 0 et inférieur ou égale à 26 . Nom/Prénom : [B04_nom_prenom]/ [E04_nom_prenom]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-742",
+      "portee": "B04",
+      "description": "Nombre de jours déclarés doit être de valeur nulle.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "842",
+      "portee": "B04/E04",
+      "description": "Salaire réel doit être de valeur supérieur à 0 . Nom/Prénom : [B04_nom_prenom]/ [E04_nom_prenom]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-842",
+      "portee": "B04",
+      "description": "Salaire réel doit être de valeur nulle.",
+      "severite": "bloquante"
+    },
+    {
+      "code": "942",
+      "portee": "B04/E04",
+      "description": "Salaire déclaré dans la limite du plafond doit être inférieur ou égal à : (salaire réel ou salaire plafonné en vigueur)",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1642",
+      "portee": "B04/E04",
+      "description": "Salaire réel et le nombre de jours déclarés ne respectent pas le SMIG en vigueur. Veuillez vérifier que les valeurs saisies sont en centimes!",
+      "severite": "warning"
+    },
+    {
+      "code": "1042",
+      "portee": "B04/E04",
+      "description": "Somme horizontale est erronée",
+      "severite": "bloquante"
+    },
+    {
+      "code": "52",
+      "portee": "B05/E05",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "152",
+      "portee": "B05/E05",
+      "description": "Type d'enregistrement doit être égal à \"B05\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "252",
+      "portee": "B05/E05",
+      "description": "Numéro d'affiliation de l'entreprise doit être égal à:[ A01_ N_Num_Affilie].",
+      "severite": "bloquante"
+    },
+    {
+      "code": "352",
+      "portee": "B05/E05",
+      "description": "Période de la déclaration doit être égale à :[ A01_ L_Période]",
+      "severite": "bloquante"
+    },
+    {
+      "code": "452",
+      "portee": "B05/E05",
+      "description": "Nombre des salariés entrants est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "552",
+      "portee": "B05/E05",
+      "description": "Total des numéros d'immatriculations des entrants est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "652",
+      "portee": "B05/E05",
+      "description": "Total des jours déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "752",
+      "portee": "B05/E05",
+      "description": "Total des salaires réels déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "852",
+      "portee": "B05/E05",
+      "description": "Total des salaires déclarés dans la limite du plafond est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "952",
+      "portee": "B05/E05",
+      "description": "Somme des Contrôles Horizontaux Déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "1152",
+      "portee": "E05",
+      "description": "Une DS complémentaire ne peut pas être sans entrants",
+      "severite": "bloquante"
+    },
+    {
+      "code": "62",
+      "portee": "B06/E06",
+      "description": "Longueur de l'enregistrement doit être égale à 260 caractères",
+      "severite": "bloquante"
+    },
+    {
+      "code": "162",
+      "portee": "B06/E06",
+      "description": "Type d'enregistrement doit être égal à \"B06\"",
+      "severite": "bloquante"
+    },
+    {
+      "code": "262",
+      "portee": "B06/E06",
+      "description": "Numéro d'affiliation de l'entreprise est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "362",
+      "portee": "B06/E06",
+      "description": "Période de la déclaration est erronée",
+      "severite": "bloquante"
+    },
+    {
+      "code": "462",
+      "portee": "B06/E06",
+      "description": "Nombre des salariés (salariés entrants + salariés émis) est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "562",
+      "portee": "B06/E06",
+      "description": "Total des numéros d'immatriculations (salariés entrants + salariés émis) est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "662",
+      "portee": "B06/E06",
+      "description": "Total des jours déclarés (salariés entrants + salariés émis) est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "762",
+      "portee": "B06/E06",
+      "description": "Total des salaires(entrants + émis) réels déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "862",
+      "portee": "B06/E06",
+      "description": "Total des salaires(entrants + émis) déclarés dans la limite du plafond est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "962",
+      "portee": "B06/E06",
+      "description": "Somme globale des Contrôles Horizontaux Déclarés est erroné",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-222",
+      "portee": "fichier",
+      "description": "Taille du fichier est trop grande",
+      "severite": "bloquante"
+    },
+    {
+      "code": "-333",
+      "portee": "fichier",
+      "description": "Fin de fichier incorrect",
+      "severite": "warning"
+    }
+  ],
+  "caracteres_autorises": [
+    {
+      "caractere": " ",
+      "ascii": 32,
+      "hex": "20",
+      "libelle": "Espace"
+    },
+    {
+      "caractere": "TAB",
+      "ascii": 9,
+      "hex": "09",
+      "libelle": "Tabulation"
+    },
+    {
+      "caractere": "A",
+      "ascii": 65,
+      "hex": "41"
+    },
+    {
+      "caractere": "B",
+      "ascii": 66,
+      "hex": "42"
+    },
+    {
+      "caractere": "C",
+      "ascii": 67,
+      "hex": "43"
+    },
+    {
+      "caractere": "D",
+      "ascii": 68,
+      "hex": "44"
+    },
+    {
+      "caractere": "E",
+      "ascii": 69,
+      "hex": "45"
+    },
+    {
+      "caractere": "F",
+      "ascii": 70,
+      "hex": "46"
+    },
+    {
+      "caractere": "G",
+      "ascii": 71,
+      "hex": "47"
+    },
+    {
+      "caractere": "H",
+      "ascii": 72,
+      "hex": "48"
+    },
+    {
+      "caractere": "I",
+      "ascii": 73,
+      "hex": "49"
+    },
+    {
+      "caractere": "J",
+      "ascii": 74,
+      "hex": "4A"
+    },
+    {
+      "caractere": "K",
+      "ascii": 75,
+      "hex": "4B"
+    },
+    {
+      "caractere": "L",
+      "ascii": 76,
+      "hex": "4C"
+    },
+    {
+      "caractere": "M",
+      "ascii": 77,
+      "hex": "4D"
+    },
+    {
+      "caractere": "N",
+      "ascii": 78,
+      "hex": "4E"
+    },
+    {
+      "caractere": "O",
+      "ascii": 79,
+      "hex": "4F"
+    },
+    {
+      "caractere": "P",
+      "ascii": 80,
+      "hex": "50"
+    },
+    {
+      "caractere": "Q",
+      "ascii": 81,
+      "hex": "51"
+    },
+    {
+      "caractere": "R",
+      "ascii": 82,
+      "hex": "52"
+    },
+    {
+      "caractere": "S",
+      "ascii": 83,
+      "hex": "53"
+    },
+    {
+      "caractere": "T",
+      "ascii": 84,
+      "hex": "54"
+    },
+    {
+      "caractere": "U",
+      "ascii": 85,
+      "hex": "55"
+    },
+    {
+      "caractere": "V",
+      "ascii": 86,
+      "hex": "56"
+    },
+    {
+      "caractere": "W",
+      "ascii": 87,
+      "hex": "57"
+    },
+    {
+      "caractere": "X",
+      "ascii": 88,
+      "hex": "58"
+    },
+    {
+      "caractere": "Y",
+      "ascii": 89,
+      "hex": "59"
+    },
+    {
+      "caractere": "Z",
+      "ascii": 90,
+      "hex": "5A"
+    },
+    {
+      "caractere": "0",
+      "ascii": 48,
+      "hex": "30"
+    },
+    {
+      "caractere": "1",
+      "ascii": 49,
+      "hex": "31"
+    },
+    {
+      "caractere": "2",
+      "ascii": 50,
+      "hex": "32"
+    },
+    {
+      "caractere": "3",
+      "ascii": 51,
+      "hex": "33"
+    },
+    {
+      "caractere": "4",
+      "ascii": 52,
+      "hex": "34"
+    },
+    {
+      "caractere": "5",
+      "ascii": 53,
+      "hex": "35"
+    },
+    {
+      "caractere": "6",
+      "ascii": 54,
+      "hex": "36"
+    },
+    {
+      "caractere": "7",
+      "ascii": 55,
+      "hex": "37"
+    },
+    {
+      "caractere": "8",
+      "ascii": 56,
+      "hex": "38"
+    },
+    {
+      "caractere": "9",
+      "ascii": 57,
+      "hex": "39"
+    }
+  ],
+  "anomalies_document": [
+    {
+      "id": "ANO-001",
+      "emplacement": "IV-2.3 B02 / page 18 — L_Situation",
+      "constat": "L_Situation est typé N(2) alors qu'il contient des codes alphanumériques (SO, DE, IT, IL, AT, CS, MS, MP).",
+      "resolution": "appliquer_impact",
+      "impact": "Traiter L_Situation comme AN(2) à l'écriture et à la lecture ; cadrage à gauche, complété par des espaces à droite."
+    },
+    {
+      "id": "ANO-002",
+      "emplacement": "III-2.1.2 A01 vs IV-2.2 B01 — L_Raison_Sociale, L_Adresse, L_Ville",
+      "constat": "Ces champs sont typés AN dans A01 mais N dans B01, alors que le document indique que B01 doit être identique à A01 sauf le type d'enregistrement.",
+      "resolution": "appliquer_impact",
+      "impact": "Pour B01, écrire les valeurs alphanumériques comme dans A01 (AN) ; ne pas forcer une conversion numérique."
+    },
+    {
+      "id": "ANO-003",
+      "emplacement": "III-2.1.1 A00 vs IV-2.1 B00 vs IV-5.1 E00 — N_Identif_Transfert",
+      "constat": "N_Identif_Transfert est N(14) dans A00/B00 mais AN(14) dans E00.",
+      "resolution": "appliquer_impact",
+      "impact": "Ecrire E00_N_Identif_Transfert en AN(14) ; conserver N(14) pour A00/B00."
+    },
+    {
+      "id": "ANO-004",
+      "emplacement": "III-2.1.1 A00 — L_filler",
+      "constat": "Le filler de A00 est noté « 241 » sans type explicite (contrairement aux autres fillers AN(n)).",
+      "resolution": "appliquer_impact",
+      "impact": "Traiter comme zone AN(241) remplie d'espaces, conformément à la description « initialisée à des espaces »."
+    },
+    {
+      "id": "ANO-005",
+      "emplacement": "IV-1 page 15 — nom de fichier vs L_Période",
+      "constat": "Le nom de fichier est spécifié DS_NNNNNNN_MMAAAA (MMAAAA) alors que L_Période est en AAAAMM.",
+      "resolution": "indeterminee",
+      "impact": "Générer AAAAMM par cohérence avec L_Période et avec l'exemple 200301 du §II-1. Le MMAAAA du §IV apparaît une seule fois, dans un passage fautif (le titre 'déclaration principale' est répété deux fois). À trancher par un dépôt de test sur le portail."
+    },
+    {
+      "id": "ANO-006",
+      "emplacement": "Page 2 — Suivi des versions vs page 1",
+      "constat": "Le tableau de suivi date la version 2 de « Février 2005 » alors que la couverture indique « Version 2 / Février 2006 ».",
+      "resolution": "appliquer_impact",
+      "impact": "Retenir 2006-02 comme date de référence documentaire ; signaler l'écart en métadonnées."
+    },
+    {
+      "id": "ANO-007",
+      "emplacement": "IV-2.5 B04 — formule S_Ctr vs noms de champs",
+      "constat": "La formule z cite B04_N_Jours_Declares et B04_N_Salaire_Reel / B04_N_Salaire_Plaf alors que les champs déclarés sont N_Nbr_Jours, N_Sal_Reel et N_Sal_Plaf.",
+      "resolution": "appliquer_impact",
+      "impact": "Calculer S_Ctr avec les noms réels des champs (N_Nbr_Jours, N_Sal_Reel, N_Sal_Plaf) selon la sémantique de la formule z."
+    },
+    {
+      "id": "ANO-008",
+      "emplacement": "IV-5.2 E01 — C_Date_Exig vs B01 D_Date_Exig",
+      "constat": "E01 nomme le champ C_Date_Exig alors que B01/A01 utilisent D_Date_Exig pour la même donnée.",
+      "resolution": "appliquer_impact",
+      "impact": "Mapper C_Date_Exig (E01) sur la même valeur que D_Date_Exig (B01)."
+    },
+    {
+      "id": "ANO-009",
+      "emplacement": "IV-5.2 E01 — L_Activite vs B01 L_Activité",
+      "constat": "E01 utilise le nom L_Activite (sans accent) et le libellé « Activité l'affilié » ; B01 utilise L_Activité.",
+      "resolution": "appliquer_impact",
+      "impact": "Considérer L_Activite et L_Activité comme le même champ fonctionnel."
+    },
+    {
+      "id": "ANO-010",
+      "emplacement": "IV-5.3 E02 — L_Situation",
+      "constat": "E02 typé AN(2) pour L_Situation alors que B02 le type N(2) pour le même concept.",
+      "resolution": "appliquer_impact",
+      "impact": "Pour E02, écrire L_Situation en AN(2) avec espaces ; pour B02, écrire en AN(2) malgré le typage N du document."
+    },
+    {
+      "id": "ANO-011",
+      "emplacement": "IV-4 page 24 — référence B0_N_Identif_Transfert",
+      "constat": "Le suivi des versions mentionne A00_N_Identif_Transfert = B0_N_Identif_Transfert (typo : B0 au lieu de B00).",
+      "resolution": "appliquer_impact",
+      "impact": "Interpréter B0_N_Identif_Transfert comme B00_N_Identif_Transfert."
+    },
+    {
+      "id": "ANO-012",
+      "emplacement": "IV-2.2 B01 — C_Code_Postal, C_Code_Agence",
+      "constat": "B01 type C_Code_Postal et C_Code_Agence en N alors qu'A01 les type AN.",
+      "resolution": "appliquer_impact",
+      "impact": "Ecrire ces champs en alphanumérique comme dans A01."
+    },
+    {
+      "id": "ANO-013",
+      "emplacement": "IV-5.5 E04 — N_Num_Affilie vs code d'erreur 242",
+      "constat": "E04.N_Num_Affilie est décrit comme devant contenir des espaces (§IV-5.5) alors que le code d'erreur 242 exige qu'il soit égal à A01_N_Num_Affilie pour B04/E04.",
+      "resolution": "indeterminee",
+      "impact": "Ne pas imposer de règle définitive : laisser le générateur configurable ou valider les deux comportements jusqu'à test portail."
+    }
+  ]
+}

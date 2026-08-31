@@ -1,0 +1,16 @@
+{
+  "plafond_mensuel_centimes": [
+    {
+      "date_effet": "à_determiner",
+      "valeur": 600000,
+      "source": "valeur historique, à vérifier auprès de la CNSS avant mise en production"
+    }
+  ],
+  "smig_mensuel_26j_centimes": [
+    {
+      "date_effet": "2005-09",
+      "valeur": 184184,
+      "source": "cahier des charges V2, §IV-3"
+    }
+  ]
+}
