@@ -20,6 +20,7 @@ L’ADR 0006 a fixé l’historisation par `moisEffet` en texte `AAAA-MM`, sans 
 3. Toute écriture dans une table d’historique utilise `moisEnCours` comme `moisEffet`.
 4. Si l’appelant fournit `moisEffet` dans un DTO → refus (`CHAMP_INTERDIT`).
 5. **Aucun endpoint** ne fait avancer `moisEnCours` dans cette étape : ce sera le module 2 (traitement du mois).
+6. La date d'effet reste déduite du mois en cours du dossier, sauf pour la **première version** d'un bloc historisé porté par un emploi, qui prend le mois de la date de début de cet emploi. Les versions suivantes suivent la règle générale. Les blocs portés par le salarié suivent la règle générale sans exception.
 
 ---
 

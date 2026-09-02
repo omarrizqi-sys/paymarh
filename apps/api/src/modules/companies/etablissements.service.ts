@@ -296,8 +296,6 @@ export class EtablissementsService {
 
       const dureeEffective =
         dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString() ?? null;
-      const jourReposEffectif =
-        dto.jourReposHebdomadaire ?? paramExistant?.jourReposHebdomadaire ?? null;
 
       if (dto.horaireDefautLignes?.length) {
         if (!dureeEffective) {
@@ -320,6 +318,13 @@ export class EtablissementsService {
       dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString();
     const jourReposEnregistre = dto.jourReposHebdomadaire ?? paramExistant?.jourReposHebdomadaire;
 
+    // Invariant : assertChampObligatoire (creation) ou colonnes NOT NULL (mise a jour) garantissent ces valeurs.
+    if (dureeEnregistree === undefined || jourReposEnregistre === undefined) {
+      throw new Error(
+        'Invariant ecrireParametrage : dureeHebdomadaire et jourReposHebdomadaire doivent etre resolus apres les controles amont.'
+      );
+    }
+
     const ligne = await this.prisma.$transaction(async (tx) => {
       const param = await tx.etablissementParametrageHistorique.upsert({
         where: {
@@ -328,8 +333,8 @@ export class EtablissementsService {
         create: {
           etablissementId: id,
           moisEffet,
-          dureeHebdomadaire: new Decimal(dureeEnregistree!),
-          jourReposHebdomadaire: jourReposEnregistre!,
+          dureeHebdomadaire: new Decimal(dureeEnregistree),
+          jourReposHebdomadaire: jourReposEnregistre,
           teletravailAutorise: dto.teletravailAutorise ?? null,
           indemniteTeletravailVersee: dto.indemniteTeletravailVersee ?? null,
           montantIndemniteTeletravail: dto.montantIndemniteTeletravail

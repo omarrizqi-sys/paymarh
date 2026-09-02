@@ -11,12 +11,20 @@ import {
   TYPES_EXONERATION,
   TYPES_HEURE,
 } from './reference-data.js';
+import {
+  LIENS_PARENTE,
+  MOTIFS_SORTIE,
+  PAYS,
+  SITUATIONS_FAMILIALES,
+  STATUTS_PARTICULIERS,
+  TYPES_CONTRAT,
+} from './reference-data-fiche-salarie.js';
 
 // ---------------------------------------------------------------------------
-// PaymaRH - Donnees de demonstration (module 0 + module 1 etape 1.1.a)
+// PaymaRH - Donnees de demonstration (module 0 + module 1 etape 1.1.a + module 2 etape 2.1.a)
 //
 // - tables de reference nationales (formes, banques, feries, types d heure,
-//   exoneration) ;
+//   exoneration, pays, types contrat, motifs sortie, statuts, situations, liens parente) ;
 // - un compte CABINET, un super-admin, un admin de compte ;
 // - une societe complete : 2 etablissements, 2 comptes bancaires, grille
 //   horaire 44 h, feries coches, 2 moisEffet d historique.
@@ -118,6 +126,61 @@ async function seedReferences(): Promise<{
     });
   }
 
+  for (const pays of PAYS) {
+    await prisma.pays.upsert({
+      where: { codeIso: pays.codeIso },
+      update: { ordre: pays.ordre, libelle: pays.libelle },
+      create: { ordre: pays.ordre, codeIso: pays.codeIso, libelle: pays.libelle },
+    });
+  }
+
+  for (const type of TYPES_CONTRAT) {
+    await prisma.typeContrat.upsert({
+      where: { code: type.code },
+      update: { libelle: type.libelle },
+      create: { code: type.code, libelle: type.libelle },
+    });
+  }
+
+  for (const motif of MOTIFS_SORTIE) {
+    await prisma.motifSortie.upsert({
+      where: { code: motif.code },
+      update: { libelle: motif.libelle },
+      create: { code: motif.code, libelle: motif.libelle },
+    });
+  }
+
+  for (const statut of STATUTS_PARTICULIERS) {
+    await prisma.statutParticulier.upsert({
+      where: { code: statut.code },
+      update: { libelle: statut.libelle },
+      create: { code: statut.code, libelle: statut.libelle },
+    });
+  }
+
+  for (const situation of SITUATIONS_FAMILIALES) {
+    await prisma.situationFamiliale.upsert({
+      where: { code: situation.code },
+      update: {
+        libelleMasculin: situation.libelleMasculin,
+        libelleFeminin: situation.libelleFeminin,
+      },
+      create: {
+        code: situation.code,
+        libelleMasculin: situation.libelleMasculin,
+        libelleFeminin: situation.libelleFeminin,
+      },
+    });
+  }
+
+  for (const lien of LIENS_PARENTE) {
+    await prisma.lienParente.upsert({
+      where: { code: lien.code },
+      update: { libelle: lien.libelle },
+      create: { code: lien.code, libelle: lien.libelle },
+    });
+  }
+
   const formeSarl = await prisma.formeJuridique.findUniqueOrThrow({ where: { code: 'SARL' } });
   const banqueAttijari = await prisma.banque.findFirstOrThrow({
     where: { nom: 'Attijariwafa Bank' },
@@ -138,7 +201,7 @@ async function seedReferences(): Promise<{
   });
 
   console.log(
-    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s).`
+    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s), ${PAYS.length} pays, ${TYPES_CONTRAT.length} types contrat, ${MOTIFS_SORTIE.length} motifs sortie, ${STATUTS_PARTICULIERS.length} statut(s) particulier(s), ${SITUATIONS_FAMILIALES.length} situations familiales, ${LIENS_PARENTE.length} liens parente.`
   );
 
   return {
@@ -582,7 +645,7 @@ async function main(): Promise<void> {
   await seedSocieteDemo(refs);
   await seedUtilisateurs(compte.id);
 
-  console.log('\nSeed termine (module 0 + fiche societe 1.1.a).');
+  console.log('\nSeed termine (module 0 + fiche societe 1.1.a + referentiels fiche salarie 2.1.a).');
 }
 
 main()

@@ -4,8 +4,9 @@
 // MODULE 0 : socle multi-tenant (Account, Company, User, AuditLog, roles).
 // MODULE 1 (etape 1.1.a) : fiche societe, etablissements, comptes bancaires,
 //   historisation par moisEffet, tables de reference nationales.
+// MODULE 2 (etape 2.1.a) : fiche salarie — modele de donnees uniquement.
 //
-// AUCUNE entite salarie / bulletin / cotisation / organisme social ici.
+// AUCUN bulletin / cotisation / organisme social ici.
 // AUCUN calcul de paie. Le moteur (payroll-engine/) reste vide.
 //
 // Hierarchie d isolation : Account -> Company -> Etablissement -> (Salarie).
@@ -172,6 +173,8 @@ model Company {
   etablissements             Etablissement[]
   parametragesHistoriques    CompanyParametrageHistorique[]
   comptesBancaires           CompteBancaire[]
+  salaries                   Salarie[]
+  compteursMatricule         CompteurMatricule[]
 
   @@unique([accountId, codeDossier])
   /// Unicite par compte si renseigne ; plusieurs NULL autorises (PostgreSQL).
@@ -251,7 +254,8 @@ model Banque {
   /// Couleur d affichage (hex, ex. #E2001A).
   couleur    String
 
-  comptesBancaires CompteBancaire[]
+  comptesBancaires        CompteBancaire[]
+  comptesBancairesSalaries CompteBancaireSalarie[]
 }
 
 /// Jour ferie national. Le `code` est stable a vie ; le libelle peut evoluer.
@@ -264,7 +268,8 @@ model JourFerie {
   referenceDate String
   type          TypeJourFerie
 
-  etablissementsTravailles JourFerieTravaille[]
+  etablissementsTravailles     JourFerieTravaille[]
+  emploisJoursFeriesTravailles EmploiJourFerieTravaille[]
 }
 
 /// Type d heure de la grille (normale / majoree). Les taux reels viennent au module 5.
@@ -320,6 +325,7 @@ model Etablissement {
   company                 Company                          @relation(fields: [companyId, accountId], references: [id, accountId], onDelete: Cascade)
   parametragesHistoriques EtablissementParametrageHistorique[]
   comptesBancaires        CompteBancaireEtablissement[]
+  emploiAffectations      EmploiAffectationVersion[]
 
   @@unique([accountId, ice])
   @@index([companyId])
@@ -465,4 +471,462 @@ model CompteBancaireEtablissement {
 
   @@id([compteBancaireId, etablissementId])
   @@index([etablissementId])
+}
+
+// ---------------------------------------------------------------------------
+// Enumerations — fiche salarie (module 2, etape 2.1.a)
+// ---------------------------------------------------------------------------
+
+enum Sexe {
+  HOMME
+  FEMME
+}
+
+enum StatutCadre {
+  CADRE
+  NON_CADRE
+}
+
+enum ModeDeterminationSalaire {
+  BRUT_MENSUEL
+  BRUT_HORAIRE
+  NET_CIBLE
+}
+
+enum ModePaiement {
+  VIREMENT
+  CHEQUE
+  ESPECES
+}
+
+enum BaseSaisieDuree {
+  HEBDOMADAIRE
+  MENSUELLE
+}
+
+enum OrigineStatut {
+  SAISIE_MANUELLE
+  PROPAGE_SOCIETE
+}
+
+/// Les cinq blocs historises de la fiche salarie.
+enum BlocHistorise {
+  CONTRAT
+  REMUNERATION
+  AFFECTATION_TEMPS_DE_TRAVAIL
+  PERSONNES_A_CHARGE
+  RETENUES
+}
+
+// ---------------------------------------------------------------------------
+// Tables de reference — fiche salarie
+// ---------------------------------------------------------------------------
+
+/// Pays souverains (195 entrees). Ordre d affichage fixe (Maroc en tete).
+model Pays {
+  id      String @id @default(uuid()) @db.Uuid
+  ordre   Int    @unique
+  codeIso String @unique
+  libelle String
+
+  salariesNaissance   Salarie[] @relation("Naissance")
+  salariesNationalite Salarie[] @relation("Nationalite")
+  salariesResidence   Salarie[] @relation("Residence")
+}
+
+/// Type de contrat de travail (liste ouverte).
+model TypeContrat {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  contrats EmploiContratVersion[]
+}
+
+/// Motif de sortie du salarie.
+model MotifSortie {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  contrats EmploiContratVersion[]
+}
+
+/// Statut particulier (liste ouverte). TAHFIZ n y figure pas (propagation societe).
+model StatutParticulier {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  lignes StatutParticulierLigne[]
+}
+
+/// Situation familiale — le code est stocke ; libelles accordes au genre a l affichage.
+model SituationFamiliale {
+  id              String @id @default(uuid()) @db.Uuid
+  code            String @unique
+  libelleMasculin String
+  libelleFeminin  String
+
+  salaries Salarie[]
+}
+
+/// Lien de parente pour les personnes a charge.
+model LienParente {
+  id      String @id @default(uuid()) @db.Uuid
+  code    String @unique
+  libelle String
+
+  personnes PersonneACharge[]
+}
+
+/// Compteur de matricules auto-generes par societe et par prefixe. Jamais decremente.
+model CompteurMatricule {
+  companyId     String @db.Uuid
+  /// Prefixe de numerotation ; chaine vide autorisee.
+  prefixe       String @default("")
+  dernierNumero Int
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, prefixe])
+}
+
+/// Compteur de numero d ordre d emploi par salarie. Jamais decremente.
+model CompteurNumeroOrdreEmploi {
+  salarieId     String @id @db.Uuid
+  dernierNumero Int
+
+  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Restrict)
+}
+
+// ---------------------------------------------------------------------------
+// Fiche salarie
+// ---------------------------------------------------------------------------
+
+/// Identite d un salarie dans une societe (1 par personne par societe).
+model Salarie {
+  id        String   @id @default(uuid()) @db.Uuid
+  companyId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matricule String
+  nom       String
+  prenom    String
+  sexe      Sexe
+  dateNaissance DateTime @db.Date
+
+  villeNaissance         String?
+  paysNaissanceId        String? @db.Uuid
+  nationaliteId          String? @db.Uuid
+  situationFamilialeCode String?
+
+  /// Identifiants legaux en texte (zeros de tete preserves).
+  numeroPiece String?
+  numeroCnss  String?
+  numeroCimr  String?
+
+  adresse                String?
+  complementAdresse      String?
+  ville                  String?
+  codePostal             String?
+  paysId                 String? @db.Uuid
+  telephonePersonnel     String?
+  telephoneProfessionnel String?
+  emailPersonnel         String?
+  emailProfessionnel     String?
+
+  urgencePrenom    String?
+  urgenceNom       String?
+  urgenceTelephone String?
+  urgenceEmail     String?
+
+  dateEntree     DateTime @db.Date
+  dateAnciennete DateTime @db.Date
+
+  company            Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  paysNaissance      Pays?               @relation("Naissance", fields: [paysNaissanceId], references: [id], onDelete: Restrict)
+  nationalite        Pays?               @relation("Nationalite", fields: [nationaliteId], references: [id], onDelete: Restrict)
+  pays               Pays?               @relation("Residence", fields: [paysId], references: [id], onDelete: Restrict)
+  situationFamiliale SituationFamiliale? @relation(fields: [situationFamilialeCode], references: [code], onDelete: Restrict)
+
+  personnesACharge  PersonneACharge[]
+  comptesBancaires  CompteBancaireSalarie[]
+  prets             Pret[]
+  saisiesSurSalaire SaisieSurSalaire[]
+  emplois           Emploi[]
+  compteurNumeroOrdre CompteurNumeroOrdreEmploi?
+
+  @@unique([companyId, matricule])
+  @@index([companyId])
+  @@index([paysNaissanceId])
+  @@index([nationaliteId])
+  @@index([paysId])
+  @@index([situationFamilialeCode])
+}
+
+/// Emploi d un salarie dans la societe. Un salarie peut en porter plusieurs.
+model Emploi {
+  id          String   @id @default(uuid()) @db.Uuid
+  salarieId   String   @db.Uuid
+  /// Ordre technique de calcul ; jamais reutilise apres suppression.
+  numeroOrdre Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+
+  contratVersions      EmploiContratVersion[]
+  remunerationVersions EmploiRemunerationVersion[]
+  affectationVersions  EmploiAffectationVersion[]
+  primesContractuelles PrimeContractuelle[]
+  avantagesEnNature    AvantageEnNature[]
+  statutsParticuliers  StatutParticulierLigne[]
+  joursFeriesTravailles EmploiJourFerieTravaille[]
+
+  @@unique([salarieId, numeroOrdre])
+  @@index([salarieId])
+}
+
+/// Bloc CONTRAT — version historisee par moisEffet.
+model EmploiContratVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  emploiId  String   @db.Uuid
+  moisEffet String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  libellePoste            String
+  dateDebut               DateTime    @db.Date
+  dateFin                 DateTime?   @db.Date
+  typeContratCode         String
+  periodeEssaiDateFin     DateTime?   @db.Date
+  renouvellementEssaiDateFin DateTime? @db.Date
+  statutCadre             StatutCadre?
+  coefficient             String?
+  position                String?
+  indice                  String?
+  dateSortie              DateTime?   @db.Date
+  motifSortieCode         String?
+
+  emploi        Emploi        @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  typeContrat   TypeContrat   @relation(fields: [typeContratCode], references: [code], onDelete: Restrict)
+  motifSortie   MotifSortie?  @relation(fields: [motifSortieCode], references: [code], onDelete: Restrict)
+
+  @@unique([emploiId, moisEffet])
+  @@index([emploiId])
+  @@index([typeContratCode])
+  @@index([motifSortieCode])
+}
+
+/// Bloc REMUNERATION — version historisee par moisEffet.
+model EmploiRemunerationVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  emploiId  String   @db.Uuid
+  moisEffet String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modeDeterminationSalaire ModeDeterminationSalaire
+  montant                  Decimal @db.Decimal(14, 2)
+  masquerNombreHeures      Boolean @default(false)
+  masquerTauxHoraire       Boolean @default(false)
+  bulletinTousLesMois      Boolean @default(true)
+  moisProduction           Int[]
+  modePaiement             ModePaiement?
+  compteBancaireId         String? @db.Uuid
+  /// Nullable = herite de l etablissement / societe.
+  teletravailIndemniteVersee Boolean?
+  /// Nullable = herite de l etablissement / societe.
+  teletravailMontant         Decimal? @db.Decimal(14, 2)
+
+  emploi           Emploi                @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  compteBancaire   CompteBancaireSalarie? @relation(fields: [compteBancaireId], references: [id], onDelete: Restrict)
+
+  @@unique([emploiId, moisEffet])
+  @@index([emploiId])
+  @@index([compteBancaireId])
+}
+
+/// Bloc AFFECTATION_TEMPS_DE_TRAVAIL — version historisee par moisEffet.
+model EmploiAffectationVersion {
+  id        String   @id @default(uuid()) @db.Uuid
+  emploiId  String   @db.Uuid
+  moisEffet String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  etablissementId String @db.Uuid
+  departementRef  String?
+  serviceRef      String?
+  baseSaisieDuree BaseSaisieDuree
+  /// Nullable = herite etablissement puis national.
+  dureeContractuelle Decimal? @db.Decimal(8, 2)
+  /// Nullable = herite etablissement (grille horaire module 3).
+  repartitionHoraireRef String?
+  /// Nullable = herite etablissement.
+  reposHebdomadaire JourSemaine?
+  /// Non nullable : true = suivre les jours feries de l etablissement.
+  suivreJoursFeriesEtablissement Boolean @default(true)
+  /// Nullable = herite etablissement.
+  teletravailAutorise Boolean?
+
+  emploi          Emploi        @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  etablissement   Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Restrict)
+
+  @@unique([emploiId, moisEffet])
+  @@index([emploiId])
+  @@index([etablissementId])
+}
+
+/// Personne a charge — bloc PERSONNES_A_CHARGE (validite temporelle par ligne).
+model PersonneACharge {
+  id        String   @id @default(uuid()) @db.Uuid
+  salarieId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lienParenteCode String
+  prenom          String
+  nom             String
+  sexe            Sexe
+  dateNaissance   DateTime @db.Date
+  aCharge         Boolean
+  /// Seule donnee de sante de la fiche ; pertinent uniquement si lienParenteCode = ENFANT.
+  situationHandicap Boolean @default(false)
+  moisEffetDebut  String
+  moisEffetFin    String?
+
+  salarie     Salarie     @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+  lienParente LienParente @relation(fields: [lienParenteCode], references: [code], onDelete: Restrict)
+
+  @@index([salarieId])
+  @@index([lienParenteCode])
+}
+
+/// Compte bancaire du salarie (RIB / IBAN). Modele distinct du CompteBancaire societe.
+model CompteBancaireSalarie {
+  id        String   @id @default(uuid()) @db.Uuid
+  salarieId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  banqueId           String? @db.Uuid
+  banqueLibreSaisie  String?
+  rib                String?
+  iban               String?
+  bic                String?
+  titulaire          String?
+  partVirement       Decimal? @db.Decimal(5, 2)
+
+  salarie            Salarie                     @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+  banque             Banque?                     @relation(fields: [banqueId], references: [id], onDelete: Restrict)
+  remunerations      EmploiRemunerationVersion[]
+
+  @@index([salarieId])
+  @@index([banqueId])
+}
+
+/// Pret — bloc RETENUES (validite temporelle par ligne).
+model Pret {
+  id        String   @id @default(uuid()) @db.Uuid
+  salarieId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  libelleObjet      String
+  libelleBulletin   String
+  montantTotal      Decimal @db.Decimal(14, 2)
+  moisDebut         String
+  mensualite        Decimal @db.Decimal(14, 2)
+  nombreEcheances   Int
+  moisEffetDebut    String
+  moisEffetFin      String?
+
+  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+
+  @@index([salarieId])
+}
+
+/// Saisie sur salaire — bloc RETENUES (validite temporelle par ligne).
+model SaisieSurSalaire {
+  id        String   @id @default(uuid()) @db.Uuid
+  salarieId String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  referenceDecision String
+  creancier         String
+  libelleBulletin   String
+  montantTotal      Decimal @db.Decimal(14, 2)
+  montantMensuel    Decimal @db.Decimal(14, 2)
+  moisDebut         String
+  moisEffetDebut    String
+  moisEffetFin      String?
+
+  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+
+  @@index([salarieId])
+}
+
+/// Prime contractuelle — non historisee (transit par elements variables).
+model PrimeContractuelle {
+  id             String @id @default(uuid()) @db.Uuid
+  emploiId       String @db.Uuid
+  primeRef       String
+  moisApplication Int[]
+
+  emploi Emploi @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+
+  @@index([emploiId])
+}
+
+/// Avantage en nature — historise par validite temporelle (bloc REMUNERATION).
+model AvantageEnNature {
+  id              String   @id @default(uuid()) @db.Uuid
+  emploiId        String   @db.Uuid
+  natureRef       String
+  montant         Decimal  @db.Decimal(14, 2)
+  moisApplication Int[]
+  moisEffetDebut  String
+  moisEffetFin    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  emploi Emploi @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+
+  @@index([emploiId])
+}
+
+/// Ligne de statut particulier sur un emploi.
+model StatutParticulierLigne {
+  id          String   @id @default(uuid()) @db.Uuid
+  emploiId    String   @db.Uuid
+  statutCode  String
+  dateDebut   DateTime @db.Date
+  dateFin     DateTime? @db.Date
+  origine     OrigineStatut @default(SAISIE_MANUELLE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  emploi  Emploi            @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  statut  StatutParticulier @relation(fields: [statutCode], references: [code], onDelete: Restrict)
+
+  @@index([emploiId])
+  @@index([statutCode])
+}
+
+/// Jour ferie travaille pour un emploi — historise par validite temporelle.
+model EmploiJourFerieTravaille {
+  emploiId       String @db.Uuid
+  jourFerieId    String @db.Uuid
+  moisEffetDebut String
+  moisEffetFin   String?
+
+  emploi    Emploi    @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  jourFerie JourFerie @relation(fields: [jourFerieId], references: [id], onDelete: Restrict)
+
+  @@id([emploiId, jourFerieId, moisEffetDebut])
+  @@index([jourFerieId])
 }
