@@ -1,18 +1,20 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import type { AlerteApi } from '@paymarh/shared-types';
-import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
+import { estConflitUnicite } from '../../common/errors/conflit-unicite.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { companyScope } from '../../common/tenancy/tenant-scope.js';
-import { Inject } from '@nestjs/common';
+import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
 import {
   creerSalarieMatriculeAuto,
+  marquerMatriculeConsomme,
 } from './compteurs-salarie.js';
 import { deduireEtatSalarie, emploiEstOuvert } from './deductions-salarie.js';
 import { EmploisService } from './emplois.service.js';
@@ -303,9 +305,23 @@ export class SalariesService {
         donneesBase
       );
     } else {
-      salarie = await this.prisma.salarie.create({
-        data: { ...donneesBase, matricule: matriculeSaisi },
-      });
+      try {
+        salarie = await this.prisma.$transaction(async (tx) => {
+          await marquerMatriculeConsomme(tx, companyId, matriculeSaisi);
+          return tx.salarie.create({
+            data: { ...donneesBase, matricule: matriculeSaisi },
+          });
+        });
+      } catch (erreur) {
+        if (estConflitUnicite(erreur)) {
+          throw new BadRequestException({
+            code: CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+            message: CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+            champ: 'matricule',
+          });
+        }
+        throw erreur;
+      }
     }
 
     const complet = await this.chargerFiche(salarie.id);
@@ -631,7 +647,16 @@ export class SalariesService {
     ];
 
     if (Object.keys(donnees).length > 0) {
-      await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees });
+      const matriculeNouveau =
+        typeof donnees.matricule === 'string' ? donnees.matricule : undefined;
+      if (matriculeNouveau !== undefined) {
+        await this.prisma.$transaction(async (tx) => {
+          await marquerMatriculeConsomme(tx, companyId, matriculeNouveau);
+          await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees }, tx);
+        });
+      } else {
+        await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees });
+      }
     }
 
     const complet = await this.chargerFiche(id);
@@ -694,6 +719,26 @@ export class SalariesService {
     if (doublon !== null) {
       throw erreurValeurIndisponible('matricule');
     }
+
+    const consomme = await this.prisma.matriculeConsomme.findUnique({
+      where: { companyId_valeur: { companyId, valeur: matricule } },
+      select: { valeur: true },
+    });
+    if (consomme === null) {
+      return;
+    }
+
+    if (exclureId !== undefined) {
+      const actuel = await this.prisma.salarie.findFirst({
+        where: { id: exclureId, companyId, matricule },
+        select: { id: true },
+      });
+      if (actuel !== null) {
+        return;
+      }
+    }
+
+    throw erreurValeurIndisponible('matricule');
   }
 
   private async verifierUniciteNumeroPiece(

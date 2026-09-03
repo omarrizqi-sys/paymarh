@@ -50,6 +50,20 @@ Lors de la création d'une fiche, si le matricule n'est pas renseigné, le logic
 
 ---
 
+## Matricule refusé alors qu'il semble libre
+
+Le logiciel peut refuser un matricule que vous venez de saisir, avec le message **« Cette valeur n'est pas disponible »**, alors qu'aucune fiche visible ne le porte.
+
+Cela arrive lorsqu'une valeur a **déjà été attribuée** dans cette société, y compris à une fiche depuis supprimée. Un matricule identifie une personne dans les déclarations et les dossiers : il n'est jamais réattribué, même après suppression.
+
+Le message est volontairement neutre : il ne dit pas si une fiche a existé, ni laquelle. Vérifiez votre saisie ; si elle est correcte, choisissez une autre valeur ou laissez le champ vide pour une attribution automatique.
+
+La même valeur peut en revanche être utilisée dans **une autre société**, y compris du même compte.
+
+Lors d'une **reprise de dossier**, seuls les matricules présents dans le dossier repris sont connus. Une valeur utilisée dans l'ancien logiciel puis retirée avant l'import n'est pas mémorisée : le logiciel ne peut pas la reconstituer.
+
+---
+
 ## Alerte de réembauche
 
 Lors de la création ou de la vérification d'une fiche, le logiciel peut signaler qu'un **salarié inactif** de la même société correspond déjà (même pièce d'identité, ou à défaut même nom, prénom et date de naissance). L'alerte permet d'ouvrir la fiche existante pour la consulter.

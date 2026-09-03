@@ -2,15 +2,19 @@
  * Allocation de matricules et numeros d ordre via compteurs persistants.
  * Les compteurs ne sont jamais decrements ; la suppression ne les affecte pas.
  * L increment est atomique en base (upsert + increment Prisma).
+ *
+ * Une valeur de matricule attribuee est marquee consommee dans la meme
+ * transaction que la creation. Elle n est jamais reattribuee dans la societe.
  */
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import {
+  calculerProchainMatricule,
   deduireDernierNumeroMatricule,
   formaterMatriculeAuto,
   type ParametresMatricule,
 } from './prochain-matricule.js';
 
-type TransactionClient = Omit<
+export type TransactionClient = Omit<
   PrismaClient,
   '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
 >;
@@ -26,7 +30,54 @@ export interface DonneesSalarieCreation {
 }
 
 /**
+ * Marque une valeur de matricule comme consommee dans la societe.
+ * Idempotent : une valeur deja marquee le reste.
+ */
+export async function marquerMatriculeConsomme(
+  tx: TransactionClient,
+  companyId: string,
+  valeur: string
+): Promise<void> {
+  await tx.matriculeConsomme.upsert({
+    where: { companyId_valeur: { companyId, valeur } },
+    create: { companyId, valeur },
+    update: {},
+  });
+}
+
+/**
+ * Liste les valeurs de matricule deja consommees dans la societe.
+ */
+export async function listerMatriculesConsommes(
+  tx: Pick<TransactionClient, 'matriculeConsomme'>,
+  companyId: string
+): Promise<string[]> {
+  const lignes = await tx.matriculeConsomme.findMany({
+    where: { companyId },
+    select: { valeur: true },
+  });
+  return lignes.map((ligne) => ligne.valeur);
+}
+
+async function avancerCompteurVers(
+  tx: TransactionClient,
+  cle: { companyId_prefixe: { companyId: string; prefixe: string } },
+  actuel: number,
+  numeroCalcule: number
+): Promise<number> {
+  if (actuel >= numeroCalcule) {
+    return actuel;
+  }
+  const ajuste = await tx.compteurMatricule.update({
+    where: cle,
+    data: { dernierNumero: numeroCalcule },
+  });
+  return ajuste.dernierNumero;
+}
+
+/**
  * Incremente atomiquement le compteur matricule et retourne le matricule formate suivant.
+ * Le prochain numero est calcule par calculerProchainMatricule a partir des valeurs consommees.
  * A la creation concurrente de la ligne, l upsert PostgreSQL evite les doublons de compteur.
  */
 export async function incrementerCompteurMatricule(
@@ -38,6 +89,10 @@ export async function incrementerCompteurMatricule(
   const parametres: ParametresMatricule = { prefixe, longueur };
   const cle = { companyId_prefixe: { companyId, prefixe } };
 
+  const valeursConsommees = await listerMatriculesConsommes(tx, companyId);
+  const prochainCalcule = calculerProchainMatricule(parametres, valeursConsommees);
+  const numeroCalcule = deduireDernierNumeroMatricule(parametres, [prochainCalcule]);
+
   const existant = await tx.compteurMatricule.findUnique({ where: cle });
 
   if (existant) {
@@ -45,35 +100,28 @@ export async function incrementerCompteurMatricule(
       where: cle,
       data: { dernierNumero: { increment: 1 } },
     });
+    const numero = await avancerCompteurVers(tx, cle, compteur.dernierNumero, numeroCalcule);
     return {
-      numero: compteur.dernierNumero,
-      matricule: formaterMatriculeAuto(parametres, compteur.dernierNumero),
+      numero,
+      matricule: formaterMatriculeAuto(parametres, numero),
     };
   }
 
-  const matricules = await tx.salarie.findMany({
-    where: { companyId },
-    select: { matricule: true },
-  });
-  const initial = deduireDernierNumeroMatricule(
-    parametres,
-    matricules.map((ligne) => ligne.matricule)
-  );
-
   const compteur = await tx.compteurMatricule.upsert({
     where: cle,
-    create: { companyId, prefixe, dernierNumero: initial + 1 },
+    create: { companyId, prefixe, dernierNumero: numeroCalcule },
     update: { dernierNumero: { increment: 1 } },
   });
+  const numero = await avancerCompteurVers(tx, cle, compteur.dernierNumero, numeroCalcule);
 
   return {
-    numero: compteur.dernierNumero,
-    matricule: formaterMatriculeAuto(parametres, compteur.dernierNumero),
+    numero,
+    matricule: formaterMatriculeAuto(parametres, numero),
   };
 }
 
 /**
- * Cree un salarie avec matricule auto-genere ; compteur et salarie dans la meme transaction.
+ * Cree un salarie avec matricule auto-genere ; compteur, marquage et salarie dans la meme transaction.
  */
 export async function creerSalarieMatriculeAuto(
   prisma: PrismaClient,
@@ -87,6 +135,7 @@ export async function creerSalarieMatriculeAuto(
       parametres.prefixe,
       parametres.longueur
     );
+    await marquerMatriculeConsomme(tx, donnees.companyId, matricule);
     return tx.salarie.create({
       data: {
         ...donnees,
@@ -146,21 +195,17 @@ export async function creerEmploiNumeroOrdreAuto(
 }
 
 /**
- * Initialise un compteur matricule depuis les matricules deja presents (reprise de dossier).
+ * Initialise un compteur matricule depuis les valeurs deja consommees (reprise de dossier).
+ * L historique d avant la reprise n existe pas : seules les valeurs presentes
+ * dans la persistance sont prises en compte.
  */
 export async function initialiserCompteurMatriculeDepuisExistants(
   prisma: PrismaClient,
   companyId: string,
   parametres: ParametresMatricule
 ): Promise<number> {
-  const matricules = await prisma.salarie.findMany({
-    where: { companyId },
-    select: { matricule: true },
-  });
-  const dernier = deduireDernierNumeroMatricule(
-    parametres,
-    matricules.map((ligne) => ligne.matricule)
-  );
+  const valeursConsommees = await listerMatriculesConsommes(prisma, companyId);
+  const dernier = deduireDernierNumeroMatricule(parametres, valeursConsommees);
   await prisma.compteurMatricule.upsert({
     where: { companyId_prefixe: { companyId, prefixe: parametres.prefixe } },
     create: { companyId, prefixe: parametres.prefixe, dernierNumero: dernier },

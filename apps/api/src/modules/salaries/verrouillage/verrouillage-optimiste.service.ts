@@ -50,8 +50,11 @@ export class VerrouillageOptimisteService {
     return version;
   }
 
-  async modifierSalarie(params: MiseAJourOptimisteSalarie) {
-    const { count } = await this.prisma.salarie.updateMany({
+  async modifierSalarie(
+    params: MiseAJourOptimisteSalarie,
+    client: { salarie: PrismaService['salarie'] } = this.prisma
+  ) {
+    const { count } = await client.salarie.updateMany({
       where: { id: params.id, version: params.versionAttendue },
       data: {
         ...params.donnees,
@@ -66,7 +69,7 @@ export class VerrouillageOptimisteService {
       });
     }
 
-    return this.prisma.salarie.findUniqueOrThrow({ where: { id: params.id } });
+    return client.salarie.findUniqueOrThrow({ where: { id: params.id } });
   }
 
   async modifierEmploi(params: MiseAJourOptimisteEmploi) {

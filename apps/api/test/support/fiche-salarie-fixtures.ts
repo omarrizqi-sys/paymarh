@@ -75,20 +75,27 @@ export async function creerSalarieMin(
   companyId: string,
   donnees: DonneesSalarieMin
 ) {
-  return prisma.salarie.create({
-    data: {
-      companyId,
-      matricule: donnees.matricule,
-      nom: donnees.nom ?? 'Alami',
-      prenom: donnees.prenom ?? 'Said',
-      sexe: 'HOMME',
-      dateNaissance: donnees.dateNaissance ?? new Date('1990-05-15'),
-      numeroPiece: donnees.numeroPiece ?? null,
-      numeroCnss: donnees.numeroCnss ?? null,
-      codePostal: donnees.codePostal ?? null,
-      dateEntree: new Date('2025-01-01'),
-      dateAnciennete: new Date('2025-01-01'),
-    },
+  return prisma.$transaction(async (tx) => {
+    await tx.matriculeConsomme.upsert({
+      where: { companyId_valeur: { companyId, valeur: donnees.matricule } },
+      create: { companyId, valeur: donnees.matricule },
+      update: {},
+    });
+    return tx.salarie.create({
+      data: {
+        companyId,
+        matricule: donnees.matricule,
+        nom: donnees.nom ?? 'Alami',
+        prenom: donnees.prenom ?? 'Said',
+        sexe: 'HOMME',
+        dateNaissance: donnees.dateNaissance ?? new Date('1990-05-15'),
+        numeroPiece: donnees.numeroPiece ?? null,
+        numeroCnss: donnees.numeroCnss ?? null,
+        codePostal: donnees.codePostal ?? null,
+        dateEntree: new Date('2025-01-01'),
+        dateAnciennete: new Date('2025-01-01'),
+      },
+    });
   });
 }
 

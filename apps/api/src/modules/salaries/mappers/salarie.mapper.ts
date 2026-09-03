@@ -1,4 +1,4 @@
-import type { Prisma } from '../../generated/prisma/client.js';
+import type { Prisma } from '../../../generated/prisma/client.js';
 import { declarerCleRubrique, RUBRIQUES_REMUNERATION } from '../../../common/remuneration/rubriques-remuneration.js';
 import {
   deduireEtatSalarie,

@@ -175,6 +175,7 @@ model Company {
   comptesBancaires           CompteBancaire[]
   salaries                   Salarie[]
   compteursMatricule         CompteurMatricule[]
+  matriculesConsommes        MatriculeConsomme[]
 
   @@unique([accountId, codeDossier])
   /// Unicite par compte si renseigne ; plusieurs NULL autorises (PostgreSQL).
@@ -598,6 +599,17 @@ model CompteurMatricule {
   company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
 
   @@id([companyId, prefixe])
+}
+
+/// Valeurs de matricule deja attribuees dans une societe.
+/// Survivent a la suppression du salarie ; jamais reattribuees dans cette societe.
+model MatriculeConsomme {
+  companyId String @db.Uuid
+  valeur    String
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, valeur])
 }
 
 /// Compteur de numero d ordre d emploi par salarie. Jamais decremente.

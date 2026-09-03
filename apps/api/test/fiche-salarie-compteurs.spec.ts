@@ -4,7 +4,9 @@ import {
   creerSalarieMatriculeAuto,
   incrementerCompteurMatricule,
   initialiserCompteurMatriculeDepuisExistants,
+  marquerMatriculeConsomme,
 } from '../src/modules/salaries/compteurs-salarie.js';
+import { calculerProchainMatricule } from '../src/modules/salaries/prochain-matricule.js';
 import {
   creerEmploiOuvert,
   creerSalarieMin,
@@ -84,6 +86,36 @@ describe('compteurs fiche salarie (base reelle)', () => {
     expect(second.matricule).not.toBe(matriculeConsomme);
   });
 
+  it('apres suppression le salarie suivant recoit la valeur suivante jamais la sienne', async () => {
+    const compte = await prisma.account.create({
+      data: { name: `${PREFIXE}-SEQ`, type: 'CABINET' },
+    });
+    const societe = await creerSocieteTest(
+      prisma,
+      formeJuridiqueId,
+      compte.id,
+      `${PREFIXE}-SEQ`,
+      'SEQ'
+    );
+
+    const premier = await creerSalarieMatriculeAuto(
+      prisma,
+      { prefixe: 'SEQ', longueur: 5 },
+      donneesSalarieBase(societe.companyId)
+    );
+    expect(premier.matricule).toBe('SEQ00001');
+    await prisma.salarie.delete({ where: { id: premier.id } });
+
+    const second = await creerSalarieMatriculeAuto(
+      prisma,
+      { prefixe: 'SEQ', longueur: 5 },
+      donneesSalarieBase(societe.companyId)
+    );
+    expect(second.matricule).toBe('SEQ00002');
+
+    await nettoyerCompteTest(prisma, `${PREFIXE}-SEQ`);
+  });
+
   it('le compteur est propre a chaque societe', async () => {
     await creerSalarieMatriculeAuto(
       prisma,
@@ -157,6 +189,67 @@ describe('compteurs fiche salarie (base reelle)', () => {
     await nettoyerCompteTest(prisma, `${PREFIXE}-INIT`);
   });
 
+  it('le compteur s initialise depuis les valeurs consommees y compris apres suppression', async () => {
+    const compte = await prisma.account.create({
+      data: { name: `${PREFIXE}-INIT-CONS`, type: 'CABINET' },
+    });
+    const societe = await creerSocieteTest(
+      prisma,
+      formeJuridiqueId,
+      compte.id,
+      `${PREFIXE}-INIT-CONS`,
+      'RCS'
+    );
+
+    const premier = await creerSalarieMin(prisma, societe.companyId, { matricule: 'RCS00009' });
+    await prisma.salarie.delete({ where: { id: premier.id } });
+
+    const initialise = await initialiserCompteurMatriculeDepuisExistants(prisma, societe.companyId, {
+      prefixe: 'RCS',
+      longueur: 5,
+    });
+    expect(initialise).toBe(9);
+
+    const suivant = await creerSalarieMatriculeAuto(
+      prisma,
+      { prefixe: 'RCS', longueur: 5 },
+      donneesSalarieBase(societe.companyId)
+    );
+    expect(suivant.matricule).toBe('RCS00010');
+
+    await nettoyerCompteTest(prisma, `${PREFIXE}-INIT-CONS`);
+  });
+
+  it('la creation auto traverse calculerProchainMatricule alimente par les valeurs consommees', async () => {
+    const compte = await prisma.account.create({
+      data: { name: `${PREFIXE}-FN-ATTEINTE`, type: 'CABINET' },
+    });
+    const societe = await creerSocieteTest(
+      prisma,
+      formeJuridiqueId,
+      compte.id,
+      `${PREFIXE}-FN-ATTEINTE`,
+      'ZUM'
+    );
+
+    await prisma.matriculeConsomme.create({
+      data: { companyId: societe.companyId, valeur: 'ZUM00007' },
+    });
+
+    const attendu = calculerProchainMatricule({ prefixe: 'ZUM', longueur: 5 }, ['ZUM00007']);
+    expect(attendu).toBe('ZUM00008');
+    expect(calculerProchainMatricule({ prefixe: 'ZUM', longueur: 5 }, [])).toBe('ZUM00001');
+
+    const salarie = await creerSalarieMatriculeAuto(
+      prisma,
+      { prefixe: 'ZUM', longueur: 5 },
+      donneesSalarieBase(societe.companyId)
+    );
+    expect(salarie.matricule).toBe(attendu);
+
+    await nettoyerCompteTest(prisma, `${PREFIXE}-FN-ATTEINTE`);
+  });
+
   it('le compteur de numero d ordre n est pas decremente a la suppression d un emploi', async () => {
     const salarie = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-ORD-1`,
@@ -215,12 +308,39 @@ describe('compteurs fiche salarie (base reelle)', () => {
     });
     expect(compteurApresEchec).toBeNull();
 
+    const consommeApresEchec = await prisma.matriculeConsomme.count({
+      where: { companyId: societe.companyId },
+    });
+    expect(consommeApresEchec).toBe(0);
+
+    await expect(
+      prisma.$transaction(async (tx) => {
+        const { matricule } = await incrementerCompteurMatricule(tx, societe.companyId, 'TX', 3);
+        await marquerMatriculeConsomme(tx, societe.companyId, matricule);
+        throw new Error('annulation apres marquage');
+      })
+    ).rejects.toThrow('annulation apres marquage');
+
+    expect(
+      await prisma.matriculeConsomme.count({ where: { companyId: societe.companyId } })
+    ).toBe(0);
+    expect(
+      await prisma.compteurMatricule.findUnique({
+        where: { companyId_prefixe: { companyId: societe.companyId, prefixe: 'TX' } },
+      })
+    ).toBeNull();
+
     const salarie = await creerSalarieMatriculeAuto(
       prisma,
       { prefixe: 'TX', longueur: 3 },
       donneesSalarieBase(societe.companyId)
     );
     expect(salarie.matricule).toBe('TX001');
+
+    const consomme = await prisma.matriculeConsomme.findUnique({
+      where: { companyId_valeur: { companyId: societe.companyId, valeur: 'TX001' } },
+    });
+    expect(consomme).not.toBeNull();
 
     await nettoyerCompteTest(prisma, `${PREFIXE}-TX`);
   });

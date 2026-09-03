@@ -2,7 +2,7 @@
  * Calcul du prochain matricule salarie pour une societe.
  *
  * Retient le plus grand matricule commencant par le prefixe, y compris
- * ceux des salaries supprimes ou sortis (liste passee en entree).
+ * ceux des salaries supprimes ou sortis (valeurs consommees passees en entree).
  * La longueur ne s applique qu a la generation automatique.
  */
 
@@ -45,16 +45,16 @@ export function formaterMatriculeAuto(parametres: ParametresMatricule, numero: n
 }
 
 /**
- * Deduit le dernier numero consomme a partir des matricules existants (initialisation reprise).
+ * Deduit le dernier numero consomme a partir des valeurs deja attribuees.
  */
 export function deduireDernierNumeroMatricule(
   parametres: ParametresMatricule,
-  matriculesExistants: readonly string[]
+  matriculesConsommes: readonly string[]
 ): number {
   const { prefixe } = parametres;
   let maximum = 0n;
 
-  for (const matricule of matriculesExistants) {
+  for (const matricule of matriculesConsommes) {
     const suffixe = extraireSuffixeNumerique(matricule, prefixe);
     if (suffixe !== null && suffixe > maximum) {
       maximum = suffixe;
@@ -66,12 +66,13 @@ export function deduireDernierNumeroMatricule(
 
 /**
  * Calcule le prochain matricule auto-genere a partir des matricules deja consommes.
+ * La liste doit etre celle des valeurs persistees, pas seulement les salaries encore en poste.
  */
 export function calculerProchainMatricule(
   parametres: ParametresMatricule,
-  matriculesExistants: readonly string[]
+  matriculesConsommes: readonly string[]
 ): string {
-  const suivant = BigInt(deduireDernierNumeroMatricule(parametres, matriculesExistants)) + 1n;
+  const suivant = BigInt(deduireDernierNumeroMatricule(parametres, matriculesConsommes)) + 1n;
   return `${parametres.prefixe}${formaterSuffixe(suivant, parametres.longueur)}`;
 }
 
