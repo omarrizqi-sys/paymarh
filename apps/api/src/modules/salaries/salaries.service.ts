@@ -12,10 +12,7 @@ import { TenantContextService } from '../../common/tenancy/tenant-context.servic
 import { companyScope } from '../../common/tenancy/tenant-scope.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
-import {
-  creerSalarieMatriculeAuto,
-  marquerMatriculeConsomme,
-} from './compteurs-salarie.js';
+import { creerSalarieMatriculeAuto, marquerMatriculeConsomme } from './compteurs-salarie.js';
 import { deduireEtatSalarie, emploiEstOuvert } from './deductions-salarie.js';
 import { EmploisService } from './emplois.service.js';
 import type {
@@ -120,9 +117,7 @@ export class SalariesService {
     };
   }
 
-  private async versFicheComplete(
-    salarie: Awaited<ReturnType<typeof this.trouverSalarieSociete>>
-  ) {
+  private async versFicheComplete(salarie: Awaited<ReturnType<typeof this.trouverSalarieSociete>>) {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarie.id);
     const bulletins = await this.bulletins.listerBulletinsParSalarie(salarie.id);
     const emplois = await this.emplois.listerEmploisPourFicheSalarie(salarie.id, moisEnCours);
@@ -459,22 +454,16 @@ export class SalariesService {
       emailPersonnel:
         dto.emailPersonnel !== undefined ? dto.emailPersonnel : existant.emailPersonnel,
       emailProfessionnel:
-        dto.emailProfessionnel !== undefined
-          ? dto.emailProfessionnel
-          : existant.emailProfessionnel,
+        dto.emailProfessionnel !== undefined ? dto.emailProfessionnel : existant.emailProfessionnel,
       telephonePersonnel:
-        dto.telephonePersonnel !== undefined
-          ? dto.telephonePersonnel
-          : existant.telephonePersonnel,
+        dto.telephonePersonnel !== undefined ? dto.telephonePersonnel : existant.telephonePersonnel,
       telephoneProfessionnel:
         dto.telephoneProfessionnel !== undefined
           ? dto.telephoneProfessionnel
           : existant.telephoneProfessionnel,
       urgenceEmail: dto.urgenceEmail !== undefined ? dto.urgenceEmail : existant.urgenceEmail,
       urgenceTelephone:
-        dto.urgenceTelephone !== undefined
-          ? dto.urgenceTelephone
-          : existant.urgenceTelephone,
+        dto.urgenceTelephone !== undefined ? dto.urgenceTelephone : existant.urgenceTelephone,
     });
   }
 
@@ -521,9 +510,7 @@ export class SalariesService {
     const dateEntree =
       dto.dateEntree !== undefined ? versDate(dto.dateEntree) : existant.dateEntree;
     const dateAnciennete =
-      dto.dateAnciennete !== undefined
-        ? versDate(dto.dateAnciennete)
-        : existant.dateAnciennete;
+      dto.dateAnciennete !== undefined ? versDate(dto.dateAnciennete) : existant.dateAnciennete;
 
     if (dto.dateEntree !== undefined) donnees.dateEntree = dateEntree;
     if (dto.dateAnciennete !== undefined) donnees.dateAnciennete = dateAnciennete;
@@ -703,11 +690,7 @@ export class SalariesService {
     }
   }
 
-  private async verifierUniciteMatricule(
-    companyId: string,
-    matricule: string,
-    exclureId?: string
-  ) {
+  private async verifierUniciteMatricule(companyId: string, matricule: string, exclureId?: string) {
     const doublon = await this.prisma.salarie.findFirst({
       where: {
         companyId,

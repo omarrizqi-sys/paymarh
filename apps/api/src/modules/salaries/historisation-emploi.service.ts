@@ -15,9 +15,7 @@ function bulletinExistePourMois(
   bulletins: readonly { mois: string; etat: EtatBulletin }[],
   mois: string
 ): boolean {
-  return bulletins.some(
-    (b) => b.mois === mois && b.etat >= EtatBulletin.CALCULE
-  );
+  return bulletins.some((b) => b.mois === mois && b.etat >= EtatBulletin.CALCULE);
 }
 
 @Injectable()

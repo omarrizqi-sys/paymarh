@@ -1,13 +1,7 @@
 import type { Uuid } from './common';
 
 export type JourSemaine =
-  | 'LUNDI'
-  | 'MARDI'
-  | 'MERCREDI'
-  | 'JEUDI'
-  | 'VENDREDI'
-  | 'SAMEDI'
-  | 'DIMANCHE';
+  'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
 
 export interface ParametrageSociete {
   readonly id?: Uuid;

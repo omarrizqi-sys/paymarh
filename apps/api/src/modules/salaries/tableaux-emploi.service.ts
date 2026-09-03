@@ -21,14 +21,8 @@ import type {
 import { versDate } from './deductions-emploi.js';
 import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
-import {
-  INCLUDE_COLLECTIONS_EMPLOI,
-  mapperCollectionsEmploi,
-} from './mappers/tableaux.mapper.js';
-import {
-  INCLUDE_EMPLOI_COMPLET,
-  versEmploiComplet,
-} from './mappers/emploi.mapper.js';
+import { INCLUDE_COLLECTIONS_EMPLOI, mapperCollectionsEmploi } from './mappers/tableaux.mapper.js';
+import { INCLUDE_EMPLOI_COMPLET, versEmploiComplet } from './mappers/emploi.mapper.js';
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
@@ -114,11 +108,7 @@ export class TableauxEmploiService {
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
-  async supprimerPrimeContractuelle(
-    emploiId: string,
-    ligneId: string,
-    versionAttendue: number
-  ) {
+  async supprimerPrimeContractuelle(emploiId: string, ligneId: string, versionAttendue: number) {
     await this.trouverPrime(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
 
@@ -197,11 +187,7 @@ export class TableauxEmploiService {
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
-  async supprimerAvantageEnNature(
-    emploiId: string,
-    ligneId: string,
-    versionAttendue: number
-  ) {
+  async supprimerAvantageEnNature(emploiId: string, ligneId: string, versionAttendue: number) {
     await this.trouverAvantage(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
 
@@ -274,8 +260,7 @@ export class TableauxEmploiService {
     const contrat = this.contratAuMois(emploi, moisEnCours);
 
     const dateDebut = dto.dateDebut !== undefined ? versDate(dto.dateDebut) : existant.dateDebut;
-    const dateFin =
-      dto.dateFin !== undefined ? parseDateNullable(dto.dateFin) : existant.dateFin;
+    const dateFin = dto.dateFin !== undefined ? parseDateNullable(dto.dateFin) : existant.dateFin;
 
     const lignes = await this.prisma.statutParticulierLigne.findMany({
       where: { emploiId },
@@ -309,11 +294,7 @@ export class TableauxEmploiService {
     return this.reponseEmploi(emploi.salarieId, emploiId, alertes);
   }
 
-  async supprimerStatutParticulier(
-    emploiId: string,
-    ligneId: string,
-    versionAttendue: number
-  ) {
+  async supprimerStatutParticulier(emploiId: string, ligneId: string, versionAttendue: number) {
     const existant = await this.trouverStatut(emploiId, ligneId);
     this.refuserStatutPropage(existant.origine);
 
@@ -332,20 +313,13 @@ export class TableauxEmploiService {
     }
   }
 
-  private contratAuMois(
-    emploi: Awaited<ReturnType<typeof this.chargerEmploi>>,
-    mois: string
-  ) {
+  private contratAuMois(emploi: Awaited<ReturnType<typeof this.chargerEmploi>>, mois: string) {
     const v = resoudreLigneHistorique(emploi.contratVersions, mois);
     if (v === null) throw new Error(`Emploi ${emploi.id} sans version contrat au mois ${mois}`);
     return v;
   }
 
-  private async reponseEmploi(
-    salarieId: string,
-    emploiId: string,
-    alertes: AlerteApi[] = []
-  ) {
+  private async reponseEmploi(salarieId: string, emploiId: string, alertes: AlerteApi[] = []) {
     const emploi = await this.chargerEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const base = versEmploiComplet(emploi, moisEnCours);

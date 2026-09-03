@@ -74,10 +74,7 @@ export class MoisEnCoursService {
     private readonly prisma: PrismaService
   ) {}
 
-  async calculerPourSalarie(
-    salarieId: string,
-    referenceCalendaire = new Date()
-  ): Promise<string> {
+  async calculerPourSalarie(salarieId: string, referenceCalendaire = new Date()): Promise<string> {
     const bulletins = await this.bulletins.listerBulletinsParSalarie(salarieId);
 
     const calculeOuValide = bulletins.filter(

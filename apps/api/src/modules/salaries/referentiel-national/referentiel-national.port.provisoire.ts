@@ -11,10 +11,7 @@ import type {
  */
 @Injectable()
 export class ReferentielNationalPortProvisoire implements ReferentielNationalPort {
-  async lireValeur(
-    _cle: CleReferentielNational,
-    _mois: string
-  ): Promise<Decimal | null> {
+  async lireValeur(_cle: CleReferentielNational, _mois: string): Promise<Decimal | null> {
     return null;
   }
 }

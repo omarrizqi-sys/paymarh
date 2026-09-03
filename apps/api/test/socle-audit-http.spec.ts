@@ -1,10 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
-import {
-  creerSalarieMin,
-  creerSocieteTest,
-} from './support/fiche-salarie-fixtures.js';
+import { creerSalarieMin, creerSocieteTest } from './support/fiche-salarie-fixtures.js';
 import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 

@@ -207,8 +207,9 @@ describe('AuditLog — traces HTTP reelles', () => {
       chemin: `/societes/${societeId}/impact-suppression`,
       utilisateurId: adminId,
     });
-    const jeton = extraireDonnees<{ jetonConfirmation: string }>(await lireJson(impact))
-      .jetonConfirmation;
+    const jeton = extraireDonnees<{ jetonConfirmation: string }>(
+      await lireJson(impact)
+    ).jetonConfirmation;
 
     const reponse = await appelerApi(app, {
       method: 'DELETE',

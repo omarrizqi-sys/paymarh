@@ -19,9 +19,7 @@ export function compterPersonnesACharge(
   lignes: readonly { aCharge: boolean; moisEffetDebut: string; moisEffetFin: string | null }[],
   moisEnCours: string
 ): number {
-  return lignes.filter(
-    (ligne) => ligne.aCharge && ligneLisiblePourMois(ligne, moisEnCours)
-  ).length;
+  return lignes.filter((ligne) => ligne.aCharge && ligneLisiblePourMois(ligne, moisEnCours)).length;
 }
 
 function compterEcheancesPrelevees(

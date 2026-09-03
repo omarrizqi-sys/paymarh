@@ -125,14 +125,7 @@ export class AffectationEmploiSaisieDto {
   @IsOptional()
   @IsEnum(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'])
   reposHebdomadaire?:
-    | 'LUNDI'
-    | 'MARDI'
-    | 'MERCREDI'
-    | 'JEUDI'
-    | 'VENDREDI'
-    | 'SAMEDI'
-    | 'DIMANCHE'
-    | null;
+    'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE' | null;
 
   @IsOptional()
   @IsBoolean()
@@ -278,14 +271,7 @@ export class ModifierAffectationEmploiDto {
   @IsOptional()
   @IsEnum(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'])
   reposHebdomadaire?:
-    | 'LUNDI'
-    | 'MARDI'
-    | 'MERCREDI'
-    | 'JEUDI'
-    | 'VENDREDI'
-    | 'SAMEDI'
-    | 'DIMANCHE'
-    | null;
+    'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE' | null;
 
   @IsOptional()
   @IsBoolean()

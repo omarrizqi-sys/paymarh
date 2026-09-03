@@ -51,11 +51,9 @@ export async function deduireHeuresMensuelles(
   id: string,
   donnees: { horaireDefautLignes: unknown[]; dureeHebdomadaire: string }
 ) {
-  return appelerApiMutation<{ horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[] }>(
-    'POST',
-    `/etablissements/${id}/deduire-heures-mensuelles`,
-    donnees
-  );
+  return appelerApiMutation<{
+    horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[];
+  }>('POST', `/etablissements/${id}/deduire-heures-mensuelles`, donnees);
 }
 
 export async function ecrireParametrageEtablissement(id: string, donnees: Record<string, unknown>) {
@@ -67,9 +65,7 @@ export async function ecrireParametrageEtablissement(id: string, donnees: Record
 }
 
 export async function impactSuppressionEtablissement(id: string) {
-  return appelerApiGet<ImpactSuppressionEtablissement>(
-    `/etablissements/${id}/impact-suppression`
-  );
+  return appelerApiGet<ImpactSuppressionEtablissement>(`/etablissements/${id}/impact-suppression`);
 }
 
 export async function supprimerEtablissement(id: string, jeton: string) {

@@ -144,9 +144,7 @@ export class TableauxSalarieService {
       dateNaissance: dto.dateNaissance ? versDate(dto.dateNaissance) : existante.dateNaissance,
       aCharge: dto.aCharge ?? existante.aCharge,
       situationHandicap:
-        lienParente === 'ENFANT'
-          ? dto.situationHandicap ?? existante.situationHandicap
-          : false,
+        lienParente === 'ENFANT' ? (dto.situationHandicap ?? existante.situationHandicap) : false,
     };
 
     validerAlphabetiquePersonne(fusion.prenom, fusion.nom);
@@ -337,11 +335,7 @@ export class TableauxSalarieService {
     const mensualite = new Decimal(dto.mensualite);
 
     const alertes: AlerteApi[] = [];
-    const alertePret = collecterAlertePretIncoherent(
-      montantTotal,
-      mensualite,
-      dto.nombreEcheances
-    );
+    const alertePret = collecterAlertePretIncoherent(montantTotal, mensualite, dto.nombreEcheances);
     if (alertePret !== null) alertes.push(alertePret);
 
     await this.prisma.pret.create({

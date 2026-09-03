@@ -227,7 +227,9 @@ describe('champs obligatoires — absent vs vide sur les ecritures HTTP', () => 
     });
 
     expect(reponse.status).toBe(200);
-    const corps = (await reponse.json()) as { data?: { horaireDefautLignes?: { nombreHeures: string; jourSemaine: string }[] } };
+    const corps = (await reponse.json()) as {
+      data?: { horaireDefautLignes?: { nombreHeures: string; jourSemaine: string }[] };
+    };
     const dimanche = corps.data?.horaireDefautLignes?.find((l) => l.jourSemaine === 'DIMANCHE');
     expect(dimanche?.nombreHeures).toBe('0');
   });

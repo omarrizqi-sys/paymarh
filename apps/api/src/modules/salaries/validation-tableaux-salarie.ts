@@ -1,10 +1,7 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import type { PrismaService } from '../../common/prisma/prisma.service.js';
-import {
-  avertissementsIdentifiants,
-  assertChiffres,
-} from '../companies/validation-fiche.js';
+import { avertissementsIdentifiants, assertChiffres } from '../companies/validation-fiche.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { sommePartsVirement } from './deductions-tableaux.js';
 import type { ReferentielNationalPort } from './referentiel-national/referentiel-national.port.js';
@@ -48,9 +45,7 @@ export function refuserSituationHandicapConjoint(
   }
 }
 
-export function assertPartVirement(
-  comptes: readonly { partVirement?: string | null }[]
-): void {
+export function assertPartVirement(comptes: readonly { partVirement?: string | null }[]): void {
   if (comptes.length <= 1) return;
   const parts = comptes.map((c) =>
     c.partVirement !== null && c.partVirement !== undefined
@@ -65,10 +60,7 @@ export function assertPartVirement(
   }
 }
 
-export function assertMontantMensuelSaisie(
-  montantMensuel: Decimal,
-  montantTotal: Decimal
-): void {
+export function assertMontantMensuelSaisie(montantMensuel: Decimal, montantTotal: Decimal): void {
   if (montantMensuel.gt(montantTotal)) {
     throw new ValidationBloquanteTableauError(
       CODES_REPONSE.MONTANT_MENSUEL_SUPERIEUR_TOTAL.code,
@@ -95,7 +87,13 @@ export async function collecterAlerteBanqueIncoherente(
   banqueId: string | null | undefined,
   rib: string | null | undefined
 ): Promise<AlerteApi | null> {
-  if (banqueId === null || banqueId === undefined || rib === null || rib === undefined || rib.length < 3) {
+  if (
+    banqueId === null ||
+    banqueId === undefined ||
+    rib === null ||
+    rib === undefined ||
+    rib.length < 3
+  ) {
     return null;
   }
   const codeRib = rib.slice(0, 3);
@@ -103,7 +101,11 @@ export async function collecterAlerteBanqueIncoherente(
     where: { id: banqueId },
     select: { codeBanque: true },
   });
-  if (banque?.codeBanque !== null && banque?.codeBanque !== undefined && banque.codeBanque !== codeRib) {
+  if (
+    banque?.codeBanque !== null &&
+    banque?.codeBanque !== undefined &&
+    banque.codeBanque !== codeRib
+  ) {
     return {
       code: CODES_REPONSE.BANQUE_INCOHERENTE.code,
       champ: 'banqueId',

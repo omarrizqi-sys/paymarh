@@ -167,6 +167,4 @@ export const TYPES_HEURE = [
   { code: 'MAJOREE_100', libelle: 'Heures majorées 100 %', ordre: 4 },
 ] as const;
 
-export const TYPES_EXONERATION = [
-  { code: 'TAHFIZ', libelle: 'Tahfiz' },
-] as const;
+export const TYPES_EXONERATION = [{ code: 'TAHFIZ', libelle: 'Tahfiz' }] as const;

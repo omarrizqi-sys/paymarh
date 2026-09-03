@@ -20,7 +20,10 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
-      className={cn('hover:bg-muted/50 border-b transition-colors data-[state=selected]:bg-muted', className)}
+      className={cn(
+        'hover:bg-muted/50 border-b transition-colors data-[state=selected]:bg-muted',
+        className
+      )}
       {...props}
     />
   );
@@ -39,7 +42,9 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 }
 
 function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
-  return <td className={cn('p-2 align-middle [&:has([role=checkbox])]:pr-0', className)} {...props} />;
+  return (
+    <td className={cn('p-2 align-middle [&:has([role=checkbox])]:pr-0', className)} {...props} />
+  );
 }
 
 export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell };

@@ -5,17 +5,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { COEFFICIENT_HEBDO_VERS_MENSUEL } from '../src/modules/companies/heures-mensuelles.js';
 import { AppModule } from '../src/app.module.js';
 import { HEADER_PERMISSIONS_REFUSEES } from '../src/common/permissions/permissions-refusees.header.js';
-import { BULLETIN_PORT, EtatBulletin, type BulletinPort } from '../src/modules/salaries/bulletin/bulletin.port.js';
+import {
+  BULLETIN_PORT,
+  EtatBulletin,
+  type BulletinPort,
+} from '../src/modules/salaries/bulletin/bulletin.port.js';
 import {
   REFERENTIEL_NATIONAL_PORT,
   type ReferentielNationalPort,
 } from '../src/modules/salaries/referentiel-national/referentiel-national.port.js';
 import { SocleTestModule } from '../src/modules/salaries/test/socle-test.module.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
-import {
-  creerSalarieMin,
-  creerSocieteTest,
-} from './support/fiche-salarie-fixtures.js';
+import { creerSalarieMin, creerSocieteTest } from './support/fiche-salarie-fixtures.js';
 import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 
@@ -287,7 +288,9 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
         { montant }
       );
       expect(reponse.status).toBe(200);
-      const corps = (await reponse.json()) as { donnees: { version: number; remuneration: { montant: string } } };
+      const corps = (await reponse.json()) as {
+        donnees: { version: number; remuneration: { montant: string } };
+      };
       version = corps.donnees.version;
       expect(corps.donnees.remuneration.montant).toBe(montant);
     }
@@ -814,14 +817,9 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
       societeA.etablissementPrincipalId
     );
 
-    await patchRemuneration(
-      app,
-      utilisateurId,
-      societeA.companyId,
-      cree.id,
-      cree.version,
-      { montant: '9999' }
-    );
+    await patchRemuneration(app, utilisateurId, societeA.companyId, cree.id, cree.version, {
+      montant: '9999',
+    });
 
     const entetesMasque = entetes(utilisateurId, societeA.companyId, {
       [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.lire',
@@ -834,10 +832,9 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     expect('remuneration' in corpsEmploi.donnees).toBe(false);
     expect('paiement' in corpsEmploi.donnees).toBe(false);
 
-    const versions = await fetch(
-      urlLocale(app, `/emplois/${cree.id}/versions/remuneration`),
-      { headers: entetesMasque }
-    );
+    const versions = await fetch(urlLocale(app, `/emplois/${cree.id}/versions/remuneration`), {
+      headers: entetesMasque,
+    });
     const corpsVersions = (await versions.json()) as {
       donnees: Record<string, unknown>[];
     };
@@ -955,10 +952,9 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
       }
     );
 
-    const reponse = await fetch(
-      urlLocale(app, `/emplois/${futur.id}/versions/remuneration`),
-      { headers: entetes(utilisateurId, societeA.companyId) }
-    );
+    const reponse = await fetch(urlLocale(app, `/emplois/${futur.id}/versions/remuneration`), {
+      headers: entetes(utilisateurId, societeA.companyId),
+    });
     expect(reponse.status).toBe(200);
     const { donnees } = (await reponse.json()) as {
       donnees: { moisEffet: string; remuneration: { montant: string } }[];
@@ -1061,8 +1057,7 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
   it('C20 — deux emplois actifs depassant le seuil legal produisent une alerte', async () => {
     const appRef = await creerAppAvecPorts({
       referentiel: {
-        lireValeur: async (cle) =>
-          cle === 'DUREE_LEGALE_TRAVAIL' ? new Decimal('40') : null,
+        lireValeur: async (cle) => (cle === 'DUREE_LEGALE_TRAVAIL' ? new Decimal('40') : null),
       },
     });
 
@@ -1094,9 +1089,9 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
       });
       expect(reponse.status).toBe(201);
       const corps = (await reponse.json()) as { alertes: { code: string }[] };
-      expect(
-        corps.alertes.some((a) => a.code === 'DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE')
-      ).toBe(true);
+      expect(corps.alertes.some((a) => a.code === 'DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE')).toBe(
+        true
+      );
     } finally {
       await appRef.close();
     }

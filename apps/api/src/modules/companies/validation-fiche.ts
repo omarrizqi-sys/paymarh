@@ -115,10 +115,7 @@ export function controlerCoherenceDossier(saisie: {
   }
 }
 
-export function controlerDatesSociete(
-  dateCreation: Date | null,
-  dateCessation: Date | null
-): void {
+export function controlerDatesSociete(dateCreation: Date | null, dateCessation: Date | null): void {
   const erreurs = controlerDatesCreationCessation(dateCreation, dateCessation);
   if (erreurs.includes('CESSATION_AVANT_CREATION')) {
     throw new ValidationBloquanteError(

@@ -32,10 +32,7 @@ import type {
   ModifierSocieteDto,
   ParametrageSocieteDto,
 } from './dto/societe.dto.js';
-import {
-  societeADesBulletins,
-  societeADesSalaries,
-} from './gardes-metier.js';
+import { societeADesBulletins, societeADesSalaries } from './gardes-metier.js';
 import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
 import { enrichirSociete } from './enrichir-operations.js';
@@ -136,9 +133,7 @@ export class SocietesService {
       });
 
       const dateCreation = dto.dateCreation ? new Date(dto.dateCreation) : null;
-      const dateCessation = dto.dateCessationActivite
-        ? new Date(dto.dateCessationActivite)
-        : null;
+      const dateCessation = dto.dateCessationActivite ? new Date(dto.dateCessationActivite) : null;
       controlerDatesSociete(dateCreation, dateCessation);
     } catch (erreur) {
       relancerValidation(erreur);
@@ -249,7 +244,8 @@ export class SocietesService {
 
     try {
       if (dto.moisDebutMontage) assertMoisAAAA_MM(dto.moisDebutMontage, 'moisDebutMontage');
-      if (dto.moisDebutProduction) assertMoisAAAA_MM(dto.moisDebutProduction, 'moisDebutProduction');
+      if (dto.moisDebutProduction)
+        assertMoisAAAA_MM(dto.moisDebutProduction, 'moisDebutProduction');
       assertAlphabetique(dto.signatairePrenom ?? undefined, 'signatairePrenom');
       assertAlphabetique(dto.signataireNom ?? undefined, 'signataireNom');
       assertAlphabetique(dto.tribunalRegistreCommerce ?? undefined, 'tribunalRegistreCommerce');
@@ -358,10 +354,7 @@ export class SocietesService {
     return ok(toSociete(maj), warnings);
   }
 
-  async changerEtat(
-    id: Uuid,
-    dto: ChangerEtatSocieteDto
-  ): Promise<ApiResponse<Societe>> {
+  async changerEtat(id: Uuid, dto: ChangerEtatSocieteDto): Promise<ApiResponse<Societe>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.changer-etat', { companyId: id });
     const existante = await this.trouverOu404(id);
@@ -417,10 +410,7 @@ export class SocietesService {
     return ok(applicable);
   }
 
-  async ecrireParametrage(
-    id: Uuid,
-    dto: ParametrageSocieteDto
-  ): Promise<ApiResponse<unknown>> {
+  async ecrireParametrage(id: Uuid, dto: ParametrageSocieteDto): Promise<ApiResponse<unknown>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.modifier', { companyId: id });
     const societe = await this.trouverOu404(id);
@@ -501,8 +491,7 @@ export class SocietesService {
     if (!confirmationJeton) {
       throw new BadRequestException({
         code: 'CONFIRMATION_REQUISE',
-        message:
-          'La suppression exige le jeton renvoye par GET /societes/:id/impact-suppression.',
+        message: 'La suppression exige le jeton renvoye par GET /societes/:id/impact-suppression.',
       });
     }
 
@@ -550,19 +539,16 @@ export class SocietesService {
     });
     const etablissementIds = etablissements.map((e) => e.id);
 
-    const [
-      comptesBancaires,
-      parametragesHistoriquesSociete,
-      parametragesHistoriquesEtablissement,
-    ] = await Promise.all([
-      this.prisma.compteBancaire.count({ where: { companyId: id } }),
-      this.prisma.companyParametrageHistorique.count({ where: { companyId: id } }),
-      etablissementIds.length === 0
-        ? Promise.resolve(0)
-        : this.prisma.etablissementParametrageHistorique.count({
-            where: { etablissementId: { in: etablissementIds } },
-          }),
-    ]);
+    const [comptesBancaires, parametragesHistoriquesSociete, parametragesHistoriquesEtablissement] =
+      await Promise.all([
+        this.prisma.compteBancaire.count({ where: { companyId: id } }),
+        this.prisma.companyParametrageHistorique.count({ where: { companyId: id } }),
+        etablissementIds.length === 0
+          ? Promise.resolve(0)
+          : this.prisma.etablissementParametrageHistorique.count({
+              where: { etablissementId: { in: etablissementIds } },
+            }),
+      ]);
 
     const inventaire = {
       etablissements: etablissements.length,

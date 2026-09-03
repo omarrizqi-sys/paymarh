@@ -37,7 +37,9 @@ export async function deduireEtatSalarie(
   return 'INACTIF';
 }
 
-export function deduireTypePieceIdentite(codeNationalite: string | null | undefined): string | null {
+export function deduireTypePieceIdentite(
+  codeNationalite: string | null | undefined
+): string | null {
   if (codeNationalite === null || codeNationalite === undefined) return null;
   return codeNationalite === 'MA' ? 'CIN' : 'carte de séjour';
 }

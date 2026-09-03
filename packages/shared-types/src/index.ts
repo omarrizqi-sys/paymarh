@@ -33,14 +33,11 @@ export type { AuditLog, AuditEcart, AuditChampModifie } from './audit';
 export type { HealthResponse } from './health';
 export type { Permission } from './permission';
 export { PERMISSIONS } from './permission';
-export type { RessourceAvecOperations, ListResponseAvecOperations } from './ressource-avec-operations';
 export type {
-  FormeJuridique,
-  Banque,
-  JourFerie,
-  TypeHeure,
-  TypeExoneration,
-} from './referentiel';
+  RessourceAvecOperations,
+  ListResponseAvecOperations,
+} from './ressource-avec-operations';
+export type { FormeJuridique, Banque, JourFerie, TypeHeure, TypeExoneration } from './referentiel';
 export type {
   JourSemaine,
   ParametrageSociete,

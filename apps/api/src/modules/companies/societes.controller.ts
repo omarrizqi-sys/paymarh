@@ -37,10 +37,7 @@ export class SocietesController {
   }
 
   @Get(':id/parametrage')
-  parametrage(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query('mois') mois: string
-  ) {
+  parametrage(@Param('id', ParseUUIDPipe) id: string, @Query('mois') mois: string) {
     return this.societes.lireParametrage(id, mois);
   }
 
@@ -55,26 +52,17 @@ export class SocietesController {
   }
 
   @Patch(':id/etat')
-  changerEtat(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ChangerEtatSocieteDto
-  ) {
+  changerEtat(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ChangerEtatSocieteDto) {
     return this.societes.changerEtat(id, dto);
   }
 
   @Patch(':id')
-  modifier(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ModifierSocieteDto
-  ) {
+  modifier(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ModifierSocieteDto) {
     return this.societes.modifier(id, dto);
   }
 
   @Put(':id/parametrage')
-  ecrireParametrage(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ParametrageSocieteDto
-  ) {
+  ecrireParametrage(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ParametrageSocieteDto) {
     return this.societes.ecrireParametrage(id, dto);
   }
 

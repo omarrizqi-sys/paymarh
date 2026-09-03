@@ -9,7 +9,11 @@ function fichiersSource(dir: string): string[] {
   for (const entree of readdirSync(dir, { withFileTypes: true })) {
     const chemin = join(dir, entree.name);
     if (entree.isDirectory()) result.push(...fichiersSource(chemin));
-    else if (/\.(ts|tsx)$/.test(entree.name) && !/\.spec\.(ts|tsx)$/.test(entree.name) && !/-mapper\.(ts|tsx)$/.test(entree.name)) {
+    else if (
+      /\.(ts|tsx)$/.test(entree.name) &&
+      !/\.spec\.(ts|tsx)$/.test(entree.name) &&
+      !/-mapper\.(ts|tsx)$/.test(entree.name)
+    ) {
       result.push(chemin);
     }
   }

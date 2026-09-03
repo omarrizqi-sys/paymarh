@@ -1,10 +1,4 @@
-import {
-  Controller,
-  type MiddlewareConsumer,
-  Module,
-  type NestModule,
-  Post,
-} from '@nestjs/common';
+import { Controller, type MiddlewareConsumer, Module, type NestModule, Post } from '@nestjs/common';
 import { RouteSansEcriture } from '../../../common/conformite-routes/route-sans-ecriture.decorator.js';
 import { PrismaModule } from '../../../common/prisma/prisma.module.js';
 import { PrismaService } from '../../../common/prisma/prisma.service.js';

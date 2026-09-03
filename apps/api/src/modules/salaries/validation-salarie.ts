@@ -18,10 +18,7 @@ const MOTIF_CHIFFRES = /^\d*$/;
 const MOTIF_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MOTIF_TELEPHONE = /^[+]?[\d\s()./-]{6,20}$/;
 
-export function assertAlphabetiqueSalarie(
-  valeur: string | null | undefined,
-  champ: string
-): void {
+export function assertAlphabetiqueSalarie(valeur: string | null | undefined, champ: string): void {
   if (valeur === null || valeur === undefined || valeur === '') return;
   if (!MOTIF_ALPHABETIQUE.test(valeur)) {
     throw new ValidationBloquanteSalarieError(
@@ -32,10 +29,7 @@ export function assertAlphabetiqueSalarie(
   }
 }
 
-export function assertChiffresSalarie(
-  valeur: string | null | undefined,
-  champ: string
-): void {
+export function assertChiffresSalarie(valeur: string | null | undefined, champ: string): void {
   if (valeur === null || valeur === undefined || valeur === '') return;
   if (!MOTIF_CHIFFRES.test(valeur)) {
     throw new ValidationBloquanteSalarieError(

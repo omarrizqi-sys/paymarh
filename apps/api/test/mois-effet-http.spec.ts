@@ -1,11 +1,7 @@
 import type { INestApplication } from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { creerAppHttp } from './support/app-http.js';
-import {
-  appelerApi,
-  creerSocieteHttp,
-  nettoyerJournauxAudit,
-} from './support/http-client.js';
+import { appelerApi, creerSocieteHttp, nettoyerJournauxAudit } from './support/http-client.js';
 import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-http-mois-${Date.now()}`;

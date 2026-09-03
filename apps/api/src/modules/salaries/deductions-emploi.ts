@@ -38,11 +38,7 @@ export function comparerDates(a: Date, b: Date): number {
   return da.getTime() - db.getTime();
 }
 
-export function dateDansIntervalle(
-  date: Date,
-  debut: Date,
-  fin: Date | null
-): boolean {
+export function dateDansIntervalle(date: Date, debut: Date, fin: Date | null): boolean {
   if (comparerDates(date, debut) < 0) return false;
   if (fin === null) return true;
   return comparerDates(date, fin) <= 0;

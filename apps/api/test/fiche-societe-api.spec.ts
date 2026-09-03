@@ -103,9 +103,8 @@ describe('API fiche societe — scenarios d integration', () => {
       expect((erreur as { code: string }).code).toBe('P2002');
     }
     // Le message API neutre est verifie en unitaire via ValidationBloquanteError
-    const { erreurValeurIndisponible } = await import(
-      '../src/modules/companies/validation-fiche.js'
-    );
+    const { erreurValeurIndisponible } =
+      await import('../src/modules/companies/validation-fiche.js');
     const err = erreurValeurIndisponible('identifiantFiscal');
     expect(err.code).toBe('VALEUR_INDISPONIBLE');
     expect(err.message.toLowerCase()).not.toMatch(/raison|dossier|societe|demo/i);
@@ -172,9 +171,7 @@ describe('API fiche societe — scenarios d integration', () => {
       },
     });
 
-    const { resoudreLigneHistorique } = await import(
-      '../src/modules/companies/historisation.js'
-    );
+    const { resoudreLigneHistorique } = await import('../src/modules/companies/historisation.js');
     const lignes = await prisma.companyParametrageHistorique.findMany({
       where: { companyId: societe.id },
     });

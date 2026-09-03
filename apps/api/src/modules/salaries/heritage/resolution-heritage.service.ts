@@ -37,7 +37,10 @@ export class ResolutionHeritageService {
     @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort
   ) {}
 
-  async resoudrePourEmploi(emploi: VersionsEmploiHeritage, mois: string): Promise<ResolutionsEmploi> {
+  async resoudrePourEmploi(
+    emploi: VersionsEmploiHeritage,
+    mois: string
+  ): Promise<ResolutionsEmploi> {
     const [resolutions] = await this.resoudrePourEmplois([emploi], mois);
     return (
       resolutions ??
@@ -87,7 +90,12 @@ export class ResolutionHeritageService {
       const affectation = resoudreLigneHistorique(emploi.affectationVersions, mois);
       const remuneration = resoudreLigneHistorique(emploi.remunerationVersions, mois);
       if (affectation === null || remuneration === null) {
-        return assemblerResolutionsEmploi(snapshotVide(), null, { dureeLegaleTravail: dureeLegale }, mois);
+        return assemblerResolutionsEmploi(
+          snapshotVide(),
+          null,
+          { dureeLegaleTravail: dureeLegale },
+          mois
+        );
       }
 
       const snapshotSalarie: SnapshotSalarieHeritage = {
@@ -102,7 +110,12 @@ export class ResolutionHeritageService {
       };
 
       const etab = parEtab.get(affectation.etablissementId) ?? null;
-      return assemblerResolutionsEmploi(snapshotSalarie, etab, { dureeLegaleTravail: dureeLegale }, mois);
+      return assemblerResolutionsEmploi(
+        snapshotSalarie,
+        etab,
+        { dureeLegaleTravail: dureeLegale },
+        mois
+      );
     });
   }
 }

@@ -16,20 +16,14 @@ import type {
   TypeExoneration,
   TypeHeure,
 } from '@paymarh/shared-types';
-import {
-  afficherDateInactivite,
-  afficherDatesExoneration,
-} from '@/lib/affichage/conditions';
+import { afficherDateInactivite, afficherDatesExoneration } from '@/lib/affichage/conditions';
 import { formaterMoisAAAA_MM, libelleEtatDossier } from '@/lib/affichage/libelles';
 import { AppelApiEchoue } from '@/lib/api/client';
 import {
   impactSuppressionCompteBancaire,
   supprimerCompteBancaire,
 } from '@/lib/api/comptes-bancaires';
-import {
-  impactSuppressionEtablissement,
-  supprimerEtablissement,
-} from '@/lib/api/etablissements';
+import { impactSuppressionEtablissement, supprimerEtablissement } from '@/lib/api/etablissements';
 import {
   changerEtatSociete,
   ecrireParametrageSociete,
@@ -89,7 +83,10 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
   const [typeExoCourant, setTypeExoCourant] = useState(parametrage?.typeExonerationId ?? '');
   const [etabSelectionne, setEtabSelectionne] = useState(initial.etablissements[0]?.id ?? '');
   const [suppression, setSuppression] = useState<
-    { type: 'societe' } | { type: 'etablissement'; id: string } | { type: 'compte'; id: string } | null
+    | { type: 'societe' }
+    | { type: 'etablissement'; id: string }
+    | { type: 'compte'; id: string }
+    | null
   >(null);
 
   function fusionnerAvertissements(
@@ -179,7 +176,11 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
                   disabled={!peutChangerEtat}
                   required
                 />
-                <MessagesChamp champ="dateInactivite" erreur={erreurs.dateInactivite} avertissements={avertissements} />
+                <MessagesChamp
+                  champ="dateInactivite"
+                  erreur={erreurs.dateInactivite}
+                  avertissements={avertissements}
+                />
               </div>
             ) : null}
           </div>
@@ -227,64 +228,160 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         >
           <div className="space-y-2">
             <Label htmlFor="codeDossier">Code dossier *</Label>
-            <Input id="codeDossier" name="codeDossier" defaultValue={societe.codeDossier} disabled={!peutModifier} required />
-            <MessagesChamp champ="codeDossier" erreur={erreurs.codeDossier} avertissements={avertissements} />
+            <Input
+              id="codeDossier"
+              name="codeDossier"
+              defaultValue={societe.codeDossier}
+              disabled={!peutModifier}
+              required
+            />
+            <MessagesChamp
+              champ="codeDossier"
+              erreur={erreurs.codeDossier}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="raisonSociale">Raison sociale *</Label>
-            <Input id="raisonSociale" name="raisonSociale" defaultValue={societe.raisonSociale} disabled={!peutModifier} required />
-            <MessagesChamp champ="raisonSociale" erreur={erreurs.raisonSociale} avertissements={avertissements} />
+            <Input
+              id="raisonSociale"
+              name="raisonSociale"
+              defaultValue={societe.raisonSociale}
+              disabled={!peutModifier}
+              required
+            />
+            <MessagesChamp
+              champ="raisonSociale"
+              erreur={erreurs.raisonSociale}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="nomCommercial">Nom commercial</Label>
-            <Input id="nomCommercial" name="nomCommercial" defaultValue={societe.nomCommercial ?? ''} disabled={!peutModifier} />
+            <Input
+              id="nomCommercial"
+              name="nomCommercial"
+              defaultValue={societe.nomCommercial ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="formeJuridiqueId">Forme juridique *</Label>
-            <Select id="formeJuridiqueId" name="formeJuridiqueId" defaultValue={societe.formeJuridiqueId} disabled={!peutModifier}>
+            <Select
+              id="formeJuridiqueId"
+              name="formeJuridiqueId"
+              defaultValue={societe.formeJuridiqueId}
+              disabled={!peutModifier}
+            >
               {initial.formesJuridiques.map((f) => (
-                <option key={f.id} value={f.id}>{f.libelle}</option>
+                <option key={f.id} value={f.id}>
+                  {f.libelle}
+                </option>
               ))}
             </Select>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="activiteExercee">Activite exercee</Label>
-            <Input id="activiteExercee" name="activiteExercee" defaultValue={societe.activiteExercee ?? ''} disabled={!peutModifier} />
+            <Input
+              id="activiteExercee"
+              name="activiteExercee"
+              defaultValue={societe.activiteExercee ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="identifiantFiscal">Identifiant fiscal</Label>
-            <Input id="identifiantFiscal" name="identifiantFiscal" defaultValue={societe.identifiantFiscal ?? ''} disabled={!peutModifier} inputMode="numeric" />
-            <MessagesChamp champ="identifiantFiscal" erreur={erreurs.identifiantFiscal} avertissements={avertissements} />
+            <Input
+              id="identifiantFiscal"
+              name="identifiantFiscal"
+              defaultValue={societe.identifiantFiscal ?? ''}
+              disabled={!peutModifier}
+              inputMode="numeric"
+            />
+            <MessagesChamp
+              champ="identifiantFiscal"
+              erreur={erreurs.identifiantFiscal}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="registreCommerce">Registre de commerce</Label>
-            <Input id="registreCommerce" name="registreCommerce" defaultValue={societe.registreCommerce ?? ''} disabled={!peutModifier} inputMode="numeric" />
-            <MessagesChamp champ="registreCommerce" erreur={erreurs.registreCommerce} avertissements={avertissements} />
+            <Input
+              id="registreCommerce"
+              name="registreCommerce"
+              defaultValue={societe.registreCommerce ?? ''}
+              disabled={!peutModifier}
+              inputMode="numeric"
+            />
+            <MessagesChamp
+              champ="registreCommerce"
+              erreur={erreurs.registreCommerce}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="tribunalRegistreCommerce">Tribunal du registre</Label>
-            <Input id="tribunalRegistreCommerce" name="tribunalRegistreCommerce" defaultValue={societe.tribunalRegistreCommerce ?? ''} disabled={!peutModifier} />
+            <Input
+              id="tribunalRegistreCommerce"
+              name="tribunalRegistreCommerce"
+              defaultValue={societe.tribunalRegistreCommerce ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="dateCreation">Date de creation</Label>
-            <Input id="dateCreation" name="dateCreation" type="date" defaultValue={societe.dateCreation?.slice(0, 10) ?? ''} disabled={!peutModifier} />
-            <MessagesChamp champ="dateCreation" erreur={erreurs.dateCreation} avertissements={avertissements} />
+            <Input
+              id="dateCreation"
+              name="dateCreation"
+              type="date"
+              defaultValue={societe.dateCreation?.slice(0, 10) ?? ''}
+              disabled={!peutModifier}
+            />
+            <MessagesChamp
+              champ="dateCreation"
+              erreur={erreurs.dateCreation}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="dateCessationActivite">Date de cessation d activite</Label>
-            <Input id="dateCessationActivite" name="dateCessationActivite" type="date" defaultValue={societe.dateCessationActivite?.slice(0, 10) ?? ''} disabled={!peutModifier} />
-            <MessagesChamp champ="dateCessationActivite" erreur={erreurs.dateCessationActivite} avertissements={avertissements} />
+            <Input
+              id="dateCessationActivite"
+              name="dateCessationActivite"
+              type="date"
+              defaultValue={societe.dateCessationActivite?.slice(0, 10) ?? ''}
+              disabled={!peutModifier}
+            />
+            <MessagesChamp
+              champ="dateCessationActivite"
+              erreur={erreurs.dateCessationActivite}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="siteWeb">Site web</Label>
-            <Input id="siteWeb" name="siteWeb" defaultValue={societe.siteWeb ?? ''} disabled={!peutModifier} />
+            <Input
+              id="siteWeb"
+              name="siteWeb"
+              defaultValue={societe.siteWeb ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="regimeDeBase">Regime de base *</Label>
-            <Select id="regimeDeBase" name="regimeDeBase" defaultValue={societe.regimeDeBase} disabled={!peutModifier}>
+            <Select
+              id="regimeDeBase"
+              name="regimeDeBase"
+              defaultValue={societe.regimeDeBase}
+              disabled={!peutModifier}
+            >
               <option value="NON_AGRICOLE">Regime general (non agricole)</option>
             </Select>
-            <MessagesChamp champ="regimeDeBase" erreur={erreurs.regimeDeBase} avertissements={avertissements} />
+            <MessagesChamp
+              champ="regimeDeBase"
+              erreur={erreurs.regimeDeBase}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="periodicitePaie">Periodicite de paie</Label>
@@ -292,15 +389,27 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           </div>
           <div className="space-y-2">
             <Label htmlFor="moisDebutMontage">Mois debut montage</Label>
-            <Input id="moisDebutMontage" name="moisDebutMontage" defaultValue={societe.moisDebutMontage} disabled={!peutModifier} />
+            <Input
+              id="moisDebutMontage"
+              name="moisDebutMontage"
+              defaultValue={societe.moisDebutMontage}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="moisDebutProduction">Mois debut production</Label>
-            <Input id="moisDebutProduction" name="moisDebutProduction" defaultValue={societe.moisDebutProduction} disabled={!peutModifier} />
+            <Input
+              id="moisDebutProduction"
+              name="moisDebutProduction"
+              defaultValue={societe.moisDebutProduction}
+              disabled={!peutModifier}
+            />
           </div>
           {peutModifier ? (
             <div className="sm:col-span-2">
-              <Button type="submit" disabled={envoi}>Enregistrer</Button>
+              <Button type="submit" disabled={envoi}>
+                Enregistrer
+              </Button>
             </div>
           ) : null}
         </form>
@@ -328,7 +437,12 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         >
           <div className="space-y-2">
             <Label htmlFor="signataireCivilite">Civilite</Label>
-            <Select id="signataireCivilite" name="signataireCivilite" defaultValue={societe.signataireCivilite ?? ''} disabled={!peutModifier}>
+            <Select
+              id="signataireCivilite"
+              name="signataireCivilite"
+              defaultValue={societe.signataireCivilite ?? ''}
+              disabled={!peutModifier}
+            >
               <option value="">—</option>
               <option value="M.">M.</option>
               <option value="Mme">Mme</option>
@@ -337,15 +451,30 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           </div>
           <div className="space-y-2">
             <Label htmlFor="signataireQualite">Qualite</Label>
-            <Input id="signataireQualite" name="signataireQualite" defaultValue={societe.signataireQualite ?? ''} disabled={!peutModifier} />
+            <Input
+              id="signataireQualite"
+              name="signataireQualite"
+              defaultValue={societe.signataireQualite ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signatairePrenom">Prenom</Label>
-            <Input id="signatairePrenom" name="signatairePrenom" defaultValue={societe.signatairePrenom ?? ''} disabled={!peutModifier} />
+            <Input
+              id="signatairePrenom"
+              name="signatairePrenom"
+              defaultValue={societe.signatairePrenom ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="signataireNom">Nom</Label>
-            <Input id="signataireNom" name="signataireNom" defaultValue={societe.signataireNom ?? ''} disabled={!peutModifier} />
+            <Input
+              id="signataireNom"
+              name="signataireNom"
+              defaultValue={societe.signataireNom ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           {peutModifier ? (
             <div className="sm:col-span-2">
@@ -355,7 +484,11 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         </form>
       </Rubrique>
 
-      <Rubrique titre="Conges payes et exoneration" id="conges-exoneration" indiceHeritage="Valeur par defaut des futurs salaries (societe).">
+      <Rubrique
+        titre="Conges payes et exoneration"
+        id="conges-exoneration"
+        indiceHeritage="Valeur par defaut des futurs salaries (societe)."
+      >
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -377,9 +510,16 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         >
           <div className="space-y-2">
             <Label htmlFor="moisClotureConges">Mois cloture conges</Label>
-            <Select id="moisClotureConges" name="moisClotureConges" defaultValue={String(parametrage?.moisClotureConges ?? 12)} disabled={!peutModifier}>
+            <Select
+              id="moisClotureConges"
+              name="moisClotureConges"
+              defaultValue={String(parametrage?.moisClotureConges ?? 12)}
+              disabled={!peutModifier}
+            >
               {Array.from({ length: 12 }, (_, i) => (
-                <option key={i + 1} value={i + 1}>{i + 1}</option>
+                <option key={i + 1} value={i + 1}>
+                  {i + 1}
+                </option>
               ))}
             </Select>
           </div>
@@ -394,7 +534,9 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             >
               <option value="">Aucune</option>
               {initial.typesExoneration.map((t) => (
-                <option key={t.id} value={t.id}>{t.libelle}</option>
+                <option key={t.id} value={t.id}>
+                  {t.libelle}
+                </option>
               ))}
             </Select>
           </div>
@@ -402,17 +544,35 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             <>
               <div className="space-y-2">
                 <Label htmlFor="exonerationDateDebut">Date debut *</Label>
-                <Input id="exonerationDateDebut" name="exonerationDateDebut" defaultValue={parametrage?.exonerationDateDebut ?? ''} disabled={!peutModifier} />
+                <Input
+                  id="exonerationDateDebut"
+                  name="exonerationDateDebut"
+                  defaultValue={parametrage?.exonerationDateDebut ?? ''}
+                  disabled={!peutModifier}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="exonerationDateFin">Date fin</Label>
-                <Input id="exonerationDateFin" name="exonerationDateFin" defaultValue={parametrage?.exonerationDateFin ?? ''} disabled={!peutModifier} />
+                <Input
+                  id="exonerationDateFin"
+                  name="exonerationDateFin"
+                  defaultValue={parametrage?.exonerationDateFin ?? ''}
+                  disabled={!peutModifier}
+                />
               </div>
             </>
           ) : (
             <>
-              <input type="hidden" name="exonerationDateDebut" value={parametrage?.exonerationDateDebut ?? ''} />
-              <input type="hidden" name="exonerationDateFin" value={parametrage?.exonerationDateFin ?? ''} />
+              <input
+                type="hidden"
+                name="exonerationDateDebut"
+                value={parametrage?.exonerationDateDebut ?? ''}
+              />
+              <input
+                type="hidden"
+                name="exonerationDateFin"
+                value={parametrage?.exonerationDateFin ?? ''}
+              />
             </>
           )}
           {peutModifier ? (
@@ -423,7 +583,11 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         </form>
       </Rubrique>
 
-      <Rubrique titre="Parametrage technique" id="parametrage-technique" indiceHeritage="Matricules par defaut pour les salaries (societe).">
+      <Rubrique
+        titre="Parametrage technique"
+        id="parametrage-technique"
+        indiceHeritage="Matricules par defaut pour les salaries (societe)."
+      >
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -433,7 +597,8 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
               matriculePrefixe: fd.get('matriculePrefixe') || null,
               matriculeLongueur: Number(fd.get('matriculeLongueur')),
               matriculeGenerationAuto: fd.get('matriculeGenerationAuto') === 'on',
-              calculAutoAbsencesEntreesSorties: fd.get('calculAutoAbsencesEntreesSorties') === 'true',
+              calculAutoAbsencesEntreesSorties:
+                fd.get('calculAutoAbsencesEntreesSorties') === 'true',
             })
               .then((r) => {
                 setSociete(r.data);
@@ -445,12 +610,30 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         >
           <div className="space-y-2">
             <Label htmlFor="matriculePrefixe">Prefixe</Label>
-            <Input id="matriculePrefixe" name="matriculePrefixe" defaultValue={societe.matriculePrefixe ?? ''} disabled={!peutModifier} />
+            <Input
+              id="matriculePrefixe"
+              name="matriculePrefixe"
+              defaultValue={societe.matriculePrefixe ?? ''}
+              disabled={!peutModifier}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="matriculeLongueur">Longueur *</Label>
-            <Input id="matriculeLongueur" name="matriculeLongueur" type="number" min={1} max={20} defaultValue={societe.matriculeLongueur} disabled={!peutModifier} required />
-            <MessagesChamp champ="matriculeLongueur" erreur={erreurs.matriculeLongueur} avertissements={avertissements} />
+            <Input
+              id="matriculeLongueur"
+              name="matriculeLongueur"
+              type="number"
+              min={1}
+              max={20}
+              defaultValue={societe.matriculeLongueur}
+              disabled={!peutModifier}
+              required
+            />
+            <MessagesChamp
+              champ="matriculeLongueur"
+              erreur={erreurs.matriculeLongueur}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="calculAutoAbsencesEntreesSorties">Calcul auto absences E/S *</Label>
@@ -471,7 +654,12 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="flex items-center gap-2">
-            <Checkbox id="matriculeGenerationAuto" name="matriculeGenerationAuto" defaultChecked={societe.matriculeGenerationAuto} disabled={!peutModifier} />
+            <Checkbox
+              id="matriculeGenerationAuto"
+              name="matriculeGenerationAuto"
+              defaultChecked={societe.matriculeGenerationAuto}
+              disabled={!peutModifier}
+            />
             <Label htmlFor="matriculeGenerationAuto">Generation auto</Label>
           </div>
           {peutModifier ? (
@@ -531,18 +719,26 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           }
           if (suppression?.type === 'etablissement') {
             const r = await impactSuppressionEtablissement(suppression.id);
-            return { inventaire: inventaireImpactEtablissement(r.data), jeton: r.data.jetonConfirmation };
+            return {
+              inventaire: inventaireImpactEtablissement(r.data),
+              jeton: r.data.jetonConfirmation,
+            };
           }
           if (suppression?.type === 'compte') {
             const r = await impactSuppressionCompteBancaire(suppression.id);
-            return { inventaire: inventaireImpactCompteBancaire(r.data), jeton: r.data.jetonConfirmation };
+            return {
+              inventaire: inventaireImpactCompteBancaire(r.data),
+              jeton: r.data.jetonConfirmation,
+            };
           }
           return { inventaire: [] as readonly LigneImpact[], jeton: '' };
         }}
         supprimer={async (jeton) => {
           if (suppression?.type === 'societe') await supprimerSociete(societe.id, jeton);
-          else if (suppression?.type === 'etablissement') await supprimerEtablissement(suppression.id, jeton);
-          else if (suppression?.type === 'compte') await supprimerCompteBancaire(suppression.id, jeton);
+          else if (suppression?.type === 'etablissement')
+            await supprimerEtablissement(suppression.id, jeton);
+          else if (suppression?.type === 'compte')
+            await supprimerCompteBancaire(suppression.id, jeton);
         }}
       />
     </div>

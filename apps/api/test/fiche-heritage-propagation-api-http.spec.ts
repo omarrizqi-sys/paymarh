@@ -81,7 +81,8 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
 
     const forme = await prisma.formeJuridique.findFirstOrThrow();
     typeHeureId = (await prisma.typeHeure.findFirstOrThrow()).id;
-    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })).id;
+    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } }))
+      .id;
 
     const compte = await prisma.account.create({ data: { name: `${PREFIXE}-A`, type: 'CABINET' } });
     const utilisateur = await prisma.user.create({
@@ -547,29 +548,21 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-ETAT-INACT`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const creation = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          statutCode: 'IDMAJ',
-          dateDebut: '2024-06-01',
-          dateFin: '2024-12-31',
-        }),
-      }
-    );
+    const creation = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2024-06-01',
+        dateFin: '2024-12-31',
+      }),
+    });
     expect(creation.status).toBe(201);
 
     const lecture = await fetch(urlLocale(app, `/emplois/${emploi.id}`), {
@@ -586,29 +579,21 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-ETAT-ACT`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const creation = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          statutCode: 'IDMAJ',
-          dateDebut: '2025-01-01',
-          dateFin: null,
-        }),
-      }
-    );
+    const creation = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2025-01-01',
+        dateFin: null,
+      }),
+    });
     expect(creation.status).toBe(201);
 
     const lecture = await fetch(urlLocale(app, `/emplois/${emploi.id}`), {
@@ -657,21 +642,24 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
       matricule: `${PREFIXE}-BULL-SAL`,
     });
     salarieIdUtilise = salarie.id;
-    await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1, '2025-07', new Date('2025-07-01'));
+    await creerEmploiOuvert(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1,
+      '2025-07',
+      new Date('2025-07-01')
+    );
 
     const port: BulletinPort = {
       listerBulletinsParSalarie: async (id) =>
-        id === salarieIdUtilise
-          ? [{ mois: '2025-07', etat: EtatBulletin.CALCULE }]
-          : [],
+        id === salarieIdUtilise ? [{ mois: '2025-07', etat: EtatBulletin.CALCULE }] : [],
       listerBulletinsParEmploi: async () => [],
       listerBulletinsParSalaries: async (ids) => {
         const hors: Record<string, readonly { mois: string; etat: EtatBulletin }[]> = {};
         for (const id of ids) {
           hors[id] =
-            id === salarieIdUtilise
-              ? [{ mois: '2025-07', etat: EtatBulletin.CALCULE }]
-              : [];
+            id === salarieIdUtilise ? [{ mois: '2025-07', etat: EtatBulletin.CALCULE }] : [];
         }
         return hors;
       },
@@ -697,8 +685,9 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
   });
 
   it('14 — retrait TAHFIZ : ligne utilisee par un bulletin devient inactive avec un mois de fin', async () => {
-    const typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } }))
-      .id;
+    const typeTahfizId = (
+      await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })
+    ).id;
 
     const activation = await appelerApi(app, {
       method: 'PUT',
@@ -732,8 +721,9 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
   });
 
   it('ligne propagee inactivee au retrait : etat INACTIVE', async () => {
-    const typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } }))
-      .id;
+    const typeTahfizId = (
+      await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })
+    ).id;
 
     const activation = await appelerApi(app, {
       method: 'PUT',
@@ -786,7 +776,8 @@ describe('TAHFIZ — retrecissement des dates et lecture par lot', () => {
     });
 
     formeId = (await prisma.formeJuridique.findFirstOrThrow()).id;
-    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })).id;
+    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } }))
+      .id;
     const compte = await prisma.account.create({
       data: { name: `${PREFIXE}-DATES`, type: 'CABINET' },
     });
@@ -928,12 +919,7 @@ describe('TAHFIZ — retrecissement des dates et lecture par lot', () => {
   });
 
   it('retrait TAHFIZ sur plusieurs dizaines de salaries : un seul appel au BulletinPort', async () => {
-    const societe = await creerSocieteTest(
-      prisma,
-      formeId,
-      compteId,
-      `${PREFIXE}-DATES-LOT`
-    );
+    const societe = await creerSocieteTest(prisma, formeId, compteId, `${PREFIXE}-DATES-LOT`);
     await prisma.company.update({
       where: { id: societe.companyId },
       data: { moisEnCours: '2025-07' },
@@ -981,7 +967,8 @@ describe('TAHFIZ — transaction unique avec le parametrage societe', () => {
     });
 
     const forme = await prisma.formeJuridique.findFirstOrThrow();
-    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })).id;
+    typeTahfizId = (await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } }))
+      .id;
     const compte = await prisma.account.create({
       data: { name: `${PREFIXE}-TX`, type: 'CABINET' },
     });

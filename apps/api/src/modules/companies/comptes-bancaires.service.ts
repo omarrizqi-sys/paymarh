@@ -41,9 +41,7 @@ export class ComptesBancairesService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(
-    societeId: Uuid
-  ): Promise<ApiResponse<ListResponseAvecOperations<CompteBancaire>>> {
+  async lister(societeId: Uuid): Promise<ApiResponse<ListResponseAvecOperations<CompteBancaire>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'compte-bancaire.lire', { companyId: societeId });
     await this.assurerSociete(societeId);
@@ -63,7 +61,10 @@ export class ComptesBancairesService {
     return ok(
       {
         items: rows.map((row) =>
-          enrichirCompteBancaire(toCompteBancaire(row), operationsCompteBancaire(context, societeId))
+          enrichirCompteBancaire(
+            toCompteBancaire(row),
+            operationsCompteBancaire(context, societeId)
+          )
         ),
         total: rows.length,
         operations: ops,
@@ -72,10 +73,7 @@ export class ComptesBancairesService {
     );
   }
 
-  async creer(
-    societeId: Uuid,
-    dto: CreerCompteBancaireDto
-  ): Promise<ApiResponse<CompteBancaire>> {
+  async creer(societeId: Uuid, dto: CreerCompteBancaireDto): Promise<ApiResponse<CompteBancaire>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'compte-bancaire.creer', { companyId: societeId });
     await this.assurerSociete(societeId);
@@ -125,10 +123,7 @@ export class ComptesBancairesService {
     return ok(toCompteBancaire(cree), warnings);
   }
 
-  async modifier(
-    id: Uuid,
-    dto: ModifierCompteBancaireDto
-  ): Promise<ApiResponse<CompteBancaire>> {
+  async modifier(id: Uuid, dto: ModifierCompteBancaireDto): Promise<ApiResponse<CompteBancaire>> {
     const context = this.tenantContext.getOrThrow();
     const existant = await this.trouverOu404(id);
     assertPeutFaire(context, 'compte-bancaire.modifier', {
@@ -228,9 +223,7 @@ export class ComptesBancairesService {
     }
   }
 
-  async impactSuppression(
-    id: Uuid
-  ): Promise<ApiResponse<ImpactSuppressionCompteBancaire>> {
+  async impactSuppression(id: Uuid): Promise<ApiResponse<ImpactSuppressionCompteBancaire>> {
     const context = this.tenantContext.getOrThrow();
     const compte = await this.trouverOu404(id);
     assertPeutFaire(context, 'compte-bancaire.supprimer', {
@@ -260,8 +253,7 @@ export class ComptesBancairesService {
     if (!jetonsIdentiques(impact.jetonConfirmation, confirmationJeton)) {
       throw new ConflictException({
         code: 'CONFIRMATION_OBSOLETE',
-        message:
-          'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
+        message: 'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
         impact,
       });
     }
@@ -331,10 +323,7 @@ export class ComptesBancairesService {
     return societe;
   }
 
-  private async filtrerEtablissementsDuCompte(
-    societeId: string,
-    ids: string[]
-  ): Promise<string[]> {
+  private async filtrerEtablissementsDuCompte(societeId: string, ids: string[]): Promise<string[]> {
     if (ids.length === 0) return [];
     const context = this.tenantContext.getOrThrow();
     const trouvés = await this.prisma.etablissement.findMany({

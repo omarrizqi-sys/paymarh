@@ -42,9 +42,7 @@ export async function ecrireParametrageSociete(id: string, donnees: Record<strin
 }
 
 export async function impactSuppressionSociete(id: string) {
-  return appelerApiGet<ImpactSuppressionSociete>(
-    `/societes/${id}/impact-suppression`
-  );
+  return appelerApiGet<ImpactSuppressionSociete>(`/societes/${id}/impact-suppression`);
 }
 
 export async function supprimerSociete(id: string, jeton: string) {

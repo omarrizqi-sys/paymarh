@@ -84,9 +84,9 @@ describe('fiche salarie — contraintes et structure (base reelle)', () => {
   it('matricule en doublon dans la meme societe est rejete', async () => {
     const matricule = `${PREFIXE}-DUP-MAT`;
     await creerSalarieMin(prisma, societeA.companyId, { matricule });
-    await expect(
-      creerSalarieMin(prisma, societeA.companyId, { matricule })
-    ).rejects.toMatchObject({ code: 'P2002' });
+    await expect(creerSalarieMin(prisma, societeA.companyId, { matricule })).rejects.toMatchObject({
+      code: 'P2002',
+    });
   });
 
   it('numero de piece en doublon dans la meme societe est rejete', async () => {

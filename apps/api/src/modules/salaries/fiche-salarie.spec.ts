@@ -11,44 +11,42 @@ import { calculerProchainMatricule, calculerProchainNumeroOrdre } from './procha
 describe('matricule salarie (fonction pure)', () => {
   it('le prochain matricule retient le plus grand commencant par le prefixe de la societe', () => {
     expect(
-      calculerProchainMatricule(
-        { prefixe: 'EMP', longueur: 5 },
-        ['EMP00001', 'EMP00005', 'EMP00003', 'AUT00099']
-      )
+      calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, [
+        'EMP00001',
+        'EMP00005',
+        'EMP00003',
+        'AUT00099',
+      ])
     ).toBe('EMP00006');
   });
 
   it('le prochain matricule ignore les matricules d une autre societe', () => {
-    expect(
-      calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, ['XYZ00099'])
-    ).toBe('EMP00001');
+    expect(calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, ['XYZ00099'])).toBe(
+      'EMP00001'
+    );
   });
 
   it('un matricule de salarie supprime n est jamais reutilise', () => {
     const supprime = 'EMP00001';
-    expect(
-      calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, [supprime])
-    ).toBe('EMP00002');
+    expect(calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, [supprime])).toBe('EMP00002');
   });
 
   it('un matricule de salarie sorti n est jamais reutilise', () => {
-    expect(
-      calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, ['EMP00012'])
-    ).toBe('EMP00013');
+    expect(calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, ['EMP00012'])).toBe(
+      'EMP00013'
+    );
   });
 
   it('la longueur parametree s applique a la generation automatique', () => {
-    expect(
-      calculerProchainMatricule({ prefixe: 'E', longueur: 3 }, [])
-    ).toBe('E001');
+    expect(calculerProchainMatricule({ prefixe: 'E', longueur: 3 }, [])).toBe('E001');
   });
 
   it('la saisie manuelle accepte une longueur differente de la longueur parametree', () => {
     const manuel = 'EMP123456789';
     expect(manuel.length).toBeGreaterThan(5);
-    expect(
-      calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, [manuel])
-    ).toBe('EMP123456790');
+    expect(calculerProchainMatricule({ prefixe: 'EMP', longueur: 5 }, [manuel])).toBe(
+      'EMP123456790'
+    );
   });
 });
 

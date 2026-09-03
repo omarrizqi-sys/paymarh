@@ -128,7 +128,8 @@ export class ParametrageEtablissementDto {
 
   @IsOptional()
   @IsIn(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'])
-  jourReposHebdomadaire?: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
+  jourReposHebdomadaire?:
+    'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
 
   @IsOptional()
   @IsBoolean()

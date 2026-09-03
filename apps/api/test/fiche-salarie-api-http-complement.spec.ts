@@ -271,12 +271,7 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
     const actif = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-HOMONYME-POST-REF`,
     });
-    await creerEmploiOuvert(
-      prisma,
-      actif.id,
-      societeA.etablissementPrincipalId,
-      99
-    );
+    await creerEmploiOuvert(prisma, actif.id, societeA.etablissementPrincipalId, 99);
 
     const reponse = await fetch(urlLocale(app, '/salaries'), {
       method: 'POST',
@@ -436,12 +431,7 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
       nom: 'Ziani',
       prenom: 'Etat',
     });
-    await creerEmploiOuvert(
-      prisma,
-      actif.id,
-      societeA.etablissementPrincipalId,
-      98
-    );
+    await creerEmploiOuvert(prisma, actif.id, societeA.etablissementPrincipalId, 98);
 
     const reponseActifs = await fetch(urlLocale(app, '/salaries?etat=ACTIF&recherche=Etat'), {
       headers: entetes(utilisateurId, societeA.companyId),
@@ -475,18 +465,8 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
       nom: 'Yousfi',
       prenom: 'Atelier',
     });
-    await creerEmploiOuvert(
-      prisma,
-      auSiege.id,
-      societeA.etablissementPrincipalId,
-      97
-    );
-    await creerEmploiOuvert(
-      prisma,
-      aAtelier.id,
-      societeA.etablissementSecondaireId,
-      96
-    );
+    await creerEmploiOuvert(prisma, auSiege.id, societeA.etablissementPrincipalId, 97);
+    await creerEmploiOuvert(prisma, aAtelier.id, societeA.etablissementSecondaireId, 96);
 
     const reponse = await fetch(
       urlLocale(
@@ -517,9 +497,7 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
         headers: entetes(utilisateurId, societeA.companyId),
       });
       const corps = (await reponse.json()) as { donnees: { items: { matricule: string }[] } };
-      expect(corps.donnees.items.some((i) => i.matricule === `${PREFIXE}-RECH-MAT-XYZ`)).toBe(
-        true
-      );
+      expect(corps.donnees.items.some((i) => i.matricule === `${PREFIXE}-RECH-MAT-XYZ`)).toBe(true);
     }
   });
 

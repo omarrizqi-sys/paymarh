@@ -1,12 +1,4 @@
-import {
-  IsArray,
-  IsDateString,
-  IsInt,
-  IsOptional,
-  IsString,
-  Max,
-  Min,
-} from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class CreerPrimeContractuelleDto {
   @IsString()

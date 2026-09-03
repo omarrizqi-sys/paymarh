@@ -9,10 +9,7 @@ export class AdminSocietesController {
   constructor(private readonly admin: AdminSocietesService) {}
 
   @Post(':id/forcer-regime-de-base')
-  forcerRegime(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ForcerRegimeDto
-  ) {
+  forcerRegime(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ForcerRegimeDto) {
     return this.admin.forcerRegimeDeBase(id, dto);
   }
 }

@@ -1,9 +1,4 @@
-import {
-  ConflictException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { ConflictException, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service.js';
 import { CODES_REPONSE } from '../reponses/codes-reponse.js';
 

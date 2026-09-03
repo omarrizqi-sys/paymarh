@@ -182,10 +182,7 @@ export async function incrementerCompteurNumeroOrdre(
 /**
  * Cree un emploi avec numero d ordre auto-alloue ; compteur et emploi dans la meme transaction.
  */
-export async function creerEmploiNumeroOrdreAuto(
-  prisma: PrismaClient,
-  salarieId: string
-) {
+export async function creerEmploiNumeroOrdreAuto(prisma: PrismaClient, salarieId: string) {
   return prisma.$transaction(async (tx) => {
     const numeroOrdre = await incrementerCompteurNumeroOrdre(tx, salarieId);
     return tx.emploi.create({

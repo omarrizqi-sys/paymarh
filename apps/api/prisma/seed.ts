@@ -334,9 +334,7 @@ async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>)
     });
   }
 
-  console.log(
-    `Etablissements : ${siege.nom} (principal), ${atelier.nom} (secondaire)`
-  );
+  console.log(`Etablissements : ${siege.nom} (principal), ${atelier.nom} (secondaire)`);
 
   // --- Historique societe (2 moisEffet) ---
   await prisma.companyParametrageHistorique.upsert({
@@ -558,16 +556,18 @@ async function seedGrilleHoraire(
   heuresHebdo: Decimal,
   heuresMensuelles: Decimal
 ): Promise<void> {
-  const repartition: { jour: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE'; heures: string }[] =
-    [
-      { jour: 'LUNDI', heures: '8' },
-      { jour: 'MARDI', heures: '8' },
-      { jour: 'MERCREDI', heures: '8' },
-      { jour: 'JEUDI', heures: '8' },
-      { jour: 'VENDREDI', heures: '8' },
-      { jour: 'SAMEDI', heures: '4' },
-      { jour: 'DIMANCHE', heures: '0' },
-    ];
+  const repartition: {
+    jour: 'LUNDI' | 'MARDI' | 'MERCREDI' | 'JEUDI' | 'VENDREDI' | 'SAMEDI' | 'DIMANCHE';
+    heures: string;
+  }[] = [
+    { jour: 'LUNDI', heures: '8' },
+    { jour: 'MARDI', heures: '8' },
+    { jour: 'MERCREDI', heures: '8' },
+    { jour: 'JEUDI', heures: '8' },
+    { jour: 'VENDREDI', heures: '8' },
+    { jour: 'SAMEDI', heures: '4' },
+    { jour: 'DIMANCHE', heures: '0' },
+  ];
 
   for (const ligne of repartition) {
     await prisma.horaireDefautLigne.upsert({
@@ -604,10 +604,7 @@ async function seedGrilleHoraire(
   });
 
   // Controle interne du seed : la somme hebdo doit coller a dureeHebdomadaire.
-  const somme = repartition.reduce(
-    (acc, l) => acc.plus(l.heures),
-    new Decimal(0)
-  );
+  const somme = repartition.reduce((acc, l) => acc.plus(l.heures), new Decimal(0));
   if (!somme.equals(heuresHebdo)) {
     throw new Error(
       `Incoherence seed grille : somme=${somme.toString()} vs duree=${heuresHebdo.toString()}`
@@ -634,7 +631,9 @@ async function seedUtilisateurs(compteId: string): Promise<void> {
   console.log("Pour interroger l'API en developpement, utilisez l'en-tete :");
   console.log(`  x-paymarh-user-id: ${adminCompte.id}`);
   console.log('Back-office : definissez NEXT_PUBLIC_PAYMARH_USER_ID avec la meme valeur.');
-  console.log('(Béquilles de developpement — pas une authentification. Bloquent toute mise en production.)');
+  console.log(
+    '(Béquilles de developpement — pas une authentification. Bloquent toute mise en production.)'
+  );
 }
 
 async function main(): Promise<void> {
@@ -652,7 +651,9 @@ async function main(): Promise<void> {
   await seedSocieteDemo(refs);
   await seedUtilisateurs(compte.id);
 
-  console.log('\nSeed termine (module 0 + fiche societe 1.1.a + referentiels fiche salarie 2.1.a).');
+  console.log(
+    '\nSeed termine (module 0 + fiche societe 1.1.a + referentiels fiche salarie 2.1.a).'
+  );
 }
 
 main()

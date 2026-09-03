@@ -1,7 +1,7 @@
 ---
-title: "Créer et paramétrer une fiche société dans PaymaRH"
-slug: "fiche-societe"
-description: "Comment créer une société dans PaymaRH, renseigner ses identifiants légaux, déclarer ses établissements, paramétrer la durée du travail et les informations bancaires."
+title: 'Créer et paramétrer une fiche société dans PaymaRH'
+slug: 'fiche-societe'
+description: 'Comment créer une société dans PaymaRH, renseigner ses identifiants légaux, déclarer ses établissements, paramétrer la durée du travail et les informations bancaires.'
 keywords:
   - fiche société
   - paie Maroc
@@ -11,13 +11,13 @@ keywords:
   - durée hebdomadaire
   - jours fériés Maroc
   - repos hebdomadaire
-category: "Fiches"
-module: "Module 1 — Fiches"
-status: "brouillon"
+category: 'Fiches'
+module: 'Module 1 — Fiches'
+status: 'brouillon'
 order: 1
-date: "2026-08-29"
-author: "PaymaRH"
-cover: ""
+date: '2026-08-29'
+author: 'PaymaRH'
+cover: ''
 ---
 
 # Créer et paramétrer une fiche société
@@ -63,7 +63,7 @@ Si vous démarrez sans reprise d'historique, indiquez le même mois dans les deu
 
 ### 2. Identifier la société
 
-**Écran :** fiche société, rubrique *Identification*, ou formulaire de création.
+**Écran :** fiche société, rubrique _Identification_, ou formulaire de création.
 
 Le **code dossier** est votre référence interne. Il est obligatoire et unique. Dans un cabinet, il sert à retrouver rapidement chaque société cliente.
 
@@ -75,7 +75,7 @@ Le **régime de base** est le régime général, non agricole. Attention : une f
 
 ### 3. Déclarer les établissements
 
-**Écran :** fiche société, rubrique *Établissements* (liste, création, désignation du principal).
+**Écran :** fiche société, rubrique _Établissements_ (liste, création, désignation du principal).
 
 L'établissement principal est créé automatiquement avec la société. Son **adresse** et sa **ville** sont obligatoires dès cette création : PaymaRH n'accepte aucune valeur de remplacement du type « À compléter ». Le nom peut être pré-rempli avec la ville (ou la raison sociale à défaut) ; vous pouvez le modifier.
 
@@ -89,7 +89,7 @@ Si votre siège déménage, vous pouvez désigner un autre établissement comme 
 
 ### 4. Paramétrer le temps de travail
 
-**Écran :** fiche société, rubrique *Établissements* → paramétrage de l’établissement sélectionné (durée hebdomadaire, grille horaire, heures mensuelles).
+**Écran :** fiche société, rubrique _Établissements_ → paramétrage de l’établissement sélectionné (durée hebdomadaire, grille horaire, heures mensuelles).
 
 La **durée hebdomadaire** est fixée à 44 heures par défaut.
 
@@ -109,7 +109,7 @@ Les fêtes religieuses suivent le calendrier lunaire. Vous n'avez pas de date à
 
 ### 6. Saisir les informations bancaires
 
-**Écran :** fiche société, rubrique *Informations bancaires*.
+**Écran :** fiche société, rubrique _Informations bancaires_.
 
 Pour chaque compte, indiquez la banque, le RIB, éventuellement l'IBAN et le BIC.
 
@@ -121,7 +121,7 @@ Un compte fermé se met en **clôturé** plutôt que supprimé : il reste consul
 
 ### 7. Paramétrer les matricules
 
-**Écran :** fiche société, rubrique *Paramétrage technique*.
+**Écran :** fiche société, rubrique _Paramétrage technique_.
 
 Le **préfixe** s'ajoute devant les matricules générés automatiquement. La **longueur** détermine le remplissage par zéros : avec une longueur de 5, le premier matricule sera 00001.
 

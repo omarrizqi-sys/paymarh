@@ -63,9 +63,7 @@ export class EtablissementsService {
     private readonly audit: AuditService
   ) {}
 
-  async lister(
-    societeId: Uuid
-  ): Promise<ApiResponse<ListResponseAvecOperations<Etablissement>>> {
+  async lister(societeId: Uuid): Promise<ApiResponse<ListResponseAvecOperations<Etablissement>>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'etablissement.lire', { companyId: societeId });
     await this.assurerSocieteDuCompte(societeId);
@@ -93,10 +91,7 @@ export class EtablissementsService {
     );
   }
 
-  async creer(
-    societeId: Uuid,
-    dto: CreerEtablissementDto
-  ): Promise<ApiResponse<Etablissement>> {
+  async creer(societeId: Uuid, dto: CreerEtablissementDto): Promise<ApiResponse<Etablissement>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'etablissement.creer', { companyId: societeId });
     const societe = await this.assurerSocieteDuCompte(societeId);
@@ -152,10 +147,7 @@ export class EtablissementsService {
     return ok(toEtablissement(cree), warnings);
   }
 
-  async modifier(
-    id: Uuid,
-    dto: ModifierEtablissementDto
-  ): Promise<ApiResponse<Etablissement>> {
+  async modifier(id: Uuid, dto: ModifierEtablissementDto): Promise<ApiResponse<Etablissement>> {
     const context = this.tenantContext.getOrThrow();
     const existant = await this.trouverOu404(id);
     assertPeutFaire(context, 'etablissement.modifier', { companyId: existant.companyId });
@@ -314,8 +306,7 @@ export class EtablissementsService {
       relancer(erreur);
     }
 
-    const dureeEnregistree =
-      dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString();
+    const dureeEnregistree = dto.dureeHebdomadaire ?? paramExistant?.dureeHebdomadaire.toString();
     const jourReposEnregistre = dto.jourReposHebdomadaire ?? paramExistant?.jourReposHebdomadaire;
 
     // Invariant : assertChampObligatoire (creation) ou colonnes NOT NULL (mise a jour) garantissent ces valeurs.
@@ -420,7 +411,9 @@ export class EtablissementsService {
   async deduireHeuresMensuelles(
     id: Uuid,
     dto: DeduireHeuresMensuellesDto
-  ): Promise<ApiResponse<{ horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[] }>> {
+  ): Promise<
+    ApiResponse<{ horaireMensuelLignes: { typeHeureId: string; nombreHeures: string }[] }>
+  > {
     const context = this.tenantContext.getOrThrow();
     const etab = await this.trouverOu404(id);
     assertPeutFaire(context, 'etablissement.modifier', { companyId: etab.companyId });
@@ -448,9 +441,7 @@ export class EtablissementsService {
     return ok({ horaireMensuelLignes });
   }
 
-  async impactSuppression(
-    id: Uuid
-  ): Promise<ApiResponse<ImpactSuppressionEtablissement>> {
+  async impactSuppression(id: Uuid): Promise<ApiResponse<ImpactSuppressionEtablissement>> {
     const context = this.tenantContext.getOrThrow();
     const etab = await this.trouverOu404(id);
     assertPeutFaire(context, 'etablissement.supprimer', { companyId: etab.companyId });
@@ -476,8 +467,7 @@ export class EtablissementsService {
     if (!jetonsIdentiques(impact.jetonConfirmation, confirmationJeton)) {
       throw new ConflictException({
         code: 'CONFIRMATION_OBSOLETE',
-        message:
-          'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
+        message: 'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
         impact,
       });
     }

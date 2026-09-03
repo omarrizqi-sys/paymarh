@@ -12,7 +12,12 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import type { FormeJuridique, Permission, RessourceAvecOperations, SocieteListe } from '@paymarh/shared-types';
+import type {
+  FormeJuridique,
+  Permission,
+  RessourceAvecOperations,
+  SocieteListe,
+} from '@paymarh/shared-types';
 import { libelleEtatDossier, formaterMoisAAAA_MM } from '@/lib/affichage/libelles';
 import { possedePermission } from '@/lib/permissions';
 import { Button } from '@/components/ui/button';
@@ -140,7 +145,10 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={colonnes.length} className="text-muted-foreground h-24 text-center">
+                <TableCell
+                  colSpan={colonnes.length}
+                  className="text-muted-foreground h-24 text-center"
+                >
                   Aucune societe trouvee.
                 </TableCell>
               </TableRow>
@@ -180,9 +188,6 @@ export function peutCreerSociete(operations: readonly Permission[]): boolean {
 }
 
 /** Resout le libelle de forme juridique depuis le referentiel. */
-export function libelleForme(
-  formes: readonly FormeJuridique[],
-  formeJuridiqueId: string
-): string {
+export function libelleForme(formes: readonly FormeJuridique[], formeJuridiqueId: string): string {
   return formes.find((f) => f.id === formeJuridiqueId)?.libelle ?? '—';
 }

@@ -78,12 +78,20 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           <div className="space-y-2">
             <Label htmlFor="codeDossier">Code dossier *</Label>
             <Input id="codeDossier" name="codeDossier" required />
-            <MessagesChamp champ="codeDossier" erreur={erreurs.codeDossier} avertissements={avertissements} />
+            <MessagesChamp
+              champ="codeDossier"
+              erreur={erreurs.codeDossier}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="raisonSociale">Raison sociale *</Label>
             <Input id="raisonSociale" name="raisonSociale" required />
-            <MessagesChamp champ="raisonSociale" erreur={erreurs.raisonSociale} avertissements={avertissements} />
+            <MessagesChamp
+              champ="raisonSociale"
+              erreur={erreurs.raisonSociale}
+              avertissements={avertissements}
+            />
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="formeJuridiqueId">Forme juridique *</Label>
@@ -119,7 +127,12 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           </div>
           <div className="space-y-2">
             <Label htmlFor="moisDebutProduction">Mois de debut de production *</Label>
-            <Input id="moisDebutProduction" name="moisDebutProduction" placeholder="AAAA-MM" required />
+            <Input
+              id="moisDebutProduction"
+              name="moisDebutProduction"
+              placeholder="AAAA-MM"
+              required
+            />
             <MessagesChamp champ="moisDebutProduction" erreur={erreurs.moisDebutProduction} />
           </div>
         </div>
@@ -134,12 +147,18 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="adresse">Adresse *</Label>
             <Input id="adresse" name="adresse" required />
-            <MessagesChamp champ="etablissementPrincipal.adresse" erreur={erreurs['etablissementPrincipal.adresse']} />
+            <MessagesChamp
+              champ="etablissementPrincipal.adresse"
+              erreur={erreurs['etablissementPrincipal.adresse']}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="ville">Ville *</Label>
             <Input id="ville" name="ville" required />
-            <MessagesChamp champ="etablissementPrincipal.ville" erreur={erreurs['etablissementPrincipal.ville']} />
+            <MessagesChamp
+              champ="etablissementPrincipal.ville"
+              erreur={erreurs['etablissementPrincipal.ville']}
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="pays">Pays</Label>

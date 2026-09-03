@@ -126,7 +126,9 @@ describe('API fiche salarie — endpoints salarie (2.1.b-2)', () => {
         ...entetes(utilisateurId, societeA.companyId),
         'content-type': 'application/json',
       },
-      body: JSON.stringify(payloadSalarieMin({ matricule: matriculeLong, nom: 'Tazi', prenom: 'Nadia' })),
+      body: JSON.stringify(
+        payloadSalarieMin({ matricule: matriculeLong, nom: 'Tazi', prenom: 'Nadia' })
+      ),
     });
 
     expect(reponse.status).toBe(201);
@@ -190,12 +192,7 @@ describe('API fiche salarie — endpoints salarie (2.1.b-2)', () => {
     const salarie = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-ACTIF`,
     });
-    await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societeA.etablissementPrincipalId,
-      1
-    );
+    await creerEmploiOuvert(prisma, salarie.id, societeA.etablissementPrincipalId, 1);
 
     const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}`), {
       headers: entetes(utilisateurId, societeA.companyId),
@@ -302,12 +299,7 @@ describe('API fiche salarie — endpoints salarie (2.1.b-2)', () => {
     const salarieActif = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-HOMONYME-REF`,
     });
-    await creerEmploiOuvert(
-      prisma,
-      salarieActif.id,
-      societeA.etablissementPrincipalId,
-      1
-    );
+    await creerEmploiOuvert(prisma, salarieActif.id, societeA.etablissementPrincipalId, 1);
 
     const avant = await prisma.salarie.count({
       where: { companyId: societeA.companyId, nom: 'Alami', prenom: 'Said' },

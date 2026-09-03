@@ -1,9 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import type { ApiWarning, Banque, CompteBancaire, Etablissement, RessourceAvecOperations } from '@paymarh/shared-types';
+import type {
+  ApiWarning,
+  Banque,
+  CompteBancaire,
+  Etablissement,
+  RessourceAvecOperations,
+} from '@paymarh/shared-types';
 import { afficherUtiliseParCompte } from '@/lib/affichage/conditions';
-import { cloturerCompteBancaire, creerCompteBancaire, modifierCompteBancaire } from '@/lib/api/comptes-bancaires';
+import {
+  cloturerCompteBancaire,
+  creerCompteBancaire,
+  modifierCompteBancaire,
+} from '@/lib/api/comptes-bancaires';
 import { possedePermission } from '@/lib/permissions';
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Badge } from '@/components/ui/badge';
@@ -105,7 +115,8 @@ export function SectionComptesBancaires({
       <ul className="space-y-4">
         {comptes.map((c) => {
           const enEdition = compteEnEdition === c.id;
-          const peutModifier = possedePermission(c.operations, 'compte-bancaire.modifier') && c.etat === 'ACTIF';
+          const peutModifier =
+            possedePermission(c.operations, 'compte-bancaire.modifier') && c.etat === 'ACTIF';
 
           return (
             <li key={c.id} className="rounded-lg border p-4">
@@ -116,18 +127,35 @@ export function SectionComptesBancaires({
                     <Badge variant={c.etat === 'ACTIF' ? 'success' : 'secondary'}>{c.etat}</Badge>
                   </div>
                   <dl className="text-muted-foreground grid gap-1 text-sm sm:grid-cols-2">
-                    <div><dt className="inline font-medium text-foreground">RIB : </dt><dd className="inline">{c.rib ?? '—'}</dd></div>
-                    <div><dt className="inline font-medium text-foreground">IBAN : </dt><dd className="inline">{c.iban ?? '—'}</dd></div>
-                    <div><dt className="inline font-medium text-foreground">BIC : </dt><dd className="inline">{c.bic ?? '—'}</dd></div>
-                    <div><dt className="inline font-medium text-foreground">Nom payeur : </dt><dd className="inline">{c.nomPayeur ?? '—'}</dd></div>
+                    <div>
+                      <dt className="inline font-medium text-foreground">RIB : </dt>
+                      <dd className="inline">{c.rib ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="inline font-medium text-foreground">IBAN : </dt>
+                      <dd className="inline">{c.iban ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="inline font-medium text-foreground">BIC : </dt>
+                      <dd className="inline">{c.bic ?? '—'}</dd>
+                    </div>
+                    <div>
+                      <dt className="inline font-medium text-foreground">Nom payeur : </dt>
+                      <dd className="inline">{c.nomPayeur ?? '—'}</dd>
+                    </div>
                   </dl>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {peutModifier ? (
-                      <Button size="sm" variant="secondary" onClick={() => setCompteEnEdition(c.id)}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setCompteEnEdition(c.id)}
+                      >
                         Modifier
                       </Button>
                     ) : null}
-                    {possedePermission(c.operations, 'compte-bancaire.cloturer') && c.etat === 'ACTIF' ? (
+                    {possedePermission(c.operations, 'compte-bancaire.cloturer') &&
+                    c.etat === 'ACTIF' ? (
                       <Button
                         size="sm"
                         variant="outline"
@@ -149,7 +177,10 @@ export function SectionComptesBancaires({
                   </div>
                 </>
               ) : (
-                <form onSubmit={(e) => void modifier(e, c.id)} className="grid gap-4 sm:grid-cols-2">
+                <form
+                  onSubmit={(e) => void modifier(e, c.id)}
+                  className="grid gap-4 sm:grid-cols-2"
+                >
                   <h4 className="font-medium sm:col-span-2">Modifier le compte</h4>
                   <div className="space-y-2">
                     <Label htmlFor={`libelle-${c.id}`}>Libelle</Label>
@@ -168,11 +199,20 @@ export function SectionComptesBancaires({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`banqueSaisieLibre-${c.id}`}>Banque (saisie libre)</Label>
-                    <Input id={`banqueSaisieLibre-${c.id}`} name="banqueSaisieLibre" defaultValue={c.banqueSaisieLibre ?? ''} />
+                    <Input
+                      id={`banqueSaisieLibre-${c.id}`}
+                      name="banqueSaisieLibre"
+                      defaultValue={c.banqueSaisieLibre ?? ''}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`rib-${c.id}`}>RIB</Label>
-                    <Input id={`rib-${c.id}`} name="rib" defaultValue={c.rib ?? ''} inputMode="numeric" />
+                    <Input
+                      id={`rib-${c.id}`}
+                      name="rib"
+                      defaultValue={c.rib ?? ''}
+                      inputMode="numeric"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`iban-${c.id}`}>IBAN</Label>
@@ -184,15 +224,27 @@ export function SectionComptesBancaires({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor={`nomPayeur-${c.id}`}>Nom payeur</Label>
-                    <Input id={`nomPayeur-${c.id}`} name="nomPayeur" defaultValue={c.nomPayeur ?? ''} />
+                    <Input
+                      id={`nomPayeur-${c.id}`}
+                      name="nomPayeur"
+                      defaultValue={c.nomPayeur ?? ''}
+                    />
                   </div>
                   <div className="flex flex-wrap gap-4 sm:col-span-2">
                     <div className="flex items-center gap-2">
-                      <Checkbox id={`usageSalaires-${c.id}`} name="usageSalaires" defaultChecked={c.usageSalaires} />
+                      <Checkbox
+                        id={`usageSalaires-${c.id}`}
+                        name="usageSalaires"
+                        defaultChecked={c.usageSalaires}
+                      />
                       <Label htmlFor={`usageSalaires-${c.id}`}>Salaires</Label>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Checkbox id={`usageCotisations-${c.id}`} name="usageCotisationsSociales" defaultChecked={c.usageCotisationsSociales} />
+                      <Checkbox
+                        id={`usageCotisations-${c.id}`}
+                        name="usageCotisationsSociales"
+                        defaultChecked={c.usageCotisationsSociales}
+                      />
                       <Label htmlFor={`usageCotisations-${c.id}`}>Cotisations sociales</Label>
                     </div>
                     <div className="flex items-center gap-2">
@@ -220,7 +272,11 @@ export function SectionComptesBancaires({
                   ) : null}
                   <div className="flex flex-wrap gap-2 sm:col-span-2">
                     <Button type="submit">Enregistrer</Button>
-                    <Button type="button" variant="outline" onClick={() => setCompteEnEdition(null)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setCompteEnEdition(null)}
+                    >
                       Annuler
                     </Button>
                   </div>

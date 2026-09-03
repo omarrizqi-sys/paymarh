@@ -212,9 +212,10 @@ export class EmploisService {
     const emploi = await this.trouverEmploi(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contratCourant = this.contratAuMois(emploi, moisEnCours);
-    const dateDebut = dto.dateDebut !== undefined ? versDate(dto.dateDebut) : contratCourant.dateDebut;
+    const dateDebut =
+      dto.dateDebut !== undefined ? versDate(dto.dateDebut) : contratCourant.dateDebut;
     const dateFin =
-      dto.dateFin !== undefined ? parseDateNullable(dto.dateFin) ?? null : contratCourant.dateFin;
+      dto.dateFin !== undefined ? (parseDateNullable(dto.dateFin) ?? null) : contratCourant.dateFin;
 
     try {
       assertDateFinApresDebut(dateDebut, dateFin);
@@ -224,7 +225,7 @@ export class EmploisService {
 
     const dateSortieAvant = contratCourant.dateSortie;
     const dateSortieApres =
-      dto.dateSortie !== undefined ? parseDateNullable(dto.dateSortie) ?? null : dateSortieAvant;
+      dto.dateSortie !== undefined ? (parseDateNullable(dto.dateSortie) ?? null) : dateSortieAvant;
 
     if (dateSortieAvant === null && dateSortieApres !== null) {
       this.exigerConfirmationSortie(id, dateSortieApres, confirmationJeton);
@@ -237,14 +238,13 @@ export class EmploisService {
       typeContratCode: dto.typeContratCode ?? contratCourant.typeContratCode,
       periodeEssaiDateFin:
         dto.periodeEssaiDateFin !== undefined
-          ? parseDateNullable(dto.periodeEssaiDateFin) ?? null
+          ? (parseDateNullable(dto.periodeEssaiDateFin) ?? null)
           : contratCourant.periodeEssaiDateFin,
       renouvellementEssaiDateFin:
         dto.renouvellementEssaiDateFin !== undefined
-          ? parseDateNullable(dto.renouvellementEssaiDateFin) ?? null
+          ? (parseDateNullable(dto.renouvellementEssaiDateFin) ?? null)
           : contratCourant.renouvellementEssaiDateFin,
-      statutCadre:
-        dto.statutCadre !== undefined ? dto.statutCadre : contratCourant.statutCadre,
+      statutCadre: dto.statutCadre !== undefined ? dto.statutCadre : contratCourant.statutCadre,
       coefficient: dto.coefficient !== undefined ? dto.coefficient : contratCourant.coefficient,
       position: dto.position !== undefined ? dto.position : contratCourant.position,
       indice: dto.indice !== undefined ? dto.indice : contratCourant.indice,
@@ -325,14 +325,12 @@ export class EmploisService {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const courante = this.remunerationAuMois(emploi, moisEnCours);
 
-    const montant =
-      dto.montant !== undefined ? new Decimal(dto.montant) : courante.montant;
+    const montant = dto.montant !== undefined ? new Decimal(dto.montant) : courante.montant;
 
     const alertes = await this.alertesRemuneration(
       emploi.salarieId,
       {
-        modeDeterminationSalaire:
-          dto.modeDeterminationSalaire ?? courante.modeDeterminationSalaire,
+        modeDeterminationSalaire: dto.modeDeterminationSalaire ?? courante.modeDeterminationSalaire,
         montant: montant.toString(),
       },
       id
@@ -346,8 +344,7 @@ export class EmploisService {
     );
 
     const fusion = {
-      modeDeterminationSalaire:
-        dto.modeDeterminationSalaire ?? courante.modeDeterminationSalaire,
+      modeDeterminationSalaire: dto.modeDeterminationSalaire ?? courante.modeDeterminationSalaire,
       montant,
       masquerNombreHeures: dto.masquerNombreHeures ?? courante.masquerNombreHeures,
       masquerTauxHoraire: dto.masquerTauxHoraire ?? courante.masquerTauxHoraire,
@@ -569,7 +566,11 @@ export class EmploisService {
     void exclureEmploiId;
     const mois = await this.moisEnCours.calculerPourSalarie(salarieId);
     const alertes: AlerteApi[] = [];
-    const smig = await collecterAlerteSalaireSmig(this.referentiel, mois, new Decimal(saisie.montant));
+    const smig = await collecterAlerteSalaireSmig(
+      this.referentiel,
+      mois,
+      new Decimal(saisie.montant)
+    );
     if (smig !== null) alertes.push(smig);
     return alertes;
   }
@@ -679,34 +680,24 @@ export class EmploisService {
   }
 
   private dateDebutOriginale(emploi: Awaited<ReturnType<typeof this.chargerEmploi>>): Date {
-    const premiere = emploi.contratVersions.reduce((a, b) =>
-      a.moisEffet <= b.moisEffet ? a : b
-    );
+    const premiere = emploi.contratVersions.reduce((a, b) => (a.moisEffet <= b.moisEffet ? a : b));
     return premiere.dateDebut;
   }
 
-  private contratAuMois(
-    emploi: Awaited<ReturnType<typeof this.chargerEmploi>>,
-    mois: string
-  ) {
+  private contratAuMois(emploi: Awaited<ReturnType<typeof this.chargerEmploi>>, mois: string) {
     const v = resoudreLigneHistorique(emploi.contratVersions, mois);
     if (v === null) throw new Error(`Emploi ${emploi.id} sans version contrat au mois ${mois}`);
     return v;
   }
 
-  private remunerationAuMois(
-    emploi: Awaited<ReturnType<typeof this.chargerEmploi>>,
-    mois: string
-  ) {
+  private remunerationAuMois(emploi: Awaited<ReturnType<typeof this.chargerEmploi>>, mois: string) {
     const v = resoudreLigneHistorique(emploi.remunerationVersions, mois);
-    if (v === null) throw new Error(`Emploi ${emploi.id} sans version remuneration au mois ${mois}`);
+    if (v === null)
+      throw new Error(`Emploi ${emploi.id} sans version remuneration au mois ${mois}`);
     return v;
   }
 
-  private affectationAuMois(
-    emploi: Awaited<ReturnType<typeof this.chargerEmploi>>,
-    mois: string
-  ) {
+  private affectationAuMois(emploi: Awaited<ReturnType<typeof this.chargerEmploi>>, mois: string) {
     const v = resoudreLigneHistorique(emploi.affectationVersions, mois);
     if (v === null) throw new Error(`Emploi ${emploi.id} sans version affectation au mois ${mois}`);
     return v;

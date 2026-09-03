@@ -148,10 +148,7 @@ export class PropagationTahfizService {
       const salarieIds = [...new Set(existantes.map((l) => l.emploi.salarieId))];
       const bulletinsParSalarie = await this.chargerBulletinsParSalaries(salarieIds);
 
-      const groupes = new Map<
-        string,
-        { ids: string[]; dateDebut: Date; dateFin: Date | null }
-      >();
+      const groupes = new Map<string, { ids: string[]; dateDebut: Date; dateFin: Date | null }>();
       for (const ligne of existantes) {
         const bulletins = bulletinsParSalarie[ligne.emploi.salarieId] ?? [];
         const bornes = moisBulletinsCouvrant(bulletins, ligne);

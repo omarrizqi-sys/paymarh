@@ -28,7 +28,11 @@ export function MessagesChamp({ erreur, avertissements = [], champ }: Props) {
 }
 
 /** Registre global des avertissements sans champ associe. */
-export function RegistreAvertissements({ avertissements }: { readonly avertissements: readonly ApiWarning[] }) {
+export function RegistreAvertissements({
+  avertissements,
+}: {
+  readonly avertissements: readonly ApiWarning[];
+}) {
   const globaux = avertissements.filter((w) => !w.champ);
   if (globaux.length === 0) return null;
 

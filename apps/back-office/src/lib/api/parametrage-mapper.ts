@@ -14,7 +14,8 @@ export function normaliserParametrageEtablissement(
     moisEffet: typeof brut.moisEffet === 'string' ? brut.moisEffet : undefined,
     dureeHebdomadaire: duree != null ? String(duree) : '44',
     jourReposHebdomadaire:
-      (brut.jourReposHebdomadaire as ParametrageEtablissement['jourReposHebdomadaire']) ?? 'DIMANCHE',
+      (brut.jourReposHebdomadaire as ParametrageEtablissement['jourReposHebdomadaire']) ??
+      'DIMANCHE',
     teletravailAutorise:
       typeof brut.teletravailAutorise === 'boolean' ? brut.teletravailAutorise : null,
     indemniteTeletravailVersee:
@@ -24,7 +25,8 @@ export function normaliserParametrageEtablissement(
       (brut.horaireDefautLignes as Record<string, unknown>[] | undefined) ?? []
     ).map((l) => ({
       id: typeof l.id === 'string' ? l.id : undefined,
-      jourSemaine: l.jourSemaine as ParametrageEtablissement['horaireDefautLignes'][number]['jourSemaine'],
+      jourSemaine:
+        l.jourSemaine as ParametrageEtablissement['horaireDefautLignes'][number]['jourSemaine'],
       typeHeureId: String(l.typeHeureId),
       nombreHeures: String(l.nombreHeures),
     })),
@@ -52,6 +54,7 @@ export function normaliserParametrageSociete(
     typeExonerationId: typeof brut.typeExonerationId === 'string' ? brut.typeExonerationId : null,
     exonerationDateDebut:
       typeof brut.exonerationDateDebut === 'string' ? brut.exonerationDateDebut : null,
-    exonerationDateFin: typeof brut.exonerationDateFin === 'string' ? brut.exonerationDateFin : null,
+    exonerationDateFin:
+      typeof brut.exonerationDateFin === 'string' ? brut.exonerationDateFin : null,
   };
 }

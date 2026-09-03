@@ -31,10 +31,7 @@ export class EtablissementsController {
   }
 
   @Post('societes/:societeId/etablissements')
-  creer(
-    @Param('societeId', ParseUUIDPipe) societeId: string,
-    @Body() dto: CreerEtablissementDto
-  ) {
+  creer(@Param('societeId', ParseUUIDPipe) societeId: string, @Body() dto: CreerEtablissementDto) {
     return this.etablissements.creer(societeId, dto);
   }
 
@@ -44,10 +41,7 @@ export class EtablissementsController {
   }
 
   @Get('etablissements/:id/parametrage')
-  parametrage(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Query('mois') mois: string
-  ) {
+  parametrage(@Param('id', ParseUUIDPipe) id: string, @Query('mois') mois: string) {
     return this.etablissements.lireParametrage(id, mois);
   }
 
@@ -57,10 +51,7 @@ export class EtablissementsController {
   }
 
   @Patch('etablissements/:id')
-  modifier(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ModifierEtablissementDto
-  ) {
+  modifier(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ModifierEtablissementDto) {
     return this.etablissements.modifier(id, dto);
   }
 

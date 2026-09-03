@@ -62,9 +62,9 @@ describe('coherence grille horaire', () => {
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '7' },
       { jourSemaine: 'LUNDI', typeHeureId: 'a', nombreHeures: '8' },
     ];
-    expect(() => controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '15' })).toThrow(
-      ValidationBloquanteError
-    );
+    expect(() =>
+      controlerCoherenceGrilleHoraireDefaut(lignes, { dureeHebdomadaire: '15' })
+    ).toThrow(ValidationBloquanteError);
   });
 
   it('accepte une ligne a zero heure (jour non travaille)', () => {

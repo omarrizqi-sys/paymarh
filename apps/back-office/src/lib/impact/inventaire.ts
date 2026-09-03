@@ -1,11 +1,18 @@
-import type { ImpactSuppressionCompteBancaire, ImpactSuppressionEtablissement, ImpactSuppressionSociete } from '@paymarh/shared-types';
+import type {
+  ImpactSuppressionCompteBancaire,
+  ImpactSuppressionEtablissement,
+  ImpactSuppressionSociete,
+} from '@paymarh/shared-types';
 import type { LigneImpact } from '@/components/impact-suppression/dialogue-impact-suppression';
 
 export function inventaireImpactSociete(data: ImpactSuppressionSociete): readonly LigneImpact[] {
   return [
     { libelle: 'Etablissements', quantite: data.etablissements },
     { libelle: 'Comptes bancaires', quantite: data.comptesBancaires },
-    { libelle: 'Historiques de parametrage societe', quantite: data.parametragesHistoriquesSociete },
+    {
+      libelle: 'Historiques de parametrage societe',
+      quantite: data.parametragesHistoriquesSociete,
+    },
     {
       libelle: 'Historiques de parametrage etablissement',
       quantite: data.parametragesHistoriquesEtablissement,

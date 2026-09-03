@@ -23,7 +23,10 @@ export default function RootLayout({
               <Link href="/" className="font-semibold tracking-tight">
                 PaymaRH
               </Link>
-              <Link href="/societes" className="text-muted-foreground hover:text-foreground text-sm">
+              <Link
+                href="/societes"
+                className="text-muted-foreground hover:text-foreground text-sm"
+              >
                 Societes
               </Link>
             </nav>

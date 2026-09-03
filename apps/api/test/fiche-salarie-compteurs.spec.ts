@@ -173,10 +173,14 @@ describe('compteurs fiche salarie (base reelle)', () => {
     await creerSalarieMin(prisma, societe.companyId, { matricule: 'REP00007' });
     await creerSalarieMin(prisma, societe.companyId, { matricule: 'REP00012' });
 
-    const initialise = await initialiserCompteurMatriculeDepuisExistants(prisma, societe.companyId, {
-      prefixe: 'REP',
-      longueur: 5,
-    });
+    const initialise = await initialiserCompteurMatriculeDepuisExistants(
+      prisma,
+      societe.companyId,
+      {
+        prefixe: 'REP',
+        longueur: 5,
+      }
+    );
     expect(initialise).toBe(12);
 
     const suivant = await creerSalarieMatriculeAuto(
@@ -204,10 +208,14 @@ describe('compteurs fiche salarie (base reelle)', () => {
     const premier = await creerSalarieMin(prisma, societe.companyId, { matricule: 'RCS00009' });
     await prisma.salarie.delete({ where: { id: premier.id } });
 
-    const initialise = await initialiserCompteurMatriculeDepuisExistants(prisma, societe.companyId, {
-      prefixe: 'RCS',
-      longueur: 5,
-    });
+    const initialise = await initialiserCompteurMatriculeDepuisExistants(
+      prisma,
+      societe.companyId,
+      {
+        prefixe: 'RCS',
+        longueur: 5,
+      }
+    );
     expect(initialise).toBe(9);
 
     const suivant = await creerSalarieMatriculeAuto(
@@ -321,9 +329,9 @@ describe('compteurs fiche salarie (base reelle)', () => {
       })
     ).rejects.toThrow('annulation apres marquage');
 
-    expect(
-      await prisma.matriculeConsomme.count({ where: { companyId: societe.companyId } })
-    ).toBe(0);
+    expect(await prisma.matriculeConsomme.count({ where: { companyId: societe.companyId } })).toBe(
+      0
+    );
     expect(
       await prisma.compteurMatricule.findUnique({
         where: { companyId_prefixe: { companyId: societe.companyId, prefixe: 'TX' } },

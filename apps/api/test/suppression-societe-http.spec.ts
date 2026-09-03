@@ -91,8 +91,9 @@ describe('suppression societe — confirmation HTTP', () => {
     });
     expect(impact.status).toBe(200);
     const impactJson = await lireJson(impact);
-    const jetonObsolete = extraireDonnees<{ jetonConfirmation: string }>(impactJson)
-      .jetonConfirmation;
+    const jetonObsolete = extraireDonnees<{ jetonConfirmation: string }>(
+      impactJson
+    ).jetonConfirmation;
 
     await prisma.companyParametrageHistorique.create({
       data: {
@@ -122,8 +123,9 @@ describe('suppression societe — confirmation HTTP', () => {
     });
     expect(impact.status).toBe(200);
     const impactJson = await lireJson(impact);
-    const jetonValide = extraireDonnees<{ jetonConfirmation: string }>(impactJson)
-      .jetonConfirmation;
+    const jetonValide = extraireDonnees<{ jetonConfirmation: string }>(
+      impactJson
+    ).jetonConfirmation;
 
     const reponse = await appelerApi(app, {
       method: 'DELETE',

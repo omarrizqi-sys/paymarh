@@ -35,7 +35,9 @@ describe('champs obligatoires — refus des valeurs absentes ou nulles', () => {
     expect(() => assertChampObligatoire(undefined, 'moisClotureConges')).toThrow(
       ValidationBloquanteError
     );
-    expect(() => assertChampObligatoire(null, 'moisClotureConges')).toThrow(ValidationBloquanteError);
+    expect(() => assertChampObligatoire(null, 'moisClotureConges')).toThrow(
+      ValidationBloquanteError
+    );
     expect(() => assertChampObligatoire(0, 'moisClotureConges')).toThrow(ValidationBloquanteError);
     expect(() => assertChampObligatoire(12, 'moisClotureConges')).not.toThrow();
   });

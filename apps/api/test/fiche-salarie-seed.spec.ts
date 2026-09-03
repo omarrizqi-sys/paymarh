@@ -37,39 +37,29 @@ describe('seed referentiels fiche salarie', () => {
     expect(palestine.libelle).toBe('Palestine');
   });
 
-  it(
-    'le seed est idempotent',
-    async () => {
-      const avant = await prisma.pays.count();
-      const { execSync } = await import('node:child_process');
-      const racine = new URL('../../..', import.meta.url);
-      execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
-      const apres = await prisma.pays.count();
-      expect(apres).toBe(avant);
-      expect(apres).toBe(195);
-    },
-    30_000
-  );
+  it('le seed est idempotent', async () => {
+    const avant = await prisma.pays.count();
+    const { execSync } = await import('node:child_process');
+    const racine = new URL('../../..', import.meta.url);
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    const apres = await prisma.pays.count();
+    expect(apres).toBe(avant);
+    expect(apres).toBe(195);
+  }, 30_000);
 
-  it(
-    'apres deux executions du seed, il existe exactement une ligne TAHFIZ',
-    async () => {
-      const { execSync } = await import('node:child_process');
-      const racine = new URL('../../..', import.meta.url);
-      execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
-      execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
-      const count = await prisma.statutParticulier.count({
-        where: { code: STATUT_TECHNIQUE_TAHFIZ.code },
-      });
-      expect(count).toBe(1);
-    },
-    60_000
-  );
+  it('apres deux executions du seed, il existe exactement une ligne TAHFIZ', async () => {
+    const { execSync } = await import('node:child_process');
+    const racine = new URL('../../..', import.meta.url);
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    const count = await prisma.statutParticulier.count({
+      where: { code: STATUT_TECHNIQUE_TAHFIZ.code },
+    });
+    expect(count).toBe(1);
+  }, 60_000);
 
   it('TAHFIZ n apparait pas dans les statuts particuliers saisissables', () => {
     expect(STATUTS_PARTICULIERS.map((s) => s.code)).toEqual(['IDMAJ']);
-    expect(STATUTS_PARTICULIERS.some((s) => s.code === STATUT_TECHNIQUE_TAHFIZ.code)).toBe(
-      false
-    );
+    expect(STATUTS_PARTICULIERS.some((s) => s.code === STATUT_TECHNIQUE_TAHFIZ.code)).toBe(false);
   });
 });

@@ -63,7 +63,12 @@ describe('assemblerResolutionsEmploi', () => {
   };
 
   it('un champ vide au niveau emploi rend la valeur etablissement avec son nom', () => {
-    const resolutions = assemblerResolutionsEmploi(salarieVide, etab, { dureeLegaleTravail: null }, '2025-07');
+    const resolutions = assemblerResolutionsEmploi(
+      salarieVide,
+      etab,
+      { dureeLegaleTravail: null },
+      '2025-07'
+    );
     expect(resolutions.dureeContractuelle).toEqual({
       valeur: '44',
       origine: 'ETABLISSEMENT',
@@ -86,14 +91,24 @@ describe('assemblerResolutionsEmploi', () => {
   });
 
   it('aucun niveau ne produit aucune valeur', () => {
-    const resolutions = assemblerResolutionsEmploi(salarieVide, null, { dureeLegaleTravail: null }, '2025-07');
+    const resolutions = assemblerResolutionsEmploi(
+      salarieVide,
+      null,
+      { dureeLegaleTravail: null },
+      '2025-07'
+    );
     expect(resolutions.dureeContractuelle).toBeNull();
     expect(resolutions.grilleHoraire).toBeNull();
     expect(resolutions.reposHebdomadaire).toBeNull();
   });
 
   it('jours feries : suivi etab vs grille propre vide (A15)', () => {
-    const suivi = assemblerResolutionsEmploi(salarieVide, etab, { dureeLegaleTravail: null }, '2025-07');
+    const suivi = assemblerResolutionsEmploi(
+      salarieVide,
+      etab,
+      { dureeLegaleTravail: null },
+      '2025-07'
+    );
     expect(suivi.joursFeriesTravailles).toEqual({
       valeur: ['jf-1'],
       origine: 'ETABLISSEMENT',

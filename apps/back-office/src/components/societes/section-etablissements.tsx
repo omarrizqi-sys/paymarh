@@ -230,11 +230,23 @@ export function SectionEtablissements({
           >
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="nom">Nom</Label>
-              <Input id="nom" name="nom" defaultValue={etab.nom} disabled={!peutModifier} required />
+              <Input
+                id="nom"
+                name="nom"
+                defaultValue={etab.nom}
+                disabled={!peutModifier}
+                required
+              />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="adresse">Adresse</Label>
-              <Input id="adresse" name="adresse" defaultValue={etab.adresse} disabled={!peutModifier} required />
+              <Input
+                id="adresse"
+                name="adresse"
+                defaultValue={etab.adresse}
+                disabled={!peutModifier}
+                required
+              />
             </div>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="complementAdresse">Complement d adresse</Label>
@@ -247,7 +259,13 @@ export function SectionEtablissements({
             </div>
             <div className="space-y-2">
               <Label htmlFor="ville">Ville</Label>
-              <Input id="ville" name="ville" defaultValue={etab.ville} disabled={!peutModifier} required />
+              <Input
+                id="ville"
+                name="ville"
+                defaultValue={etab.ville}
+                disabled={!peutModifier}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="pays">Pays</Label>
@@ -255,14 +273,25 @@ export function SectionEtablissements({
             </div>
             <div className="space-y-2">
               <Label htmlFor="codePostal">Code postal</Label>
-              <Input id="codePostal" name="codePostal" defaultValue={etab.codePostal ?? ''} disabled={!peutModifier} />
+              <Input
+                id="codePostal"
+                name="codePostal"
+                defaultValue={etab.codePostal ?? ''}
+                disabled={!peutModifier}
+              />
               {afficherFormatCodePostalMaroc(etab.pays) ? (
                 <p className="text-muted-foreground text-xs">Format attendu : 5 chiffres (Maroc)</p>
               ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="ice">ICE</Label>
-              <Input id="ice" name="ice" defaultValue={etab.ice ?? ''} disabled={!peutModifier} inputMode="numeric" />
+              <Input
+                id="ice"
+                name="ice"
+                defaultValue={etab.ice ?? ''}
+                disabled={!peutModifier}
+                inputMode="numeric"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="taxeProfessionnelle">Taxe professionnelle</Label>
@@ -275,15 +304,27 @@ export function SectionEtablissements({
             </div>
             <div className="space-y-2">
               <Label htmlFor="telephone">Telephone</Label>
-              <Input id="telephone" name="telephone" defaultValue={etab.telephone ?? ''} disabled={!peutModifier} />
+              <Input
+                id="telephone"
+                name="telephone"
+                defaultValue={etab.telephone ?? ''}
+                disabled={!peutModifier}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" type="email" defaultValue={etab.email ?? ''} disabled={!peutModifier} />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                defaultValue={etab.email ?? ''}
+                disabled={!peutModifier}
+              />
             </div>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
               {peutModifier ? <Button type="submit">Enregistrer l etablissement</Button> : null}
-              {possedePermission(etab.operations, 'etablissement.designer-principal') && !etab.estPrincipal ? (
+              {possedePermission(etab.operations, 'etablissement.designer-principal') &&
+              !etab.estPrincipal ? (
                 <Button
                   type="button"
                   variant="secondary"
@@ -301,7 +342,8 @@ export function SectionEtablissements({
                   Designer principal
                 </Button>
               ) : null}
-              {possedePermission(etab.operations, 'etablissement.supprimer') && !etab.estPrincipal ? (
+              {possedePermission(etab.operations, 'etablissement.supprimer') &&
+              !etab.estPrincipal ? (
                 <Button type="button" variant="destructive" onClick={() => onSupprimer(etab.id)}>
                   Supprimer
                 </Button>
@@ -311,7 +353,11 @@ export function SectionEtablissements({
 
           <Separator />
 
-          <form onSubmit={(e) => void enregistrerParamEtab(e)} className="space-y-6" id={`param-etab-${etab.id}`}>
+          <form
+            onSubmit={(e) => void enregistrerParamEtab(e)}
+            className="space-y-6"
+            id={`param-etab-${etab.id}`}
+          >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="dureeHebdomadaire">Duree hebdomadaire (h)</Label>
@@ -330,13 +376,21 @@ export function SectionEtablissements({
                   defaultValue={param?.jourReposHebdomadaire ?? 'DIMANCHE'}
                   disabled={!peutModifier}
                 >
-                  {(['LUNDI', 'MARDI', 'MERCREDI', 'JEUDI', 'VENDREDI', 'SAMEDI', 'DIMANCHE'] as const).map(
-                    (j) => (
-                      <option key={j} value={j}>
-                        {libelleJourSemaine(j)}
-                      </option>
-                    )
-                  )}
+                  {(
+                    [
+                      'LUNDI',
+                      'MARDI',
+                      'MERCREDI',
+                      'JEUDI',
+                      'VENDREDI',
+                      'SAMEDI',
+                      'DIMANCHE',
+                    ] as const
+                  ).map((j) => (
+                    <option key={j} value={j}>
+                      {libelleJourSemaine(j)}
+                    </option>
+                  ))}
                 </Select>
               </div>
               <div className="space-y-2">
@@ -344,7 +398,9 @@ export function SectionEtablissements({
                 <Select
                   id="teletravailAutorise"
                   name="teletravailAutorise"
-                  defaultValue={teletravailAffiche === null ? '' : teletravailAffiche ? 'true' : 'false'}
+                  defaultValue={
+                    teletravailAffiche === null ? '' : teletravailAffiche ? 'true' : 'false'
+                  }
                   disabled={!peutModifier}
                   onChange={(ev) => {
                     const v = ev.target.value;
@@ -362,7 +418,9 @@ export function SectionEtablissements({
                   <Select
                     id="indemniteTeletravailVersee"
                     name="indemniteTeletravailVersee"
-                    defaultValue={indemniteAffiche === null ? '' : indemniteAffiche ? 'true' : 'false'}
+                    defaultValue={
+                      indemniteAffiche === null ? '' : indemniteAffiche ? 'true' : 'false'
+                    }
                     disabled={!peutModifier}
                     onChange={(ev) => {
                       const v = ev.target.value;
@@ -409,7 +467,9 @@ export function SectionEtablissements({
                     size="sm"
                     disabled={deductionEnCours}
                     onClick={() => {
-                      const form = document.getElementById(`param-etab-${etab.id}`) as HTMLFormElement | null;
+                      const form = document.getElementById(
+                        `param-etab-${etab.id}`
+                      ) as HTMLFormElement | null;
                       if (form) void deduireDepuisHebdo(form);
                     }}
                   >
@@ -421,17 +481,19 @@ export function SectionEtablissements({
                 Saisie directe ou valeurs deduites par l API a partir de l hebdomadaire (52/12).
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
-                {[...typesHeures].sort((a, b) => a.ordre - b.ordre).map((t) => (
-                  <div key={t.id} className="space-y-1">
-                    <Label htmlFor={`mensuel-${t.id}`}>{t.libelle}</Label>
-                    <Input
-                      id={`mensuel-${t.id}`}
-                      value={mensuel[t.id] ?? ''}
-                      disabled={!peutModifier}
-                      onChange={(ev) => setMensuel((m) => ({ ...m, [t.id]: ev.target.value }))}
-                    />
-                  </div>
-                ))}
+                {[...typesHeures]
+                  .sort((a, b) => a.ordre - b.ordre)
+                  .map((t) => (
+                    <div key={t.id} className="space-y-1">
+                      <Label htmlFor={`mensuel-${t.id}`}>{t.libelle}</Label>
+                      <Input
+                        id={`mensuel-${t.id}`}
+                        value={mensuel[t.id] ?? ''}
+                        disabled={!peutModifier}
+                        onChange={(ev) => setMensuel((m) => ({ ...m, [t.id]: ev.target.value }))}
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
 

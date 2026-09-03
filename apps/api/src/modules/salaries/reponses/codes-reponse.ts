@@ -30,7 +30,7 @@ export const CODES_REPONSE = {
   },
   ANCIENNETE_POSTERIEURE_ENTREE: {
     code: 'ANCIENNETE_POSTERIEURE_ENTREE',
-    message: "La date d anciennete est posterieure a la date d entree.",
+    message: 'La date d anciennete est posterieure a la date d entree.',
   },
   FORMAT_CONTACT_INVALIDE: {
     code: 'FORMAT_CONTACT_INVALIDE',
@@ -114,7 +114,8 @@ export const CODES_REPONSE = {
   },
   MENSUALITE_ECHEANCES_INCOHERENTE: {
     code: 'MENSUALITE_ECHEANCES_INCOHERENTE',
-    message: 'La mensualite multipliee par le nombre d echeances ne correspond pas au montant total.',
+    message:
+      'La mensualite multipliee par le nombre d echeances ne correspond pas au montant total.',
   },
   STATUT_HORS_INTERVALLE_EMPLOI: {
     code: 'STATUT_HORS_INTERVALLE_EMPLOI',

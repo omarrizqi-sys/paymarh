@@ -47,10 +47,13 @@ describe('MoisEnCoursService — cascade a trois cas', () => {
   });
 
   it('cas 3 — sans bulletin, deux emplois actifs : mois de debut du plus ancien', async () => {
-    const service = creerService([], [
-      { dateDebut: new Date('2024-06-01'), dateSortie: null },
-      { dateDebut: new Date('2025-03-01'), dateSortie: null },
-    ]);
+    const service = creerService(
+      [],
+      [
+        { dateDebut: new Date('2024-06-01'), dateSortie: null },
+        { dateDebut: new Date('2025-03-01'), dateSortie: null },
+      ]
+    );
     const mois = await service.calculerPourSalarie(salarieId, new Date('2026-01-01'));
     expect(mois).toBe('2024-06');
   });

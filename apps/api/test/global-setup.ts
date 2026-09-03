@@ -12,7 +12,7 @@ export default async function globalSetup(): Promise<void> {
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
-      'PostgreSQL n\'est pas configure (DATABASE_URL manquant). Copiez .env.example en .env puis lancez : docker compose up -d'
+      "PostgreSQL n'est pas configure (DATABASE_URL manquant). Copiez .env.example en .env puis lancez : docker compose up -d"
     );
   }
 
@@ -21,7 +21,7 @@ export default async function globalSetup(): Promise<void> {
     await client.connect();
     await client.query('SELECT 1');
   } catch {
-    throw new Error('PostgreSQL n\'est pas demarre. Lancez : docker compose up -d');
+    throw new Error("PostgreSQL n'est pas demarre. Lancez : docker compose up -d");
   } finally {
     await client.end();
   }

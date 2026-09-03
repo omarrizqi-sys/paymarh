@@ -227,9 +227,7 @@ export const MOTIFS_SORTIE = [
   { code: 'DECES', libelle: 'Décès, disparition' },
 ] as const;
 
-export const STATUTS_PARTICULIERS = [
-  { code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
-] as const;
+export const STATUTS_PARTICULIERS = [{ code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' }] as const;
 
 /** Code technique des lignes TAHFIZ propagees — jamais propose a la saisie. */
 export const STATUT_TECHNIQUE_TAHFIZ = {

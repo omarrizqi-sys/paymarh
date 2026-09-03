@@ -4,11 +4,7 @@ import type { PrismaClient } from '../../generated/prisma/client.js';
 import { emploiEstOuvert } from './deductions-salarie.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
-import {
-  comparerDates,
-  dateDansIntervalle,
-  versDate,
-} from './deductions-emploi.js';
+import { comparerDates, dateDansIntervalle, versDate } from './deductions-emploi.js';
 import type { ReferentielNationalPort } from './referentiel-national/referentiel-national.port.js';
 
 export class ValidationBloquanteEmploiError extends Error {

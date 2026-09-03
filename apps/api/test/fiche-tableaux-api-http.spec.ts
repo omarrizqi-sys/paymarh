@@ -4,7 +4,11 @@ import { Decimal } from 'decimal.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { HEADER_PERMISSIONS_REFUSEES } from '../src/common/permissions/permissions-refusees.header.js';
-import { BULLETIN_PORT, EtatBulletin, type BulletinPort } from '../src/modules/salaries/bulletin/bulletin.port.js';
+import {
+  BULLETIN_PORT,
+  EtatBulletin,
+  type BulletinPort,
+} from '../src/modules/salaries/bulletin/bulletin.port.js';
 import {
   REFERENTIEL_NATIONAL_PORT,
   type ReferentielNationalPort,
@@ -23,7 +27,7 @@ import { prisma } from './support/prisma-test.js';
 const PREFIXE = `test-tableaux-api-${Date.now()}`;
 
 function codesBanqueFixture(): { codeRib: string; codeAutre: string } {
-  const n = Number(PREFIXE.replace(/\D/g, '').slice(-5)) % 800 + 100;
+  const n = (Number(PREFIXE.replace(/\D/g, '').slice(-5)) % 800) + 100;
   return {
     codeRib: String(n).padStart(3, '0'),
     codeAutre: String(n + 1).padStart(3, '0'),
@@ -116,25 +120,22 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
 
     let version = 0;
     for (let i = 0; i < 10; i++) {
-      const reponse = await fetch(
-        urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`),
-        {
-          method: 'POST',
-          headers: {
-            ...entetes(utilisateurId, societe.companyId),
-            'content-type': 'application/json',
-            'if-match': String(version),
-          },
-          body: JSON.stringify({
-            lienParenteCode: 'ENFANT',
-            prenom: `Enf${String.fromCharCode(65 + i)}`,
-            nom: 'Test',
-            sexe: 'HOMME',
-            dateNaissance: `201${i % 10}-0${(i % 9) + 1}-15`,
-            aCharge: true,
-          }),
-        }
-      );
+      const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`), {
+        method: 'POST',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': String(version),
+        },
+        body: JSON.stringify({
+          lienParenteCode: 'ENFANT',
+          prenom: `Enf${String.fromCharCode(65 + i)}`,
+          nom: 'Test',
+          sexe: 'HOMME',
+          dateNaissance: `201${i % 10}-0${(i % 9) + 1}-15`,
+          aCharge: true,
+        }),
+      });
       expect(reponse.status).toBe(201);
       const corps = (await reponse.json()) as { donnees: { version: number } };
       version = corps.donnees.version;
@@ -312,20 +313,17 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-CB-UN`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          comptes: [{ rib: '007780000000000000000000' }],
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [{ rib: '007780000000000000000000' }],
+      }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as {
       donnees: { comptesBancaires: { partVirement: string | null }[] };
@@ -338,23 +336,20 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-CB-90`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          comptes: [
-            { rib: '007780000000000000000001', partVirement: '45.00' },
-            { rib: '007780000000000000000002', partVirement: '45.00' },
-          ],
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [
+          { rib: '007780000000000000000001', partVirement: '45.00' },
+          { rib: '007780000000000000000002', partVirement: '45.00' },
+        ],
+      }),
+    });
     expect(reponse.status).toBe(400);
 
     const comptes = await prisma.compteBancaireSalarie.count({
@@ -368,23 +363,20 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-CB-100`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          comptes: [
-            { rib: '007780000000000000000011', partVirement: '60.00' },
-            { rib: '007780000000000000000012', partVirement: '40.00' },
-          ],
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [
+          { rib: '007780000000000000000011', partVirement: '60.00' },
+          { rib: '007780000000000000000012', partVirement: '40.00' },
+        ],
+      }),
+    });
     expect(reponse.status).toBe(200);
   });
 
@@ -412,31 +404,25 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       body: JSON.stringify(payload),
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '1',
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '1',
+      },
+      body: JSON.stringify(payload),
+    });
     expect(reponse.status).toBe(201);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'PERSONNE_A_CHARGE_DOUBLON')).toBe(true);
-    expect(
-      (await prisma.personneACharge.count({ where: { salarieId: salarie.id } }))
-    ).toBe(2);
+    expect(await prisma.personneACharge.count({ where: { salarieId: salarie.id } })).toBe(2);
   });
 
   it('6a — enfant age depasse produit alerte C8 si referentiel fournit le seuil', async () => {
     const appRef = await creerAppAvecPorts({
       referentiel: {
-        lireValeur: async (cle) =>
-          cle === 'AGE_MAX_ENFANT_CHARGE' ? new Decimal(21) : null,
+        lireValeur: async (cle) => (cle === 'AGE_MAX_ENFANT_CHARGE' ? new Decimal(21) : null),
       },
     });
 
@@ -445,25 +431,22 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         matricule: `${PREFIXE}-C8-ALERTE`,
       });
 
-      const reponse = await fetch(
-        urlLocale(appRef, `/salaries/${salarie.id}/personnes-a-charge`),
-        {
-          method: 'POST',
-          headers: {
-            ...entetes(utilisateurId, societe.companyId),
-            'content-type': 'application/json',
-            'if-match': '0',
-          },
-          body: JSON.stringify({
-            lienParenteCode: 'ENFANT',
-            prenom: 'Adulte',
-            nom: 'Charge',
-            sexe: 'HOMME',
-            dateNaissance: '1990-01-01',
-            aCharge: true,
-          }),
-        }
-      );
+      const reponse = await fetch(urlLocale(appRef, `/salaries/${salarie.id}/personnes-a-charge`), {
+        method: 'POST',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({
+          lienParenteCode: 'ENFANT',
+          prenom: 'Adulte',
+          nom: 'Charge',
+          sexe: 'HOMME',
+          dateNaissance: '1990-01-01',
+          aCharge: true,
+        }),
+      });
       const corps = (await reponse.json()) as { alertes: { code: string }[] };
       expect(corps.alertes.some((a) => a.code === 'ENFANT_AGE_DEPASSE')).toBe(true);
     } finally {
@@ -476,25 +459,22 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-C8-SANS`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          lienParenteCode: 'ENFANT',
-          prenom: 'Adulte',
-          nom: 'SansRef',
-          sexe: 'HOMME',
-          dateNaissance: '1990-01-01',
-          aCharge: true,
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        lienParenteCode: 'ENFANT',
+        prenom: 'Adulte',
+        nom: 'SansRef',
+        sexe: 'HOMME',
+        dateNaissance: '1990-01-01',
+        aCharge: true,
+      }),
+    });
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'ENFANT_AGE_DEPASSE')).toBe(false);
   });
@@ -502,8 +482,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
   it('6c — aucune alerte C8 si situation de handicap cochee', async () => {
     const appRef = await creerAppAvecPorts({
       referentiel: {
-        lireValeur: async (cle) =>
-          cle === 'AGE_MAX_ENFANT_CHARGE' ? new Decimal(21) : null,
+        lireValeur: async (cle) => (cle === 'AGE_MAX_ENFANT_CHARGE' ? new Decimal(21) : null),
       },
     });
 
@@ -512,26 +491,23 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         matricule: `${PREFIXE}-C8-HAND`,
       });
 
-      const reponse = await fetch(
-        urlLocale(appRef, `/salaries/${salarie.id}/personnes-a-charge`),
-        {
-          method: 'POST',
-          headers: {
-            ...entetes(utilisateurId, societe.companyId),
-            'content-type': 'application/json',
-            'if-match': '0',
-          },
-          body: JSON.stringify({
-            lienParenteCode: 'ENFANT',
-            prenom: 'Handicap',
-            nom: 'Enfant',
-            sexe: 'HOMME',
-            dateNaissance: '1990-01-01',
-            aCharge: true,
-            situationHandicap: true,
-          }),
-        }
-      );
+      const reponse = await fetch(urlLocale(appRef, `/salaries/${salarie.id}/personnes-a-charge`), {
+        method: 'POST',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({
+          lienParenteCode: 'ENFANT',
+          prenom: 'Handicap',
+          nom: 'Enfant',
+          sexe: 'HOMME',
+          dateNaissance: '1990-01-01',
+          aCharge: true,
+          situationHandicap: true,
+        }),
+      });
       const corps = (await reponse.json()) as { alertes: { code: string }[] };
       expect(corps.alertes.some((a) => a.code === 'ENFANT_AGE_DEPASSE')).toBe(false);
     } finally {
@@ -576,12 +552,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-PRIME-DUP`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
     const payload = { primeRef: 'PRIME-TRANSPORT', moisApplication: [12] };
 
@@ -595,18 +566,15 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       body: JSON.stringify(payload),
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '1',
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '1',
+      },
+      body: JSON.stringify(payload),
+    });
     expect(reponse.status).toBe(201);
     const corps = (await reponse.json()) as { alertes: unknown[] };
     expect(corps.alertes).toHaveLength(0);
@@ -616,12 +584,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-CHEV`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
     await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -637,22 +600,19 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       }),
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '1',
-        },
-        body: JSON.stringify({
-          statutCode: 'IDMAJ',
-          dateDebut: '2025-06-01',
-          dateFin: null,
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '1',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2025-06-01',
+        dateFin: null,
+      }),
+    });
     expect(reponse.status).toBe(400);
     const corps = (await reponse.json()) as { code: string };
     expect(corps.code).toBe('CHEVAUCHEMENT_STATUTS');
@@ -662,12 +622,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-PROP`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
     const statut = await prisma.statutParticulierLigne.create({
       data: {
@@ -710,29 +665,24 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-SAISIE-BLOC`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/saisies-sur-salaire`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          referenceDecision: 'DEC-001',
-          creancier: 'Banque',
-          libelleBulletin: 'SAISIE',
-          montantTotal: '1000.00',
-          montantMensuel: '1500.00',
-          moisDebut: '2024-01',
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/saisies-sur-salaire`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        referenceDecision: 'DEC-001',
+        creancier: 'Banque',
+        libelleBulletin: 'SAISIE',
+        montantTotal: '1000.00',
+        montantMensuel: '1500.00',
+        moisDebut: '2024-01',
+      }),
+    });
     expect(reponse.status).toBe(400);
-    expect(
-      (await prisma.saisieSurSalaire.count({ where: { salarieId: salarie.id } }))
-    ).toBe(0);
+    expect(await prisma.saisieSurSalaire.count({ where: { salarieId: salarie.id } })).toBe(0);
   });
 
   it('12 — pret incoherent mensualite x echeances est enregistre avec alerte', async () => {
@@ -758,9 +708,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     });
     expect(reponse.status).toBe(201);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
-    expect(corps.alertes.some((a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE')).toBe(
-      false
-    );
+    expect(corps.alertes.some((a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE')).toBe(false);
 
     const reponse2 = await fetch(urlLocale(app, `/salaries/${salarie.id}/prets`), {
       method: 'POST',
@@ -779,9 +727,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       }),
     });
     const corps2 = (await reponse2.json()) as { alertes: { code: string }[] };
-    expect(corps2.alertes.some((a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE')).toBe(
-      true
-    );
+    expect(corps2.alertes.some((a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE')).toBe(true);
   });
 
   it('13 — mois de debut de prelevement dans le passe accepte sans alerte', async () => {
@@ -866,12 +812,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-MASQUAGE`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
     await prisma.compteBancaireSalarie.create({
       data: { salarieId: salarie.id, rib: '007780000000000000000099' },
@@ -973,32 +914,24 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-PAC-ECRAS`,
     });
-    await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const creation = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          lienParenteCode: 'ENFANT',
-          prenom: 'Sara',
-          nom: 'Benali',
-          sexe: 'FEMME',
-          dateNaissance: '2016-04-20',
-          aCharge: true,
-        }),
-      }
-    );
+    const creation = await fetch(urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        lienParenteCode: 'ENFANT',
+        prenom: 'Sara',
+        nom: 'Benali',
+        sexe: 'FEMME',
+        dateNaissance: '2016-04-20',
+        aCharge: true,
+      }),
+    });
     const { donnees: creationDonnees } = (await creation.json()) as {
       donnees: { personnesACharge: { id: string }[]; version: number };
     };
@@ -1031,35 +964,25 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-HORS`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const reponse = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          statutCode: 'IDMAJ',
-          dateDebut: '2024-06-01',
-          dateFin: '2025-12-31',
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2024-06-01',
+        dateFin: '2025-12-31',
+      }),
+    });
     expect(reponse.status).toBe(201);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'STATUT_HORS_INTERVALLE_EMPLOI')).toBe(true);
-    expect(
-      (await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } }))
-    ).toBe(1);
+    expect(await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } })).toBe(1);
   });
 
   it('19 — RIB deja utilise dans la societe produit alerte C12 sans blocage', async () => {
@@ -1072,34 +995,24 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-RIB-DUP-SA`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({ comptes: [{ rib }] }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ comptes: [{ rib }] }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'RIB_DEJA_UTILISE')).toBe(true);
-    expect(
-      (await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } }))
-    ).toBe(1);
+    expect(await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } })).toBe(1);
   });
 
   it('20 — le meme RIB dans une autre societe ne produit aucune alerte C12', async () => {
     const forme = await prisma.formeJuridique.findFirstOrThrow();
-    const societeB = await creerSocieteTest(
-      prisma,
-      forme.id,
-      societe.accountId,
-      `${PREFIXE}-SB`
-    );
+    const societeB = await creerSocieteTest(prisma, forme.id, societe.accountId, `${PREFIXE}-SB`);
     const rib = '007780000000000000000888';
 
     await prisma.compteBancaire.create({
@@ -1110,18 +1023,15 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-RIB-AUTRE-SA`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarieB.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societeB.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({ comptes: [{ rib }] }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarieB.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societeB.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ comptes: [{ rib }] }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'RIB_DEJA_UTILISE')).toBe(false);
@@ -1133,23 +1043,20 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     });
     const rib = '0077800000000000';
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({ comptes: [{ rib }] }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ comptes: [{ rib }] }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as { alertes: { code: string }[] };
     expect(corps.alertes.some((a) => a.code === 'FORMAT_IDENTIFIANT_BANCAIRE')).toBe(true);
     expect(
-      (await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id, rib } }))
+      await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id, rib } })
     ).toBe(1);
   });
 
@@ -1168,18 +1075,15 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     });
     const rib = ribDepuisCode(codeRib, '00555');
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({ comptes: [{ rib }] }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ comptes: [{ rib }] }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as {
       donnees: { comptesBancaires: { banqueId: string | null }[] };
@@ -1208,20 +1112,17 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-BANQUE-INCOH`,
     });
 
-    const reponse = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          comptes: [{ rib: ribDepuisCode(codeRib, '00666'), banqueId: banqueAutre.id }],
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [{ rib: ribDepuisCode(codeRib, '00666'), banqueId: banqueAutre.id }],
+      }),
+    });
     expect(reponse.status).toBe(200);
     const corps = (await reponse.json()) as {
       alertes: { code: string }[];
@@ -1237,23 +1138,20 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       matricule: `${PREFIXE}-CB-OMIS`,
     });
 
-    const premier = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          comptes: [
-            { rib: '007780000000000000000301', partVirement: '60.00' },
-            { rib: '007780000000000000000302', partVirement: '40.00' },
-          ],
-        }),
-      }
-    );
+    const premier = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [
+          { rib: '007780000000000000000301', partVirement: '60.00' },
+          { rib: '007780000000000000000302', partVirement: '40.00' },
+        ],
+      }),
+    });
     const { donnees: donneesPremier } = (await premier.json()) as {
       donnees: { comptesBancaires: { id: string }[]; version: number };
     };
@@ -1262,60 +1160,49 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(compteConserve).toBeDefined();
     expect(compteOmis).toBeDefined();
 
-    const second = await fetch(
-      urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`),
-      {
-        method: 'PUT',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': String(donneesPremier.version),
-        },
-        body: JSON.stringify({
-          comptes: [{ id: compteConserve, rib: '007780000000000000000301', partVirement: '100.00' }],
-        }),
-      }
-    );
+    const second = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': String(donneesPremier.version),
+      },
+      body: JSON.stringify({
+        comptes: [{ id: compteConserve, rib: '007780000000000000000301', partVirement: '100.00' }],
+      }),
+    });
     expect(second.status).toBe(200);
 
-    expect(await prisma.compteBancaireSalarie.findUnique({ where: { id: compteConserve! } })).not.toBeNull();
-    expect(await prisma.compteBancaireSalarie.findUnique({ where: { id: compteOmis! } })).toBeNull();
     expect(
-      (await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } }))
-    ).toBe(1);
+      await prisma.compteBancaireSalarie.findUnique({ where: { id: compteConserve! } })
+    ).not.toBeNull();
+    expect(
+      await prisma.compteBancaireSalarie.findUnique({ where: { id: compteOmis! } })
+    ).toBeNull();
+    expect(await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } })).toBe(1);
   });
 
   it('25 — montant interdit sur une prime contractuelle est refuse', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-PRIME-MONTANT`,
     });
-    const emploi = await creerEmploiOuvert(
-      prisma,
-      salarie.id,
-      societe.etablissementPrincipalId,
-      1
-    );
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const reponse = await fetch(
-      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`),
-      {
-        method: 'POST',
-        headers: {
-          ...entetes(utilisateurId, societe.companyId),
-          'content-type': 'application/json',
-          'if-match': '0',
-        },
-        body: JSON.stringify({
-          primeRef: 'PRIME-TRANSPORT',
-          moisApplication: [1],
-          montant: '500.00',
-        }),
-      }
-    );
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [1],
+        montant: '500.00',
+      }),
+    });
     expect(reponse.status).toBe(400);
-    expect(
-      (await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } }))
-    ).toBe(0);
+    expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(0);
   });
 
   it('26 — personne a charge supprimee avec bulletin : inactive mais encore comptee au mois en cours', async () => {

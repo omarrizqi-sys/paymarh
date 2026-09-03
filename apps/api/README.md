@@ -85,14 +85,14 @@ Deux comportements qui surprennent et qui sont **volontaires** :
 
 ## Routes disponibles au module 0
 
-| Route                | Garde         | Description                                       |
-| -------------------- | ------------- | ------------------------------------------------- |
-| `GET /health`        | aucune        | Témoin de santé. Ne lit ni la base ni le contexte |
-| `GET /accounts/me`   | `TenantGuard` | Le compte de l'utilisateur courant                |
+| Route               | Garde         | Description                                       |
+| ------------------- | ------------- | ------------------------------------------------- |
+| `GET /health`       | aucune        | Témoin de santé. Ne lit ni la base ni le contexte |
+| `GET /accounts/me`  | `TenantGuard` | Le compte de l'utilisateur courant                |
 | `GET /societes`     | `TenantGuard` | Les sociétés de son compte                        |
 | `GET /societes/:id` | `TenantGuard` | Une société de son compte                         |
-| `GET /users`         | `TenantGuard` | Les utilisateurs de son compte                    |
-| `GET /users/me`      | `TenantGuard` | L'utilisateur courant                             |
+| `GET /users`        | `TenantGuard` | Les utilisateurs de son compte                    |
+| `GET /users/me`     | `TenantGuard` | L'utilisateur courant                             |
 
 ### Interroger les routes protégées
 

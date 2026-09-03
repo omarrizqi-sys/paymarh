@@ -28,10 +28,7 @@ export class ComptesBancairesController {
   }
 
   @Post('societes/:societeId/comptes-bancaires')
-  creer(
-    @Param('societeId', ParseUUIDPipe) societeId: string,
-    @Body() dto: CreerCompteBancaireDto
-  ) {
+  creer(@Param('societeId', ParseUUIDPipe) societeId: string, @Body() dto: CreerCompteBancaireDto) {
     return this.comptes.creer(societeId, dto);
   }
 
@@ -41,10 +38,7 @@ export class ComptesBancairesController {
   }
 
   @Patch('comptes-bancaires/:id')
-  modifier(
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: ModifierCompteBancaireDto
-  ) {
+  modifier(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ModifierCompteBancaireDto) {
     return this.comptes.modifier(id, dto);
   }
 

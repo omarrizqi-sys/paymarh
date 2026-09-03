@@ -86,10 +86,7 @@ export class SalariesController {
   @PerimetreSalarie('salarieId')
   @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_EMPLOI' })
   @SansIfMatch()
-  creerEmploi(
-    @Param('salarieId', ParseUUIDPipe) salarieId: string,
-    @Body() dto: CreerEmploiDto
-  ) {
+  creerEmploi(@Param('salarieId', ParseUUIDPipe) salarieId: string, @Body() dto: CreerEmploiDto) {
     return this.emplois.creer(salarieId, dto);
   }
 

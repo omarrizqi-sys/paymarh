@@ -119,9 +119,7 @@ describe('API fiche salarie — non-reutilisation des matricules', () => {
         ...entetes(utilisateurId, societeA.companyId),
         'content-type': 'application/json',
       },
-      body: JSON.stringify(
-        payloadSalarie({ prenom: 'Omar', matricule: `${PREFIXE}-SUPPR-AUTO` })
-      ),
+      body: JSON.stringify(payloadSalarie({ prenom: 'Omar', matricule: `${PREFIXE}-SUPPR-AUTO` })),
     });
     expect(refus.status).toBe(400);
     assertRefusNeutre((await refus.json()) as { message?: string; code?: string });

@@ -120,8 +120,7 @@ export function DialogueImpactSuppression({
             onChange={(e) => setAccepte(e.target.checked)}
           />
           <Label htmlFor="accepte-suppression" className="cursor-pointer leading-snug">
-            J ai lu l inventaire ci-dessus et j accepte la suppression irreversible de ces
-            elements.
+            J ai lu l inventaire ci-dessus et j accepte la suppression irreversible de ces elements.
           </Label>
         </div>
 

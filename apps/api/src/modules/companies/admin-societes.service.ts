@@ -20,10 +20,7 @@ export class AdminSocietesService {
     private readonly audit: AuditService
   ) {}
 
-  async forcerRegimeDeBase(
-    id: Uuid,
-    dto: ForcerRegimeDto
-  ): Promise<ApiResponse<Societe>> {
+  async forcerRegimeDeBase(id: Uuid, dto: ForcerRegimeDto): Promise<ApiResponse<Societe>> {
     const context = this.tenantContext.getOrThrow();
     assertPeutFaire(context, 'societe.forcer-regime-de-base', { companyId: id });
 
