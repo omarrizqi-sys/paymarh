@@ -22,18 +22,38 @@ export function creerExtensionGardeSansEcriture(
   return {
     name: 'garde-route-sans-ecriture',
     client: {
-      $executeRaw({ args, query }) {
+      $executeRaw({
+        args,
+        query,
+      }: {
+        args: unknown;
+        query: (args: unknown) => ReturnType<PrismaClient['$executeRaw']>;
+      }) {
         refuserSiMarque('$executeRaw');
         return query(args);
       },
-      $executeRawUnsafe({ args, query }) {
+      $executeRawUnsafe({
+        args,
+        query,
+      }: {
+        args: unknown;
+        query: (args: unknown) => ReturnType<PrismaClient['$executeRawUnsafe']>;
+      }) {
         refuserSiMarque('$executeRawUnsafe');
         return query(args);
       },
     },
     query: {
       $allModels: {
-        async $allOperations({ operation, query, args }) {
+        async $allOperations({
+          operation,
+          query,
+          args,
+        }: {
+          operation: string;
+          query: (args: unknown) => Promise<unknown>;
+          args: unknown;
+        }) {
           if (OPERATIONS_ECRITURE.has(operation)) {
             refuserSiMarque(operation);
           }

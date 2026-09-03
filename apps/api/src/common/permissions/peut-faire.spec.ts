@@ -3,7 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { TenantContext } from '@paymarh/shared-types';
 import { peutFaire } from './peut-faire.js';
-import { calculerJetonConfirmation, jetonsIdentiques } from '../../modules/companies/jeton-confirmation.js';
+import {
+  calculerJetonConfirmation,
+  jetonsIdentiques,
+} from '../../modules/companies/jeton-confirmation.js';
 import { avertissementsIdentifiants } from '../../modules/companies/validation-fiche.js';
 
 describe('peutFaire — correspondance provisoire', () => {
@@ -70,17 +73,17 @@ describe('avertissements longueur', () => {
   it('signale un RIB trop court sans bloquer', () => {
     const warnings = avertissementsIdentifiants({ rib: '12345678901234567890' });
     expect(
-      warnings.some((w: { code: string; champ?: string }) => w.code === 'LONGUEUR_INATTENDUE' && w.champ === 'rib')
+      warnings.some(
+        (w: { code: string; champ?: string }) =>
+          w.code === 'LONGUEUR_INATTENDUE' && w.champ === 'rib'
+      )
     ).toBe(true);
   });
 });
 
 describe('garde-fou : aucun test de role hors peutFaire', () => {
   it('ne trouve aucun if (role === ...) dans les modules metier', () => {
-    const racines = [
-      join(import.meta.dirname, '..', '..', 'modules'),
-      join(import.meta.dirname),
-    ];
+    const racines = [join(import.meta.dirname, '..', '..', 'modules'), join(import.meta.dirname)];
     const motifs = [
       /context\.role\s*===/,
       /utilisateur\.role\s*===/,

@@ -27,11 +27,11 @@ Le porteur du projet n’a pas de formation technique mais lit le métier : le m
 
 Conséquences concrètes au module 1 :
 
-| Conservé (anglais) | Nouveau (français métier) |
-| --- | --- |
-| `Company`, `Account`, `User` | `Etablissement`, `CompteBancaire`, `JourFerie` |
-| `createdAt`, `accountId` | `TypeHeure`, `TypeExoneration`, `FormeJuridique`, `Banque` |
-| Index, UUID, migrations | `raisonSociale`, `codeDossier`, `moisEffet`, `jourReposHebdomadaire` |
+| Conservé (anglais)           | Nouveau (français métier)                                            |
+| ---------------------------- | -------------------------------------------------------------------- |
+| `Company`, `Account`, `User` | `Etablissement`, `CompteBancaire`, `JourFerie`                       |
+| `createdAt`, `accountId`     | `TypeHeure`, `TypeExoneration`, `FormeJuridique`, `Banque`           |
+| Index, UUID, migrations      | `raisonSociale`, `codeDossier`, `moisEffet`, `jourReposHebdomadaire` |
 
 `Company` **n’est pas renommé**. C’est un héritage assumé du module 0. Le renommer casserait l’API de démonstration, les types partagés (`@paymarh/shared-types`), les tests d’isolation multi-tenant et l’historique Git, pour un gain purement cosmétique.
 
@@ -42,7 +42,7 @@ Les commentaires, la documentation et les articles de la base de connaissance re
 ## Pourquoi
 
 1. **Lien avec la réglementation.** `cotisationCNSS` désigne un objet juridique précis, avec ses taux et plafonds. `socialContribution` n’en désigne aucun. Traduire, c’est perdre le fil du texte de loi.
-2. **Règle déjà écrite.** `docs/CONVENTIONS.md` impose ce mixte depuis le module 0. Cet ADR fige son application aux *noms de modèles* Prisma, pas seulement aux champs TypeScript.
+2. **Règle déjà écrite.** `docs/CONVENTIONS.md` impose ce mixte depuis le module 0. Cet ADR fige son application aux _noms de modèles_ Prisma, pas seulement aux champs TypeScript.
 3. **Stabilité du socle.** Le module 0 est validé et poussé. On n’y touche pas sans nécessité métier.
 4. **Relecture humaine.** PaymaRH est piloté par IA : un schéma que le porteur peut relire en français métier réduit le risque qu’une erreur passe inaperçue.
 
@@ -58,9 +58,9 @@ Les commentaires, la documentation et les articles de la base de connaissance re
 
 ## Alternatives rejetées
 
-| Alternative | Motif de rejet |
-| --- | --- |
-| Tout anglais | Perte du lien réglementaire ; relecture métier impossible. |
-| Renommer `Company` en `Societe` | Casse le module 0 pour un gain esthétique. |
-| Doublons (`Company` + alias `Societe`) | Deux noms pour une table ; confusion garantie. |
-| Français avec accents dans les identifiants | Risques d’encodage Git / OS / ORM. |
+| Alternative                                 | Motif de rejet                                             |
+| ------------------------------------------- | ---------------------------------------------------------- |
+| Tout anglais                                | Perte du lien réglementaire ; relecture métier impossible. |
+| Renommer `Company` en `Societe`             | Casse le module 0 pour un gain esthétique.                 |
+| Doublons (`Company` + alias `Societe`)      | Deux noms pour une table ; confusion garantie.             |
+| Français avec accents dans les identifiants | Risques d’encodage Git / OS / ORM.                         |

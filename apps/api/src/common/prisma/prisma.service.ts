@@ -18,10 +18,7 @@ import { creerExtensionGardeSansEcriture } from './prisma-sans-ecriture-extensio
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(
-    configService: ConfigService,
-    sansEcriture: RequeteSansEcritureContextService
-  ) {
+  constructor(configService: ConfigService, sansEcriture: RequeteSansEcritureContextService) {
     const connectionString = configService.get<string>('DATABASE_URL');
 
     if (!connectionString) {

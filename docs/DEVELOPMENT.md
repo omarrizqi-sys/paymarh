@@ -97,22 +97,18 @@ pnpm dev:back-office   # back-office seul
 
 ### Qualité
 
-| Commande              | Effet                                       |
-| --------------------- | ------------------------------------------- |
-| `pnpm lint`           | Analyse statique de tout le dépôt           |
-| `pnpm lint:fix`       | Corrige automatiquement ce qui peut l'être  |
-| `pnpm format`         | Reformate tous les fichiers                 |
-| `pnpm format:check`   | Vérifie le formatage sans rien modifier     |
-| `pnpm typecheck`      | Vérifie les types sans produire de fichiers |
-| `pnpm test`           | Lance **tous** les tests (unitaires + intégration HTTP). **Échoue** si PostgreSQL n'est pas démarré |
-| `pnpm test:unit`      | Tests unitaires uniquement (API + back-office), sans base de données                                  |
-| `pnpm test:watch`     | Relance les tests à chaque modification     |
-| `pnpm check:circular` | Détecte les imports circulaires             |
+| Commande          | Effet                                                                                              |
+| ----------------- | -------------------------------------------------------------------------------------------------- |
+| `pnpm verify`     | Vérification complète avant de valider un module (lint, format, types, tests, imports circulaires) |
+| `pnpm lint:fix`   | Corrige automatiquement ce qui peut l'être                                                         |
+| `pnpm format`     | Reformate tous les fichiers                                                                        |
+| `pnpm test:unit`  | Tests unitaires uniquement (API + back-office), sans base de données                               |
+| `pnpm test:watch` | Relance les tests à chaque modification                                                            |
 
-**Avant de considérer un module terminé**, ces quatre commandes doivent passer :
+**Avant de considérer un module terminé**, la vérification complète doit passer :
 
 ```bash
-pnpm lint && pnpm test && pnpm check:circular && pnpm build
+pnpm verify
 ```
 
 ---
@@ -164,7 +160,7 @@ Le back-office envoie le même identifiant via la variable d'environnement `NEXT
 ```bash
 git checkout -b module-1-fiches      # une branche par module
 # ... développement ...
-pnpm lint && pnpm test && pnpm check:circular
+pnpm verify
 git add .
 git commit -m "Ajoute la fiche salarié"
 ```
@@ -178,17 +174,17 @@ git commit -m "Ajoute la fiche salarié"
 
 ## 8. En cas de problème
 
-| Symptôme                             | Cause probable                                  | Solution                                                                          |
-| ------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------- |
-| `docker: daemon not running`         | Docker Desktop est fermé                        | Démarrer Docker Desktop, attendre qu'il soit prêt                                 |
-| `container is unhealthy`             | Volume dans un état incohérent                  | `pnpm db:down` puis `pnpm db:up`                                                  |
-| `DATABASE_URL est absente`           | Pas de fichier `.env`                           | Copier `.env.example` en `.env`                                                   |
-| Badge rouge « API injoignable »      | API arrêtée, ou base arrêtée                    | `pnpm db:up` puis `pnpm dev:api`                                                  |
-| `Cannot find module './x.service'`   | Extension `.js` oubliée dans un import de l'API | Voir [CONVENTIONS.md §4](./CONVENTIONS.md#4-imports-esm--lextension-js-dans-lapi) |
-| `Nest can't resolve dependencies`    | Un `import type` sur une classe injectée        | Retirer le `type` : NestJS a besoin de l'import à l'exécution                     |
-| Port 3000 ou 3001 déjà utilisé       | Une instance tourne encore                      | Fermer l'autre terminal, ou changer `API_PORT` dans `.env`                        |
-| Erreurs bizarres après un `git pull` | Dépendances désynchronisées                     | `pnpm install` puis `pnpm --filter @paymarh/api db:generate`                      |
-| `PostgreSQL n'est pas demarre` (tests) | Docker arrêté                                 | `pnpm db:up` puis relancer `pnpm test`                                            |
+| Symptôme                               | Cause probable                                  | Solution                                                                          |
+| -------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------- |
+| `docker: daemon not running`           | Docker Desktop est fermé                        | Démarrer Docker Desktop, attendre qu'il soit prêt                                 |
+| `container is unhealthy`               | Volume dans un état incohérent                  | `pnpm db:down` puis `pnpm db:up`                                                  |
+| `DATABASE_URL est absente`             | Pas de fichier `.env`                           | Copier `.env.example` en `.env`                                                   |
+| Badge rouge « API injoignable »        | API arrêtée, ou base arrêtée                    | `pnpm db:up` puis `pnpm dev:api`                                                  |
+| `Cannot find module './x.service'`     | Extension `.js` oubliée dans un import de l'API | Voir [CONVENTIONS.md §4](./CONVENTIONS.md#4-imports-esm--lextension-js-dans-lapi) |
+| `Nest can't resolve dependencies`      | Un `import type` sur une classe injectée        | Retirer le `type` : NestJS a besoin de l'import à l'exécution                     |
+| Port 3000 ou 3001 déjà utilisé         | Une instance tourne encore                      | Fermer l'autre terminal, ou changer `API_PORT` dans `.env`                        |
+| Erreurs bizarres après un `git pull`   | Dépendances désynchronisées                     | `pnpm install` puis `pnpm --filter @paymarh/api db:generate`                      |
+| `PostgreSQL n'est pas demarre` (tests) | Docker arrêté                                   | `pnpm db:up` puis relancer `pnpm test`                                            |
 
 ### Repartir de zéro
 

@@ -11,9 +11,7 @@
 ```json
 {
   "data": { "id": "...", "rib": "1234..." },
-  "warnings": [
-    { "code": "LONGUEUR_INATTENDUE", "champ": "rib", "message": "..." }
-  ]
+  "warnings": [{ "code": "LONGUEUR_INATTENDUE", "champ": "rib", "message": "..." }]
 }
 ```
 
@@ -23,18 +21,18 @@ Les avertissements n’empêchent pas l’enregistrement. Les erreurs bloquantes
 
 ## 2. Bloquant
 
-| Cas | Code typique |
-| --- | --- |
-| Caractère non conforme (chiffre dans un nom, lettre dans un RIB) | `CARACTERE_NON_CONFORME` |
-| Champ obligatoire absent | `CHAMP_OBLIGATOIRE` |
-| `moisDebutMontage` > `moisDebutProduction` | `MONTAGE_APRES_PRODUCTION` |
-| `dateInactivite` ≤ `moisDebutProduction` | `INACTIVITE_NON_POSTERIEURE` |
-| Cessation avant création | `CESSATION_AVANT_CREATION` |
-| Fin d’exonération avant début | `EXONERATION_FIN_AVANT_DEBUT` |
-| Doublon `codeDossier` / `identifiantFiscal` / `ice` dans le compte | `VALEUR_INDISPONIBLE` |
-| Deux établissements principaux | contrainte base + refus métier |
-| `moisEffet` fourni par l’appelant | `CHAMP_INTERDIT` |
-| Jeton de suppression obsolète | `CONFIRMATION_OBSOLETE` |
+| Cas                                                                | Code typique                   |
+| ------------------------------------------------------------------ | ------------------------------ |
+| Caractère non conforme (chiffre dans un nom, lettre dans un RIB)   | `CARACTERE_NON_CONFORME`       |
+| Champ obligatoire absent                                           | `CHAMP_OBLIGATOIRE`            |
+| `moisDebutMontage` > `moisDebutProduction`                         | `MONTAGE_APRES_PRODUCTION`     |
+| `dateInactivite` ≤ `moisDebutProduction`                           | `INACTIVITE_NON_POSTERIEURE`   |
+| Cessation avant création                                           | `CESSATION_AVANT_CREATION`     |
+| Fin d’exonération avant début                                      | `EXONERATION_FIN_AVANT_DEBUT`  |
+| Doublon `codeDossier` / `identifiantFiscal` / `ice` dans le compte | `VALEUR_INDISPONIBLE`          |
+| Deux établissements principaux                                     | contrainte base + refus métier |
+| `moisEffet` fourni par l’appelant                                  | `CHAMP_INTERDIT`               |
+| Jeton de suppression obsolète                                      | `CONFIRMATION_OBSOLETE`        |
 
 ---
 

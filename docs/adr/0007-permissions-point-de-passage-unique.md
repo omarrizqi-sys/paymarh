@@ -44,8 +44,8 @@ Si chaque service teste `role === 'MANAGER'`, le jour du vrai moteur de droits i
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| Tests de rôle partout | Explosion de dette au module auth |
-| Table de droits dès maintenant | Hors périmètre 1.1.b ; Auth.js pas installé |
-| Guards Nest par rôle | Encourage le couplage au rôle plutôt qu’à l’opération |
+| Alternative                    | Motif                                                 |
+| ------------------------------ | ----------------------------------------------------- |
+| Tests de rôle partout          | Explosion de dette au module auth                     |
+| Table de droits dès maintenant | Hors périmètre 1.1.b ; Auth.js pas installé           |
+| Guards Nest par rôle           | Encourage le couplage au rôle plutôt qu’à l’opération |

@@ -9,15 +9,15 @@
 
 ## Champs héritables retenus
 
-| Champ (emploi / résolution) | Cascade | Source spec |
-| --- | --- | --- |
-| `dureeContractuelle` | SAL > ETB (`dureeHebdomadaire`) > SOC (aucun) > NAT (`DUREE_LEGALE_TRAVAIL`) | v5 § Nullabilité et héritage ; v7 établissement « Durée hebdomadaire » (Héritable = oui) |
-| `reposHebdomadaire` | SAL > ETB (`jourReposHebdomadaire`) > SOC (aucun) > NAT (aucun) | v5 ; v7 établissement « Repos hebdomadaire » |
-| `teletravailAutorise` | SAL > ETB > SOC (aucun) > NAT (aucun) | v5 ; v7 établissement « Télétravail autorisé » |
-| `teletravailIndemniteVersee` | SAL > ETB (`indemniteTeletravailVersee`) > SOC (aucun) > NAT (aucun) | v5 ; v7 établissement « indemnité de télétravail » |
-| `teletravailMontant` | SAL > ETB (`montantIndemniteTeletravail`) > SOC (aucun) > NAT (aucun) | v5 ; v7 établissement « Montant de l'indemnité » |
-| `grilleHoraire` (résolution) | Si `repartitionHoraireRef` propre → pas de grille d'heures (module 3) ; sinon ETB `horaireDefautLignes` | v5 `repartitionHoraireRef` ; v7 Annexe 1 / « Grille des horaires » |
-| `joursFeriesTravailles` | Exception A15 : `suivreJoursFeriesEtablissement` | v5 exception `suivreJoursFeriesEtablissement` ; v7 « Jours fériés travaillés » (T1) |
+| Champ (emploi / résolution)  | Cascade                                                                                                 | Source spec                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `dureeContractuelle`         | SAL > ETB (`dureeHebdomadaire`) > SOC (aucun) > NAT (`DUREE_LEGALE_TRAVAIL`)                            | v5 § Nullabilité et héritage ; v7 établissement « Durée hebdomadaire » (Héritable = oui) |
+| `reposHebdomadaire`          | SAL > ETB (`jourReposHebdomadaire`) > SOC (aucun) > NAT (aucun)                                         | v5 ; v7 établissement « Repos hebdomadaire »                                             |
+| `teletravailAutorise`        | SAL > ETB > SOC (aucun) > NAT (aucun)                                                                   | v5 ; v7 établissement « Télétravail autorisé »                                           |
+| `teletravailIndemniteVersee` | SAL > ETB (`indemniteTeletravailVersee`) > SOC (aucun) > NAT (aucun)                                    | v5 ; v7 établissement « indemnité de télétravail »                                       |
+| `teletravailMontant`         | SAL > ETB (`montantIndemniteTeletravail`) > SOC (aucun) > NAT (aucun)                                   | v5 ; v7 établissement « Montant de l'indemnité »                                         |
+| `grilleHoraire` (résolution) | Si `repartitionHoraireRef` propre → pas de grille d'heures (module 3) ; sinon ETB `horaireDefautLignes` | v5 `repartitionHoraireRef` ; v7 Annexe 1 / « Grille des horaires »                       |
+| `joursFeriesTravailles`      | Exception A15 : `suivreJoursFeriesEtablissement`                                                        | v5 exception `suivreJoursFeriesEtablissement` ; v7 « Jours fériés travaillés » (T1)      |
 
 Aucun autre champ n'a été ajouté. Les congés payés société ne sont pas héritables (T1 / v7).
 

@@ -22,13 +22,13 @@ Deux types de contenu coexistent :
 
 ### Les cinq blocs
 
-| Bloc | Porté par | Mécanisme |
-| --- | --- | --- |
-| `CONTRAT` | Emploi | table de versions (`EmploiContratVersion`) |
-| `REMUNERATION` | Emploi | table de versions (`EmploiRemunerationVersion`) |
-| `AFFECTATION_TEMPS_DE_TRAVAIL` | Emploi | table de versions (`EmploiAffectationVersion`) |
-| `PERSONNES_A_CHARGE` | Salarié | lignes à validité temporelle (`PersonneACharge`) |
-| `RETENUES` | Salarié | lignes à validité temporelle (`Pret`, `SaisieSurSalaire`) |
+| Bloc                           | Porté par | Mécanisme                                                 |
+| ------------------------------ | --------- | --------------------------------------------------------- |
+| `CONTRAT`                      | Emploi    | table de versions (`EmploiContratVersion`)                |
+| `REMUNERATION`                 | Emploi    | table de versions (`EmploiRemunerationVersion`)           |
+| `AFFECTATION_TEMPS_DE_TRAVAIL` | Emploi    | table de versions (`EmploiAffectationVersion`)            |
+| `PERSONNES_A_CHARGE`           | Salarié   | lignes à validité temporelle (`PersonneACharge`)          |
+| `RETENUES`                     | Salarié   | lignes à validité temporelle (`Pret`, `SaisieSurSalaire`) |
 
 Les avantages en nature appartiennent au bloc `REMUNERATION` mais sont un tableau répétable : ils suivent le second mécanisme (`AvantageEnNature`).
 
@@ -88,10 +88,10 @@ Pour les personnes à charge, prêts et saisies :
 
 La valeur de clôture dépend du **type d'opération**, pas d'une règle unique :
 
-| Opération | Bulletin au mois en cours | `moisEffetFin` de la ligne close |
-| --- | --- | --- |
-| **Suppression** d'une ligne déjà utilisée | Oui | **Mois en cours** (inclus). Supprimer un prêt en mars signifie que la retenue de mars n'est plus prélevée ; les mois antérieurs restent intacts. Fermer au mois précédent rouvrirait un mois déjà produit. |
-| **Modification** d'une ligne (versionnage) | Oui | **Mois précédent** pour l'ancienne ligne ; la nouvelle démarre au **mois en cours**. Remplacement sans chevauchement ni trou. |
+| Opération                                  | Bulletin au mois en cours | `moisEffetFin` de la ligne close                                                                                                                                                                           |
+| ------------------------------------------ | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Suppression** d'une ligne déjà utilisée  | Oui                       | **Mois en cours** (inclus). Supprimer un prêt en mars signifie que la retenue de mars n'est plus prélevée ; les mois antérieurs restent intacts. Fermer au mois précédent rouvrirait un mois déjà produit. |
+| **Modification** d'une ligne (versionnage) | Oui                       | **Mois précédent** pour l'ancienne ligne ; la nouvelle démarre au **mois en cours**. Remplacement sans chevauchement ni trou.                                                                              |
 
 Implémentation : `moisFinSuppressionLigneUtilisee(moisEnCours)` vs `moisFinClotureLigneRemplacee(moisEnCours)` dans `HistorisationLigneTemporelleService`.
 
@@ -99,9 +99,9 @@ Implémentation : `moisFinSuppressionLigneUtilisee(moisEnCours)` vs `moisFinClot
 
 Une ligne close possède **deux interprétations distinctes**, volontairement non alignées au mois de clôture :
 
-| Lecture | Fonction | Au mois de clôture (`moisEffetFin = mois en cours`) |
-| --- | --- | --- |
-| **État affiché** | `deduireEtatLigne` | `INACTIVE` — la ligne n'est plus opérationnelle pour les saisies du mois en cours (ex. suppression d'un prêt : plus de retenue à partir de ce mois). |
+| Lecture                     | Fonction               | Au mois de clôture (`moisEffetFin = mois en cours`)                                                                                                                                                      |
+| --------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **État affiché**            | `deduireEtatLigne`     | `INACTIVE` — la ligne n'est plus opérationnelle pour les saisies du mois en cours (ex. suppression d'un prêt : plus de retenue à partir de ce mois).                                                     |
 | **Lisibilité pour un mois** | `ligneLisiblePourMois` | `true` — le mois de fin est **inclus** : le bulletin du mois en cours couvre encore cette ligne ; le compteur `nombrePersonnesACharge` et le recalcul des bulletins passés s'appuient sur cette lecture. |
 
 **Ne pas aligner** les deux fonctions sur une comparaison stricte (`<` vs `<=`) : faire disparaître la ligne du compteur ou de la résolution bulletin au mois de clôture fausserait la déduction pour charges de famille et la reproductibilité des bulletins déjà produits ou en cours de production.
@@ -118,8 +118,8 @@ Les blocs portés par le **salarié** suivent la règle générale du mois en co
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| Historiser chaque champ salarié séparément | Explosion de tables ; incohérences inter-champs |
-| Dupliquer toutes les lignes répétables à chaque version | Coût de stockage ; complexité de saisie |
-| Un seul mécanisme pour tous les blocs | Inadapté aux tableaux répétables |
+| Alternative                                             | Motif                                           |
+| ------------------------------------------------------- | ----------------------------------------------- |
+| Historiser chaque champ salarié séparément              | Explosion de tables ; incohérences inter-champs |
+| Dupliquer toutes les lignes répétables à chaque version | Coût de stockage ; complexité de saisie         |
+| Un seul mécanisme pour tous les blocs                   | Inadapté aux tableaux répétables                |

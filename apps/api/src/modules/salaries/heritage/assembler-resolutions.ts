@@ -1,9 +1,6 @@
 import type { Decimal } from 'decimal.js';
 import { ligneLisiblePourMois } from '../historisation-temporelle.js';
-import type {
-  LigneGrilleHoraireResolue,
-  ResolutionsEmploi,
-} from './niveaux-heritage.js';
+import type { LigneGrilleHoraireResolue, ResolutionsEmploi } from './niveaux-heritage.js';
 import { premierNonNul } from './resoudre-champ.js';
 
 export interface SnapshotSalarieHeritage {
@@ -14,7 +11,11 @@ export interface SnapshotSalarieHeritage {
   readonly teletravailMontant: Decimal | null;
   readonly repartitionHoraireRef: string | null;
   readonly suivreJoursFeriesEtablissement: boolean;
-  readonly joursFeriesPropres: readonly { jourFerieId: string; moisEffetDebut: string; moisEffetFin: string | null }[];
+  readonly joursFeriesPropres: readonly {
+    jourFerieId: string;
+    moisEffetDebut: string;
+    moisEffetFin: string | null;
+  }[];
 }
 
 export interface SnapshotEtablissementHeritage {
@@ -147,7 +148,7 @@ function resoudreGrilleHoraire(
 
   const lignes = etablissement?.horaireDefautLignes ?? [];
   if (lignes.length === 0) {
-    return premierNonNul([
+    return premierNonNul<readonly LigneGrilleHoraireResolue[]>([
       { valeur: null, origine: 'SALARIE', libelleEntite: null },
       { valeur: null, origine: 'ETABLISSEMENT', libelleEntite: libelleEtab },
       { valeur: null, origine: 'SOCIETE', libelleEntite: null },

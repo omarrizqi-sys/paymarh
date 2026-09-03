@@ -16,11 +16,11 @@ Un emploi porte trois blocs historisés (`CONTRAT`, `REMUNERATION`, `AFFECTATION
 
 ### Trois rubriques PATCH, une par bloc
 
-| Route | Bloc Prisma | Contenu |
-| --- | --- | --- |
-| `PATCH …/contrat` | `EmploiContratVersion` | Poste, dates, type contrat, essai, cadre, sortie |
-| `PATCH …/remuneration` | `EmploiRemunerationVersion` | Mode salaire, montant, options bulletin, télétravail, **paiement** (écriture) |
-| `PATCH …/affectation-temps-de-travail` | `EmploiAffectationVersion` | Établissement, durée, repos, fériés, télétravail |
+| Route                                  | Bloc Prisma                 | Contenu                                                                       |
+| -------------------------------------- | --------------------------- | ----------------------------------------------------------------------------- |
+| `PATCH …/contrat`                      | `EmploiContratVersion`      | Poste, dates, type contrat, essai, cadre, sortie                              |
+| `PATCH …/remuneration`                 | `EmploiRemunerationVersion` | Mode salaire, montant, options bulletin, télétravail, **paiement** (écriture) |
+| `PATCH …/affectation-temps-de-travail` | `EmploiAffectationVersion`  | Établissement, durée, repos, fériés, télétravail                              |
 
 En **lecture**, `paiement` (`modePaiement`, `compteBancaireId`) est une clé JSON distincte pour le masquage (A12, E2), bien qu'en écriture elle reste dans la rubrique rémunération.
 
@@ -53,11 +53,11 @@ En lecture agrégée (`GET /emplois/:id`, `emplois[]` dans `GET /salaries/:id`, 
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
+| Alternative                             | Motif                                                           |
+| --------------------------------------- | --------------------------------------------------------------- |
 | Rubrique `paiement` séparée en écriture | Partage le bloc REMUNERATION → décision d'historisation ambiguë |
-| Rubrique `sortie` dédiée | Même bloc CONTRAT ; confirmation partielle difficile à isoler |
-| Rubriques plus fines (ex. poste seul) | Chevauchement du bloc CONTRAT |
+| Rubrique `sortie` dédiée                | Même bloc CONTRAT ; confirmation partielle difficile à isoler   |
+| Rubriques plus fines (ex. poste seul)   | Chevauchement du bloc CONTRAT                                   |
 
 ---
 

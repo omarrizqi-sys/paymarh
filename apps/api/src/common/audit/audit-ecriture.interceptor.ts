@@ -1,11 +1,6 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { AuditEcart } from '@paymarh/shared-types';
+import type { AuditChampModifie, AuditEcart } from '@paymarh/shared-types';
 import type { Observable } from 'rxjs';
 import { from, switchMap } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -20,7 +15,7 @@ function calculerEcart(
   avant: Record<string, unknown>,
   apres: Record<string, unknown>
 ): AuditEcart | null {
-  const champs: AuditEcart['champs'] = [];
+  const champs: AuditChampModifie[] = [];
   const cles = new Set([...Object.keys(avant), ...Object.keys(apres)]);
 
   for (const nom of cles) {
@@ -40,7 +35,11 @@ function extraireDonnees(reponse: unknown): Record<string, unknown> | null {
   }
 
   const enveloppe = reponse as Record<string, unknown>;
-  if ('donnees' in enveloppe && typeof enveloppe.donnees === 'object' && enveloppe.donnees !== null) {
+  if (
+    'donnees' in enveloppe &&
+    typeof enveloppe.donnees === 'object' &&
+    enveloppe.donnees !== null
+  ) {
     return enveloppe.donnees as Record<string, unknown>;
   }
 
@@ -88,8 +87,7 @@ export class AuditEcritureInterceptor implements NestInterceptor {
           switchMap(async (reponse) => {
             const apres = extraireDonnees(reponse);
             const ctx = this.tenantContext.getOrThrow();
-            const ecart =
-              avant !== null && apres !== null ? calculerEcart(avant, apres) : null;
+            const ecart = avant !== null && apres !== null ? calculerEcart(avant, apres) : null;
 
             await this.audit.record({
               userId: ctx.userId,

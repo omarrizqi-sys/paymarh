@@ -12,12 +12,12 @@ Ce document décrit les écrans du back-office pour la fiche société et les ap
 
 **Rôle :** Vue d’ensemble des dossiers du compte.
 
-| Action | API |
-| --- | --- |
-| Charger la liste | `GET /societes` → `{ items[], total, operations[] }` |
-| Compter les établissements | `GET /societes/:id/etablissements` (par société) |
-| Libellé forme juridique | `GET /referentiels/formes-juridiques` |
-| Créer | Bouton si `operations` contient `societe.creer` → `/societes/nouveau` |
+| Action                     | API                                                                   |
+| -------------------------- | --------------------------------------------------------------------- |
+| Charger la liste           | `GET /societes` → `{ items[], total, operations[] }`                  |
+| Compter les établissements | `GET /societes/:id/etablissements` (par société)                      |
+| Libellé forme juridique    | `GET /referentiels/formes-juridiques`                                 |
+| Créer                      | Bouton si `operations` contient `societe.creer` → `/societes/nouveau` |
 
 Colonnes : code dossier, raison sociale, forme juridique, état, mois en cours, nombre d’établissements. Recherche, tri et pagination côté client (TanStack Table).
 
@@ -27,10 +27,10 @@ Colonnes : code dossier, raison sociale, forme juridique, état, mois en cours, 
 
 **Rôle :** Créer une société et son établissement principal en une fois.
 
-| Action | API |
-| --- | --- |
-| Soumettre | `POST /societes` (adresse + ville obligatoires dans `etablissementPrincipal`) |
-| Formes juridiques | `GET /referentiels/formes-juridiques` |
+| Action            | API                                                                           |
+| ----------------- | ----------------------------------------------------------------------------- |
+| Soumettre         | `POST /societes` (adresse + ville obligatoires dans `etablissementPrincipal`) |
+| Formes juridiques | `GET /referentiels/formes-juridiques`                                         |
 
 ---
 
@@ -60,25 +60,25 @@ Rubriques dans l’ordre de la spec :
 
 ### Informations bancaires
 
-| Action | API |
-| --- | --- |
-| Liste | `GET /societes/:id/comptes-bancaires` |
-| Créer | `POST /societes/:id/comptes-bancaires` |
-| Clôturer | `POST /comptes-bancaires/:id/cloturer` |
+| Action    | API                                                                  |
+| --------- | -------------------------------------------------------------------- |
+| Liste     | `GET /societes/:id/comptes-bancaires`                                |
+| Créer     | `POST /societes/:id/comptes-bancaires`                               |
+| Clôturer  | `POST /comptes-bancaires/:id/cloturer`                               |
 | Supprimer | Aperçu `GET …/impact-suppression` puis `DELETE …?confirmationJeton=` |
 
 « Utilisé par » masqué si un seul établissement.
 
 ### Établissements
 
-| Action | API |
-| --- | --- |
-| Liste | `GET /societes/:id/etablissements` |
-| Créer | `POST /societes/:id/etablissements` |
-| Modifier | `PATCH /etablissements/:id` |
-| Désigner principal | `POST /etablissements/:id/designer-principal` |
+| Action                                      | API                                             |
+| ------------------------------------------- | ----------------------------------------------- |
+| Liste                                       | `GET /societes/:id/etablissements`              |
+| Créer                                       | `POST /societes/:id/etablissements`             |
+| Modifier                                    | `PATCH /etablissements/:id`                     |
+| Désigner principal                          | `POST /etablissements/:id/designer-principal`   |
 | Paramétrage (horaires, fériés, télétravail) | `GET/PUT /etablissements/:id/parametrage?mois=` |
-| Supprimer | Aperçu + jeton |
+| Supprimer                                   | Aperçu + jeton                                  |
 
 Grille horaire : lignes depuis `GET /referentiels/types-heures`. Total de contrôle affiché (somme d’affichage via decimal.js).
 
@@ -111,10 +111,10 @@ Dans `.env` :
 
 ### Béquilles de développement (pas d'authentification)
 
-| Côté | Mécanisme | Fichier |
-| --- | --- | --- |
-| API (curl, tests HTTP) | En-tête `x-paymarh-user-id` | `apps/api/src/common/tenancy/tenant-context.middleware.ts` |
-| Back-office (navigateur) | Variable `NEXT_PUBLIC_PAYMARH_USER_ID` → même en-tête | `apps/back-office/src/lib/api/client.ts` |
+| Côté                       | Mécanisme                                                                                       | Fichier                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| API (curl, tests HTTP)     | En-tête `x-paymarh-user-id`                                                                     | `apps/api/src/common/tenancy/tenant-context.middleware.ts`       |
+| Back-office (navigateur)   | Variable `NEXT_PUBLIC_PAYMARH_USER_ID` → même en-tête                                           | `apps/back-office/src/lib/api/client.ts`                         |
 | API (tests droits salarié) | En-tête `x-paymarh-permissions-refusees` (liste de permissions à refuser, ignoré en production) | `apps/api/src/common/permissions/permissions-refusees.header.ts` |
 
 > **Béquilles de développement — pas une authentification.** À remplacer par Auth.js. **Bloquent toute mise en production tant qu'elles existent** (sauf `x-paymarh-permissions-refusees`, sans effet en production).
@@ -123,10 +123,10 @@ Dans `.env` :
 
 ## Fichiers principaux
 
-| Fichier | Rôle |
-| --- | --- |
-| `apps/back-office/src/app/societes/` | Pages App Router |
-| `apps/back-office/src/lib/api/` | Clients HTTP |
-| `apps/back-office/src/lib/affichage/conditions.ts` | Affichage conditionnel (spec étape 2) |
-| `apps/back-office/src/components/impact-suppression/` | Dialogue de suppression |
-| `apps/api/src/common/permissions/operations-ressource.ts` | Permissions en lecture |
+| Fichier                                                   | Rôle                                  |
+| --------------------------------------------------------- | ------------------------------------- |
+| `apps/back-office/src/app/societes/`                      | Pages App Router                      |
+| `apps/back-office/src/lib/api/`                           | Clients HTTP                          |
+| `apps/back-office/src/lib/affichage/conditions.ts`        | Affichage conditionnel (spec étape 2) |
+| `apps/back-office/src/components/impact-suppression/`     | Dialogue de suppression               |
+| `apps/api/src/common/permissions/operations-ressource.ts` | Permissions en lecture                |

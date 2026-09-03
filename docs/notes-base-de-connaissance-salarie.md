@@ -133,4 +133,3 @@ Si aucun niveau ne fournit de valeur, le logiciel n'en invente aucune.
 **Jours fériés travaillés :** tant que l'option de suivi de l'établissement est active, la grille de l'établissement s'applique. Si vous désactivez ce suivi, le salarié porte **sa propre** liste de jours, même entièrement vide — ce n'est plus un héritage.
 
 Il n'existe pas d'action « tout hériter » : chaque champ vide hérite indépendamment.
-

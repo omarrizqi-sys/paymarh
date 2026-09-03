@@ -1,5 +1,8 @@
-import type { Prisma } from '../../../generated/prisma/client.js';
-import { declarerCleRubrique, RUBRIQUES_REMUNERATION } from '../../../common/remuneration/rubriques-remuneration.js';
+import type { Prisma, Salarie } from '../../../generated/prisma/client.js';
+import {
+  declarerCleRubrique,
+  RUBRIQUES_REMUNERATION,
+} from '../../../common/remuneration/rubriques-remuneration.js';
 import {
   deduireEtatSalarie,
   deduireLibelleSituationFamiliale,
@@ -90,9 +93,7 @@ export async function versFicheSalarie(
     urgenceEmail: salarie.urgenceEmail,
     dateEntree: formaterDate(salarie.dateEntree),
     dateAnciennete: formaterDate(salarie.dateAnciennete),
-    emplois: trierEmploisPourFiche(
-      emplois as Parameters<typeof trierEmploisPourFiche>[0]
-    ),
+    emplois: trierEmploisPourFiche(emplois as Parameters<typeof trierEmploisPourFiche>[0]),
     ...(salarie.personnesACharge !== undefined
       ? mapperCollectionsSalarie(
           {
@@ -115,7 +116,7 @@ export async function versFicheSalarie(
 }
 
 export function versLigneListeSalarie(
-  salarie: Pick<Prisma.Salarie, 'id' | 'matricule' | 'nom' | 'prenom'>,
+  salarie: Pick<Salarie, 'id' | 'matricule' | 'nom' | 'prenom'>,
   etat: 'ACTIF' | 'INACTIF'
 ) {
   return {

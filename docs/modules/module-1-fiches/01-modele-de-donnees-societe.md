@@ -17,10 +17,10 @@ La fiche société est le point de départ de tout dossier de paie. Elle porte l
 
 ## 2. Deux niveaux : société et établissement
 
-| Niveau | Ce qu’il porte |
-| --- | --- |
-| **Société** (`Company`) | Personne morale : raison sociale, forme juridique, identifiants fiscaux, état du dossier, signataire, matricules, comptes bancaires, paramètres historisés (congés, exonération). |
-| **Établissement** (`Etablissement`) | Lieu d’exploitation : adresse, ICE, taxe professionnelle, durée du travail, horaires, jours fériés travaillés, télétravail. |
+| Niveau                              | Ce qu’il porte                                                                                                                                                                    |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Société** (`Company`)             | Personne morale : raison sociale, forme juridique, identifiants fiscaux, état du dossier, signataire, matricules, comptes bancaires, paramètres historisés (congés, exonération). |
+| **Établissement** (`Etablissement`) | Lieu d’exploitation : adresse, ICE, taxe professionnelle, durée du travail, horaires, jours fériés travaillés, télétravail.                                                       |
 
 Un établissement **principal** est créé avec la société. Exactement un principal existe à tout moment (index unique partiel en base). Les établissements secondaires n’héritent pas de la raison sociale : ces informations restent au niveau société.
 
@@ -63,10 +63,10 @@ Le modèle `Company` du module 0 est **étendu**, pas renommé. Le champ `name` 
 
 ### Contraintes d’unicité (par compte)
 
-| Champ | Portée |
-| --- | --- |
-| `codeDossier` | Unique par `accountId` |
-| `identifiantFiscal` | Unique par `accountId` si renseigné |
+| Champ                       | Portée                                                |
+| --------------------------- | ----------------------------------------------------- |
+| `codeDossier`               | Unique par `accountId`                                |
+| `identifiantFiscal`         | Unique par `accountId` si renseigné                   |
 | `ice` (sur `Etablissement`) | Unique par `accountId`, tous établissements confondus |
 
 Deux comptes différents peuvent porter la même valeur. Les messages d’erreur resteront **neutres** en 1.1.b (étanchéité).
@@ -127,9 +127,9 @@ Voir [02-historisation-et-heritage.md](./02-historisation-et-heritage.md). En r�
 
 ## 10. Fichiers concernés
 
-| Fichier | Rôle |
-| --- | --- |
-| `apps/api/prisma/schema.prisma` | Modèle |
-| `apps/api/prisma/migrations/20260829190000_fiche_societe_module_1/` | Migration |
-| `apps/api/prisma/seed.ts` + `reference-data.ts` | Références + démo |
-| `apps/api/src/modules/companies/*.ts` | Utilitaires purs (cohérence, historisation, heures) |
+| Fichier                                                             | Rôle                                                |
+| ------------------------------------------------------------------- | --------------------------------------------------- |
+| `apps/api/prisma/schema.prisma`                                     | Modèle                                              |
+| `apps/api/prisma/migrations/20260829190000_fiche_societe_module_1/` | Migration                                           |
+| `apps/api/prisma/seed.ts` + `reference-data.ts`                     | Références + démo                                   |
+| `apps/api/src/modules/companies/*.ts`                               | Utilitaires purs (cohérence, historisation, heures) |

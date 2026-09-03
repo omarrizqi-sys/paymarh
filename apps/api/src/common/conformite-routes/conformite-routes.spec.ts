@@ -1,17 +1,17 @@
-import { Controller, Get, Module, Patch, Post } from '@nestjs/common';
+import { Controller, Get, Module, Patch, Post, type Type } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 import { JournaliserEcriture } from '../audit/journaliser-ecriture.decorator.js';
 import { ConformiteRoutesModule } from './conformite-routes.module.js';
 import { ExigeIfMatch } from './exige-if-match.decorator.js';
-import { ErreurConformiteRoutes, VerificateurRoutesService } from './verificateur-routes.service.js';
-import { RequiertPermission } from '../permissions/requiert-permission.decorator.js';
 import {
-  RouteSansEcriture,
-  SansIfMatch,
-} from './route-sans-ecriture.decorator.js';
+  ErreurConformiteRoutes,
+  VerificateurRoutesService,
+} from './verificateur-routes.service.js';
+import { RequiertPermission } from '../permissions/requiert-permission.decorator.js';
+import { RouteSansEcriture, SansIfMatch } from './route-sans-ecriture.decorator.js';
 
-async function demarrerModule(module: typeof Module): Promise<void> {
+async function demarrerModule(module: Type<unknown>): Promise<void> {
   const moduleRef = await Test.createTestingModule({
     imports: [ConformiteRoutesModule, module],
   }).compile();
@@ -231,8 +231,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
 
     await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
       (erreur: unknown) =>
-        erreur instanceof ErreurConformiteRoutes &&
-        erreur.message.includes('@RequiertPermission')
+        erreur instanceof ErreurConformiteRoutes && erreur.message.includes('@RequiertPermission')
     );
   });
 });

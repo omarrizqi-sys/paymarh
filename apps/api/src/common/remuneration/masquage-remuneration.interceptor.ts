@@ -10,10 +10,7 @@ import type { Permission } from '@paymarh/shared-types';
 import type { Request } from 'express';
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import {
-  PERMISSION_SERVICE,
-  type PermissionService,
-} from '../permissions/permission.service.js';
+import { PERMISSION_SERVICE, type PermissionService } from '../permissions/permission.service.js';
 import {
   HEADER_PERMISSIONS_REFUSEES,
   lirePermissionsRefuseesDepuisEnTete,
@@ -46,26 +43,37 @@ export class MasquageRemunerationInterceptor implements NestInterceptor {
     const request = http.getRequest<Request>();
     const ctx = this.tenantContext.get();
 
-    if (ctx !== null) {
-      const refusees = lirePermissionsRefuseesDepuisEnTete(
-        request.headers[HEADER_PERMISSIONS_REFUSEES]
-      );
+    if (ctx === undefined) {
       const toutesRubriques = new Set(TOUTES_RUBRIQUES_REMUNERATION);
-
       if (
         this.estEcriture(request.method) &&
-        !this.permissions.possedePermission(ctx, PERMISSION_ECRITURE, refusees) &&
         contientRubriqueMasquee(request.body, toutesRubriques)
       ) {
         throw new ForbiddenException(MESSAGE_INTERDIT);
       }
+      return next
+        .handle()
+        .pipe(map((donnees) => retirerRubriquesMasquees(donnees, toutesRubriques)));
+    }
 
-      const rubriquesMasquees = this.rubriquesMasqueesLecture(ctx, refusees);
-      if (rubriquesMasquees.size > 0) {
-        return next.handle().pipe(
-          map((donnees) => retirerRubriquesMasquees(donnees, rubriquesMasquees))
-        );
-      }
+    const refusees = lirePermissionsRefuseesDepuisEnTete(
+      request.headers[HEADER_PERMISSIONS_REFUSEES]
+    );
+    const toutesRubriques = new Set(TOUTES_RUBRIQUES_REMUNERATION);
+
+    if (
+      this.estEcriture(request.method) &&
+      !this.permissions.possedePermission(ctx, PERMISSION_ECRITURE, refusees) &&
+      contientRubriqueMasquee(request.body, toutesRubriques)
+    ) {
+      throw new ForbiddenException(MESSAGE_INTERDIT);
+    }
+
+    const rubriquesMasquees = this.rubriquesMasqueesLecture(ctx, refusees);
+    if (rubriquesMasquees.size > 0) {
+      return next
+        .handle()
+        .pipe(map((donnees) => retirerRubriquesMasquees(donnees, rubriquesMasquees)));
     }
 
     return next.handle();

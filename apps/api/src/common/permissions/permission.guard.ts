@@ -13,16 +13,16 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { accountScope } from '../tenancy/tenant-scope.js';
 import { TenantContextService } from '../tenancy/tenant-context.service.js';
 import type { Request } from 'express';
-import {
-  PERMISSION_SERVICE,
-  type PermissionService,
-} from './permission.service.js';
+import { PERMISSION_SERVICE, type PermissionService } from './permission.service.js';
 import {
   CLE_PERIMETRE_EMPLOI,
   CLE_PERIMETRE_SALARIE,
   CLE_PERMISSION,
 } from './requiert-permission.decorator.js';
-import { HEADER_PERMISSIONS_REFUSEES, lirePermissionsRefuseesDepuisEnTete } from './permissions-refusees.header.js';
+import {
+  HEADER_PERMISSIONS_REFUSEES,
+  lirePermissionsRefuseesDepuisEnTete,
+} from './permissions-refusees.header.js';
 import { EXEMPTIONS_ROUTES_MODULE_1 } from '../conformite-routes/exemptions-module-1.js';
 import { cleRouteHttp } from '../conformite-routes/route-cle.js';
 
@@ -43,10 +43,10 @@ export class PermissionGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const permission = this.reflector.getAllAndOverride<Permission | undefined>(
-      CLE_PERMISSION,
-      [context.getHandler(), context.getClass()]
-    );
+    const permission = this.reflector.getAllAndOverride<Permission | undefined>(CLE_PERMISSION, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     if (permission === undefined) {
       const route = cleRouteHttp(context, this.reflector);
@@ -71,9 +71,9 @@ export class PermissionGuard implements CanActivate {
     );
 
     if (parametreSalarie !== undefined) {
-      await this.verifierPerimetreSalarie(request.params ?? {}, parametreSalarie);
+      await this.verifierPerimetreSalarie(request.params, parametreSalarie);
     } else if (parametreEmploi !== undefined) {
-      await this.verifierPerimetreEmploi(request.params ?? {}, parametreEmploi);
+      await this.verifierPerimetreEmploi(request.params, parametreEmploi);
     }
 
     const ctx = this.tenantContext.getOrThrow();
@@ -88,7 +88,7 @@ export class PermissionGuard implements CanActivate {
   }
 
   private async verifierPerimetreSalarie(
-    params: Record<string, string>,
+    params: Request['params'],
     nomParametre: string
   ): Promise<void> {
     const id = params[nomParametre];
@@ -111,7 +111,7 @@ export class PermissionGuard implements CanActivate {
   }
 
   private async verifierPerimetreEmploi(
-    params: Record<string, string>,
+    params: Request['params'],
     nomParametre: string
   ): Promise<void> {
     const id = params[nomParametre];

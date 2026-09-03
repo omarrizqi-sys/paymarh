@@ -16,46 +16,22 @@
     "ordre_periode_nom_fichier": {
       "defaut": "AAAAMM",
       "valeur": "AAAAMM",
-      "valeurs_possibles": [
-        "AAAAMM",
-        "MMAAAA"
-      ],
+      "valeurs_possibles": ["AAAAMM", "MMAAAA"],
       "description": "Ordre mois/année du segment {periode} dans les noms de fichiers (DS_*, DSC*, AFFEBDS_*). Basculer via ce paramètre sans modifier le code."
     }
   },
   "fichiers": {
     "preetabli": {
       "modele_nom": "AFFEBDS_{numAFF}_{periode}.txt",
-      "enregistrements": [
-        "A00",
-        "A01",
-        "A02",
-        "A03"
-      ]
+      "enregistrements": ["A00", "A01", "A02", "A03"]
     },
     "ds_principale": {
       "modele_nom": "DS_{numAFF}_{periode}.txt",
-      "enregistrements": [
-        "B00",
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06"
-      ]
+      "enregistrements": ["B00", "B01", "B02", "B03", "B04", "B05", "B06"]
     },
     "ds_complementaire": {
       "modele_nom": "DSC{N}_{numAFF}_{periode}.txt",
-      "enregistrements": [
-        "E00",
-        "E01",
-        "E02",
-        "E03",
-        "E04",
-        "E05",
-        "E06"
-      ]
+      "enregistrements": ["E00", "E01", "E02", "E03", "E04", "E05", "E06"]
     }
   },
   "enregistrements": {
@@ -2131,12 +2107,7 @@
     {
       "id": "TRI-TYPE-ENREG",
       "categorie": "format",
-      "portee": [
-        "A00",
-        "A01",
-        "A02",
-        "A03"
-      ],
+      "portee": ["A00", "A01", "A02", "A03"],
       "enonce": "Le fichier « préétabli est trié par : Le champ L_Type_Enreg croissant.",
       "formule": null,
       "severite": "bloquante"
@@ -2144,9 +2115,7 @@
     {
       "id": "TRI-NUM-ASSURE-PRE",
       "categorie": "format",
-      "portee": [
-        "A02"
-      ],
+      "portee": ["A02"],
       "enonce": "Pour les enregistrements de type « Détail émission », les lignes sont triées par N_Num_Assure croissant.",
       "formule": null,
       "severite": "bloquante"
@@ -2154,15 +2123,7 @@
     {
       "id": "TRI-TYPE-BDS",
       "categorie": "format",
-      "portee": [
-        "B00",
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06"
-      ],
+      "portee": ["B00", "B01", "B02", "B03", "B04", "B05", "B06"],
       "enonce": "Le fichier « déclaration des salaires » doit être trié par : Le champ L_Type_Enreg croissant.",
       "formule": null,
       "severite": "bloquante"
@@ -2170,10 +2131,7 @@
     {
       "id": "TRI-NUM-ASSURE-BDS",
       "categorie": "format",
-      "portee": [
-        "B02",
-        "B04"
-      ],
+      "portee": ["B02", "B04"],
       "enonce": "Pour les enregistrements de type « Détail déclaration des salaires sur préétabli » et de type « Détail déclaration des salaires pour les entrants » trier par N_Num_Assure croissant.",
       "formule": null,
       "severite": "bloquante"
@@ -2181,15 +2139,7 @@
     {
       "id": "BDS-NON-VIDE",
       "categorie": "format",
-      "portee": [
-        "B00",
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06"
-      ],
+      "portee": ["B00", "B01", "B02", "B03", "B04", "B05", "B06"],
       "enonce": "Le contenu d'un fichier BDS ne peut pas être vide. Tous les types d'enregistrements doivent exister, même quand il n'y a pas d'informations à déclarer (ex : Nouvelle affiliation).",
       "formule": null,
       "severite": "bloquante"
@@ -2197,9 +2147,7 @@
     {
       "id": "FMT-JOURS-MAX",
       "categorie": "format",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Le nombre de jours (B02_N_Jours_Declares) doit être inférieur ou égal à 26.",
       "formule": "B02_N_Jours_Declares <= 26",
       "severite": "bloquante",
@@ -2208,9 +2156,7 @@
     {
       "id": "FMT-SITUATION-LISTE",
       "categorie": "format",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Le code situation (B02_L_Situation) doit appartenir à la liste des valeurs « situation » : « » , « SO », « DE », « IT », « IL », « AT », « CS », « MS » , « MP ».",
       "formule": null,
       "severite": "bloquante",
@@ -2219,10 +2165,7 @@
     {
       "id": "FMT-SALAIRE-PLAF-PERIODE",
       "categorie": "format",
-      "portee": [
-        "B02",
-        "B04"
-      ],
+      "portee": ["B02", "B04"],
       "enonce": "Le « salaire plafonné » doit être plafonné en fonction du plafond en vigueur à la période à l'exception de la main d'œuvre occasionnelle.",
       "formule": null,
       "severite": "bloquante",
@@ -2231,10 +2174,7 @@
     {
       "id": "FMT-SALAIRE-PLAF-LE-REEL",
       "categorie": "format",
-      "portee": [
-        "B02",
-        "B04"
-      ],
+      "portee": ["B02", "B04"],
       "enonce": "Le salaire plafonné doit être inférieur ou égal au salaire réel.",
       "formule": null,
       "severite": "bloquante",
@@ -2243,9 +2183,7 @@
     {
       "id": "FMT-CS-MS-NULS",
       "categorie": "format",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Pour les situations « CS » et « MS » le nombre de jours et les salaires réels et plafonnés doivent être nuls.",
       "formule": null,
       "severite": "bloquante"
@@ -2253,9 +2191,7 @@
     {
       "id": "FMT-SIT-VIDE-RENSEIGNE",
       "categorie": "format",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Pour la situation « » le nombre de jours et les salaires réels et plafonnés doivent être renseignés.",
       "formule": null,
       "severite": "bloquante"
@@ -2263,9 +2199,7 @@
     {
       "id": "FMT-TRAVAIL-NORMAL",
       "categorie": "format",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Si le salarié a travaillé normalement, la présence du nombre de jours et du salaire est obligatoire pour les enregistrements de type 3 et 4 et dans ce cas particulier le nombre de jours doit être inférieur ou égal à 26 et supérieur à zéro.",
       "formule": null,
       "severite": "bloquante"
@@ -2273,10 +2207,7 @@
     {
       "id": "FMT-SMIG",
       "categorie": "format",
-      "portee": [
-        "B02",
-        "B04"
-      ],
+      "portee": ["B02", "B04"],
       "enonce": "Le contrôle sur le salaire prend en compte la valeur du SMIG en vigueur et le nombre de jours travaillés. En effet, si le salaire est inférieur au SMIG au prorata du nombre de jours déclaré -1, le portail doit signaler une erreur non bloquante .Exemples : - si le nombre de jours déclarés est 26, alors le salaire doit être supérieur strictement au (SMIG/26) * 25 en vigueur. - si le nombre de jour déclaré est 13, alors le salaire déclaré doit être supérieur strictement au SMIG/ 26 * 12. De manière général si n est le nombre de jours déclarés le salaire doit être supérieur strictement au SMIG en vigueur/26*(n-1).",
       "formule": "N_Salaire_Reel > SMIG_mensuel_26j_centimes / 26 * (N_Jours_Declares - 1)",
       "severite": "warning",
@@ -2285,9 +2216,7 @@
     {
       "id": "FMT-MDO",
       "categorie": "format",
-      "portee": [
-        "B04"
-      ],
+      "portee": ["B04"],
       "enonce": "Pour la main d'œuvre occasionnelle (type d'enregistrement 5, Num_assuré) seul le salaire global est déclaré sans nombre de jours ni numéro d'immatriculation et le salaire plafonné doit être inférieur ou égale au salaire réel.",
       "formule": null,
       "severite": "bloquante"
@@ -2295,9 +2224,7 @@
     {
       "id": "TOT-A",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_Nbr_Salaries = le nombre des enregistrements de type « Détail de la déclaration des salaires sur préétabli » (L_Type_Enreg = 'B02').",
       "formule": "B03_N_Nbr_Salaries = count(B02)",
       "severite": "bloquante",
@@ -2306,9 +2233,7 @@
     {
       "id": "TOT-B",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Enfants = Somme(B02_N_Enfants)",
       "formule": "B03_N_T_Enfants = Somme(B02_N_Enfants)",
       "severite": "bloquante",
@@ -2317,9 +2242,7 @@
     {
       "id": "TOT-C",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_AF_A_Payer = Somme(B02_N_AF_A_Payer)",
       "formule": "B03_N_T_AF_A_Payer = Somme(B02_N_AF_A_Payer)",
       "severite": "bloquante",
@@ -2328,9 +2251,7 @@
     {
       "id": "TOT-D",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_AF_A_Deduire = Somme(B02_N_AF_A_Deduire)",
       "formule": "B03_N_T_AF_A_Deduire = Somme(B02_N_AF_A_Deduire)",
       "severite": "bloquante",
@@ -2339,9 +2260,7 @@
     {
       "id": "TOT-E",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_AF_Net_A_Payer = Somme(B02_N_AF_Net_A_Payer)",
       "formule": "B03_N_T_AF_Net_A_Payer = Somme(B02_N_AF_Net_A_Payer)",
       "severite": "bloquante",
@@ -2350,9 +2269,7 @@
     {
       "id": "TOT-F",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Num_Imma = Somme(B02_N_Num_Imma)",
       "formule": "B03_N_T_Num_Imma = Somme(B02_N_Num_Imma)",
       "severite": "bloquante",
@@ -2361,9 +2278,7 @@
     {
       "id": "TOT-G",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_AF_A_Reverser = Somme(B02_N_AF_A_Reverser)",
       "formule": "B03_N_T_AF_A_Reverser = Somme(B02_N_AF_A_Reverser)",
       "severite": "bloquante",
@@ -2372,9 +2287,7 @@
     {
       "id": "TOT-H",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Jours_Declares = Somme(B02_N_Jours_Declares)",
       "formule": "B03_N_T_Jours_Declares = Somme(B02_N_Jours_Declares)",
       "severite": "bloquante",
@@ -2383,9 +2296,7 @@
     {
       "id": "TOT-I",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Salaire_Reel = Somme(B02_N_Salaire_Reel)",
       "formule": "B03_N_T_Salaire_Reel = Somme(B02_N_Salaire_Reel)",
       "severite": "bloquante",
@@ -2394,9 +2305,7 @@
     {
       "id": "TOT-J",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Salaire_Plaf = Somme(B02_N_Salaire_Plaf)",
       "formule": "B03_N_T_Salaire_Plaf = Somme(B02_N_Salaire_Plaf)",
       "severite": "bloquante",
@@ -2405,9 +2314,7 @@
     {
       "id": "TOT-K",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
       "formule": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
       "severite": "bloquante",
@@ -2416,9 +2323,7 @@
     {
       "id": "TOT-L",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_Nbr_Salaries = le nombre des enregistrements de type « Détail de la déclaration des salaires pour les Entrants » (L_Type_Enreg = 'B04') ou égal à 0 si aucun entrant n'est déclaré (un enregistrement de type B04 existe et contient des valeurs nulles)",
       "formule": null,
       "severite": "bloquante",
@@ -2427,9 +2332,7 @@
     {
       "id": "TOT-M",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_T_Num_Imma = Somme(B04_ N_Num_Imma)",
       "formule": "B05_N_T_Num_Imma = Somme(B04_N_Num_Imma)",
       "severite": "bloquante",
@@ -2438,9 +2341,7 @@
     {
       "id": "TOT-N",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_T_Jours_Declares = Somme(B04_N_Jours_Declares)",
       "formule": "B05_N_T_Jours_Declares = Somme(B04_N_Nbr_Jours)",
       "severite": "bloquante",
@@ -2449,9 +2350,7 @@
     {
       "id": "TOT-O",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_T_Salaire_Reel = Somme(B04_N_Salaire_Reel)",
       "formule": "B05_N_T_Salaire_Reel = Somme(B04_N_Sal_Reel)",
       "severite": "bloquante",
@@ -2460,9 +2359,7 @@
     {
       "id": "TOT-P",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_T_Salaire_Plaf = Somme(B04_N_Salaire_Plaf)",
       "formule": "B05_N_T_Salaire_Plaf = Somme(B04_N_Sal_Plaf)",
       "severite": "bloquante",
@@ -2471,9 +2368,7 @@
     {
       "id": "TOT-Q",
       "categorie": "total_vertical",
-      "portee": [
-        "B05"
-      ],
+      "portee": ["B05"],
       "enonce": "B05_N_T_Ctr = Somme(B04_S_Ctr)",
       "formule": "B05_N_T_Ctr = Somme(B04_S_Ctr)",
       "severite": "bloquante",
@@ -2482,9 +2377,7 @@
     {
       "id": "TOT-R",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_Nbr_Salaries = B03_N_Nbr_Salaries + B05_N_Nbr_Salaries",
       "formule": "B06_N_Nbr_Salaries = B03_N_Nbr_Salaries + B05_N_Nbr_Salaries",
       "severite": "bloquante",
@@ -2493,9 +2386,7 @@
     {
       "id": "TOT-S",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_T_Num_Imma = B03_N_T_Num_Imma + B05_ N_ T_Num_Imma",
       "formule": "B06_N_T_Num_Imma = B03_N_T_Num_Imma + B05_N_T_Num_Imma",
       "severite": "bloquante",
@@ -2504,9 +2395,7 @@
     {
       "id": "TOT-T",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_T_Jours_Declares = B03_N_T_Jours_Declares + B05_N_T_Jours_Declares",
       "formule": "B06_N_T_Jours_Declares = B03_N_T_Jours_Declares + B05_N_T_Jours_Declares",
       "severite": "bloquante",
@@ -2515,9 +2404,7 @@
     {
       "id": "TOT-U",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_T_Salaire_Reel = B03_N_T_Salaire_Reel + B05_N_T_Salaire_Reel",
       "formule": "B06_N_T_Salaire_Reel = B03_N_T_Salaire_Reel + B05_N_T_Salaire_Reel",
       "severite": "bloquante",
@@ -2526,9 +2413,7 @@
     {
       "id": "TOT-V",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_T_Salaire_Plaf = B03_N_T_Salaire_Plaf + B05_N_T_Salaire_Plaf",
       "formule": "B06_N_T_Salaire_Plaf = B03_N_T_Salaire_Plaf + B05_N_T_Salaire_Plaf",
       "severite": "bloquante",
@@ -2537,9 +2422,7 @@
     {
       "id": "TOT-W",
       "categorie": "total_vertical",
-      "portee": [
-        "B06"
-      ],
+      "portee": ["B06"],
       "enonce": "B06_N_T_Ctr = B03_N_T_Ctr + B05_N_T_Ctr",
       "formule": "B06_N_T_Ctr = B03_N_T_Ctr + B05_N_T_Ctr",
       "severite": "bloquante",
@@ -2548,9 +2431,7 @@
     {
       "id": "SOM-X",
       "categorie": "somme_horizontale",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "B02_S_Ctr = B02_N_Num_Assure + B02_N_AF_A_Reverser + B02_N_Jours_Declares + B02_N_Salaire_Reel + B02_N_Salaire_Plaf + Rang de (B02_L_Situation)",
       "formule": "B02_S_Ctr = B02_N_Num_Assure + B02_N_AF_A_Reverser + B02_N_Jours_Declares + B02_N_Salaire_Reel + B02_N_Salaire_Plaf + Rang(B02_L_Situation)",
       "severite": "bloquante",
@@ -2559,9 +2440,7 @@
     {
       "id": "SOM-Y",
       "categorie": "total_vertical",
-      "portee": [
-        "B03"
-      ],
+      "portee": ["B03"],
       "enonce": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
       "formule": "B03_N_T_Ctr = Somme(B02_S_Ctr)",
       "severite": "bloquante",
@@ -2570,9 +2449,7 @@
     {
       "id": "SOM-Z",
       "categorie": "somme_horizontale",
-      "portee": [
-        "B04"
-      ],
+      "portee": ["B04"],
       "enonce": "B04_S_Ctr = B04_N_Num_Assure + B04_N_Jours_Declares + B04_N_Salaire_Reel + B04_N_Salaire_Plaf",
       "formule": "B04_S_Ctr = B04_N_Num_Assure + B04_N_Nbr_Jours + B04_N_Sal_Reel + B04_N_Sal_Plaf",
       "severite": "bloquante",
@@ -2581,10 +2458,7 @@
     {
       "id": "COH-DOUBLON-IMMA",
       "categorie": "coherence",
-      "portee": [
-        "B02",
-        "B04"
-      ],
+      "portee": ["B02", "B04"],
       "enonce": "Le BDS ne doit pas contenir des doublons pour un numéro d'immatriculé. Ce contrôle ne s'applique pas aux n° d'immatriculés vides ou égales à 0 contenus dans les enregistrements de type 5 (Salariés entrants).",
       "formule": null,
       "severite": "bloquante",
@@ -2593,9 +2467,7 @@
     {
       "id": "COH-UNICITE-CIN",
       "categorie": "coherence",
-      "portee": [
-        "B04"
-      ],
+      "portee": ["B04"],
       "enonce": "Au niveau des entrants, le numéro de CIN doit être unique dans une TD. Le contrôle d'unicité se fait en supprimant les espaces et ne tient pas compte des minuscules et majuscules.",
       "formule": null,
       "severite": "bloquante",
@@ -2604,14 +2476,7 @@
     {
       "id": "COH-PERIODE-UNIQUE",
       "categorie": "coherence",
-      "portee": [
-        "B01",
-        "B02",
-        "B03",
-        "B04",
-        "B05",
-        "B06"
-      ],
+      "portee": ["B01", "B02", "B03", "B04", "B05", "B06"],
       "enonce": "La période du BDS doit être unique dans le fichier BDS et doit être égale à la période du BDS qui a été choisie par l'utilisateur pour cette déclaration (l'utilisateur choisi d'abord la période avant de déposer son fichier BDS).",
       "formule": null,
       "severite": "bloquante"
@@ -2619,9 +2484,7 @@
     {
       "id": "COH-AF-REVERSER-SO-DE",
       "categorie": "coherence",
-      "portee": [
-        "B02"
-      ],
+      "portee": ["B02"],
       "enonce": "Dans le cas des situations Sorti et Décédé, l'AF à reverser doit être égale à l'AF net à payer.",
       "formule": null,
       "severite": "bloquante"
@@ -2629,9 +2492,7 @@
     {
       "id": "COH-B04-SANS-ENTRANT",
       "categorie": "coherence",
-      "portee": [
-        "B04"
-      ],
+      "portee": ["B04"],
       "enonce": "Dans le cas ou l'affilié n'a aucun entrant à déclarer. Un seul enregistrement de type B04 doit être créé en spécifiant la période, le numéro d'affilié et en mentionnant 9 espaces vides ' ' dans le champ B04_ N_Num_Assure. Les autres informations doivent être égales à Zéro si le type est N et égales à des espaces si le type est AN.",
       "formule": null,
       "severite": "bloquante"
@@ -2639,9 +2500,7 @@
     {
       "id": "COH-TD-COMP-UNICITE-IMMA",
       "categorie": "coherence",
-      "portee": [
-        "E04"
-      ],
+      "portee": ["E04"],
       "enonce": "Contrôle de l'unicité du numéro imma pour une période : Le N° d'immatriculation déclaré dans une TD complementaire ne doit pas figurer dans la TD principale ou dans une autre TD complémentaire concernant la même période.",
       "formule": null,
       "severite": "bloquante"
@@ -2649,9 +2508,7 @@
     {
       "id": "COH-TD-COMP-UNICITE-CIN",
       "categorie": "coherence",
-      "portee": [
-        "E04"
-      ],
+      "portee": ["E04"],
       "enonce": "Contrôle de l'unicité du numéro CIN pour une période : en cas d'absence d'un N°imma, Le N° CIN déclaré dans une TD complémentaire ne doit pas ficgurer dans la TD principale ou dans une autre TD complémentaire concernant la même période.",
       "formule": null,
       "severite": "bloquante"
@@ -2659,9 +2516,7 @@
     {
       "id": "COH-E05-SANS-ENTRANT",
       "categorie": "coherence",
-      "portee": [
-        "E05"
-      ],
+      "portee": ["E05"],
       "enonce": "Une DS complémentaire ne peut pas être sans entrants",
       "formule": null,
       "severite": "bloquante",

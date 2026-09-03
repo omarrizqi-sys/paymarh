@@ -1,5 +1,8 @@
-import type { Prisma } from '../../generated/prisma/client.js';
-import { declarerCleRubrique, RUBRIQUES_REMUNERATION } from '../../../common/remuneration/rubriques-remuneration.js';
+import type { Prisma } from '../../../generated/prisma/client.js';
+import {
+  declarerCleRubrique,
+  RUBRIQUES_REMUNERATION,
+} from '../../../common/remuneration/rubriques-remuneration.js';
 import { resoudreLigneHistorique } from '../../companies/historisation.js';
 import {
   convertirDureeAutreBase,
@@ -195,9 +198,9 @@ export function versVersionsAffectation(versions: readonly AffectationVersion[])
     }));
 }
 
-export function trierEmploisPourFiche<T extends { numeroOrdre: number; contrat: { dateDebut: string } }>(
-  emplois: readonly T[]
-): T[] {
+export function trierEmploisPourFiche<
+  T extends { numeroOrdre: number; contrat: { dateDebut: string } },
+>(emplois: readonly T[]): T[] {
   return [...emplois].sort((a, b) => {
     const cmp = a.contrat.dateDebut.localeCompare(b.contrat.dateDebut);
     if (cmp !== 0) return cmp;

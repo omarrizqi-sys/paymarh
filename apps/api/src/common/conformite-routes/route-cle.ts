@@ -1,4 +1,4 @@
-import { RequestMethod, type ExecutionContext } from '@nestjs/common';
+import { RequestMethod, type ExecutionContext, type Type } from '@nestjs/common';
 import { PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
 import type { Reflector } from '@nestjs/core';
 
@@ -17,6 +17,8 @@ function joindreChemins(...segments: readonly string[]): string {
     .join('/');
   return `/${normalise}`;
 }
+
+type CibleReflector = Parameters<Reflector['get']>[1];
 
 /** Cle normalisee « METHOD /chemin » pour une requete HTTP NestJS. */
 export function cleRouteHttp(context: ExecutionContext, reflector: Reflector): string | null {
@@ -42,12 +44,13 @@ export function cleRouteHttp(context: ExecutionContext, reflector: Reflector): s
 /** Meme normalisation que cleRouteHttp, pour le scan au demarrage. */
 export function cleRouteHandler(
   reflector: Reflector,
-  metatype: object,
+  metatype: Type<unknown>,
   handler: (...args: unknown[]) => unknown,
   methodeHttp: number
 ): string {
   const prefixeControleur = reflector.get<string | undefined>(PATH_METADATA, metatype) ?? '';
-  const cheminHandler = reflector.get<string | undefined>(PATH_METADATA, handler) ?? '';
+  const cheminHandler =
+    reflector.get<string | undefined>(PATH_METADATA, handler as CibleReflector) ?? '';
   const cheminComplet = joindreChemins(prefixeControleur, cheminHandler);
   const nom = NOM_METHODE_HTTP[methodeHttp] ?? String(methodeHttp);
   return `${nom} ${cheminComplet}`;

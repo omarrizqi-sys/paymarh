@@ -42,7 +42,7 @@ Deux gestionnaires peuvent modifier la même fiche simultanément. Sans garde-fo
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
+| Alternative                           | Motif                                         |
+| ------------------------------------- | --------------------------------------------- |
 | Verrou pessimiste (SELECT FOR UPDATE) | Bloque les lecteurs ; inadapté à une API REST |
-| Version sur chaque table répétable | Complexité UI et synchronisation client |
+| Version sur chaque table répétable    | Complexité UI et synchronisation client       |

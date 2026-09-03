@@ -41,8 +41,8 @@ L’ADR 0006 a fixé l’historisation par `moisEffet` en texte `AAAA-MM`, sans 
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| Champ date d’effet saisi | Contredit la décision V1 de la spec |
-| Utiliser la date système | Décale les dossiers en retard de saisie |
+| Alternative                          | Motif                                    |
+| ------------------------------------ | ---------------------------------------- |
+| Champ date d’effet saisi             | Contredit la décision V1 de la spec      |
+| Utiliser la date système             | Décale les dossiers en retard de saisie  |
 | Endpoint PATCH moisEnCours dès 1.1.b | Empiète sur le module traitement du mois |

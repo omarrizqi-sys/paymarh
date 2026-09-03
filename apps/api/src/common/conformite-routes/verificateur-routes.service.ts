@@ -76,17 +76,13 @@ export class VerificateurRoutesService implements OnApplicationBootstrap {
     }
   }
 
-  private verifierControleur(
-    controller: InstanceWrapper<object>,
-    manquements: string[]
-  ): void {
+  private verifierControleur(controller: InstanceWrapper<object>, manquements: string[]): void {
     const metatype = controller.metatype;
     if (metatype === undefined || metatype === null) {
       return;
     }
 
-    const prefixeControleur =
-      this.reflector.get<string | undefined>(PATH_METADATA, metatype) ?? '';
+    const prefixeControleur = this.reflector.get<string | undefined>(PATH_METADATA, metatype) ?? '';
     const prototype = metatype.prototype as object;
 
     for (const nomMethode of Object.getOwnPropertyNames(prototype)) {
@@ -95,22 +91,17 @@ export class VerificateurRoutesService implements OnApplicationBootstrap {
       }
 
       const handler = prototype[nomMethode as keyof typeof prototype] as
-        | ((...args: unknown[]) => unknown)
-        | undefined;
+        ((...args: unknown[]) => unknown) | undefined;
       if (typeof handler !== 'function') {
         continue;
       }
 
-      const methodeHttp = this.reflector.get<number | undefined>(
-        METHOD_METADATA,
-        handler
-      );
+      const methodeHttp = this.reflector.get<number | undefined>(METHOD_METADATA, handler);
       if (methodeHttp === undefined) {
         continue;
       }
 
-      const cheminHandler =
-        this.reflector.get<string | undefined>(PATH_METADATA, handler) ?? '';
+      const cheminHandler = this.reflector.get<string | undefined>(PATH_METADATA, handler) ?? '';
       const cheminComplet = joindreChemins(prefixeControleur, cheminHandler);
       const route = cleRoute(methodeHttp, cheminComplet);
 

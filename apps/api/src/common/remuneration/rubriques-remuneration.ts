@@ -23,9 +23,8 @@ export const REGISTRE_CLE_RUBRIQUE: Readonly<Record<string, RubriqueRemuneration
 };
 
 /** Toutes les rubriques masquees sans salarie.remuneration.lire. */
-export const TOUTES_RUBRIQUES_REMUNERATION: readonly RubriqueRemuneration[] = Object.values(
-  RUBRIQUES_REMUNERATION
-);
+export const TOUTES_RUBRIQUES_REMUNERATION: readonly RubriqueRemuneration[] =
+  Object.values(RUBRIQUES_REMUNERATION);
 
 /**
  * Enregistre l appartenance d une cle a une rubrique (pour les prompts suivants).

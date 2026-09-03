@@ -29,8 +29,10 @@ export function trierPersonnesACharge<T extends { dateNaissance: Date | string }
   lignes: readonly T[]
 ): T[] {
   return [...lignes].sort((a, b) => {
-    const da = typeof a.dateNaissance === 'string' ? a.dateNaissance : formaterDate(a.dateNaissance);
-    const db = typeof b.dateNaissance === 'string' ? b.dateNaissance : formaterDate(b.dateNaissance);
+    const da =
+      typeof a.dateNaissance === 'string' ? a.dateNaissance : formaterDate(a.dateNaissance);
+    const db =
+      typeof b.dateNaissance === 'string' ? b.dateNaissance : formaterDate(b.dateNaissance);
     return da.localeCompare(db);
   });
 }

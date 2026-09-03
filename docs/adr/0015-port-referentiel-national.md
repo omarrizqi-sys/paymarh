@@ -29,8 +29,8 @@ Quand la valeur est absente, l'alerte correspondante **n'est pas émise**. Aucun
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| Table locale en phase 2 | Hors périmètre ; duplication future |
-| Seuil par défaut (ex. SMIG fixe) | Alertes fausses possibles |
+| Alternative                        | Motif                                                    |
+| ---------------------------------- | -------------------------------------------------------- |
+| Table locale en phase 2            | Hors périmètre ; duplication future                      |
+| Seuil par défaut (ex. SMIG fixe)   | Alertes fausses possibles                                |
 | Ignorer les alertes définitivement | Perte de couverture métier dès que le référentiel existe |

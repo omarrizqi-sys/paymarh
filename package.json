@@ -23,6 +23,7 @@
     "test:unit": "vitest run --project api-unit --project back-office",
     "test:watch": "vitest",
     "typecheck": "pnpm --recursive typecheck",
+    "verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm check:circular",
     "check:circular": "madge --circular apps/api/src apps/back-office/src packages/shared-types/src",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",

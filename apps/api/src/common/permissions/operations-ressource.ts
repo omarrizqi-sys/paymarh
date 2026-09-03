@@ -14,7 +14,10 @@ function ajouterSi(
 }
 
 /** Operations autorisees sur une societe donnee. */
-export function operationsSociete(context: TenantContext, companyId: string): readonly Permission[] {
+export function operationsSociete(
+  context: TenantContext,
+  companyId: string
+): readonly Permission[] {
   const ops: Permission[] = [];
   ajouterSi(ops, context, 'societe.lire', companyId);
   ajouterSi(ops, context, 'societe.modifier', companyId);

@@ -17,14 +17,14 @@ Aucun contrôleur ni service ne teste un rôle directement (`if (role === …)`)
 
 ## 2. Liste des permissions
 
-| Permission | Signification |
-| --- | --- |
-| `societe.lire` / `creer` / `modifier` / `supprimer` / `changer-etat` | Fiche société |
-| `societe.forcer-regime-de-base` | Chemin admin uniquement |
-| `etablissement.*` | Lire, créer, modifier, supprimer, désigner principal |
-| `compte-bancaire.*` | Lire, créer, modifier, clôturer, supprimer |
-| `referentiel.lire` | Banques, jours fériés, formes, types d’heures / exonération |
-| `referentiel.gerer` | Maintenance des référentiels (réservé plateforme ; pas d’écriture dans cette étape) |
+| Permission                                                           | Signification                                                                       |
+| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `societe.lire` / `creer` / `modifier` / `supprimer` / `changer-etat` | Fiche société                                                                       |
+| `societe.forcer-regime-de-base`                                      | Chemin admin uniquement                                                             |
+| `etablissement.*`                                                    | Lire, créer, modifier, supprimer, désigner principal                                |
+| `compte-bancaire.*`                                                  | Lire, créer, modifier, clôturer, supprimer                                          |
+| `referentiel.lire`                                                   | Banques, jours fériés, formes, types d’heures / exonération                         |
+| `referentiel.gerer`                                                  | Maintenance des référentiels (réservé plateforme ; pas d’écriture dans cette étape) |
 
 ---
 
@@ -32,11 +32,11 @@ Aucun contrôleur ni service ne teste un rôle directement (`if (role === …)`)
 
 Fichier unique : `apps/api/src/common/permissions/role-permissions.provisoire.ts`.
 
-| Rôle | Droits |
-| --- | --- |
-| `ACCOUNT_ADMIN` | Toutes les opérations sur les sociétés **de son compte** (sauf forcer-régime et gérer référentiel) |
-| `MANAGER` | lire / créer / modifier (société, établissement, compte). **Pas** supprimer, **pas** changer d’état |
-| `EMPLOYEE` | Aucune (sauf `referentiel.lire`, accordé à tout utilisateur authentifié) |
+| Rôle             | Droits                                                                                                                        |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `ACCOUNT_ADMIN`  | Toutes les opérations sur les sociétés **de son compte** (sauf forcer-régime et gérer référentiel)                            |
+| `MANAGER`        | lire / créer / modifier (société, établissement, compte). **Pas** supprimer, **pas** changer d’état                           |
+| `EMPLOYEE`       | Aucune (sauf `referentiel.lire`, accordé à tout utilisateur authentifié)                                                      |
 | `PLATFORM_ADMIN` | `referentiel.gerer` + `societe.forcer-regime-de-base` seulement. **Aucun accès** aux données des comptes sur le chemin normal |
 
 L’isolation multi-tenant (`accountScope`) reste la barrière entre comptes. `peutFaire` décide seulement si l’opération est autorisée pour le rôle.

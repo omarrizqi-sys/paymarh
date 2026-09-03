@@ -22,23 +22,23 @@ La fiche salarié regroupe identité, coordonnées, identifiants légaux et date
 
 Quatre routes `PATCH`, alignées sur la spec v5 (« Identité, coordonnées, identifiants légaux, dates d'entrée et d'ancienneté ») :
 
-| Route | Contenu |
-| --- | --- |
-| `PATCH …/identite` | Nom, prénom, sexe, naissance, nationalité, situation familiale |
-| `PATCH …/coordonnees` | Adresse, contacts, personne à prévenir |
-| `PATCH …/identifiants-legaux` | Matricule, pièce, CNSS, CIMR |
-| `PATCH …/dates` | Date d'entrée, date d'ancienneté |
+| Route                         | Contenu                                                        |
+| ----------------------------- | -------------------------------------------------------------- |
+| `PATCH …/identite`            | Nom, prénom, sexe, naissance, nationalité, situation familiale |
+| `PATCH …/coordonnees`         | Adresse, contacts, personne à prévenir                         |
+| `PATCH …/identifiants-legaux` | Matricule, pièce, CNSS, CIMR                                   |
+| `PATCH …/dates`               | Date d'entrée, date d'ancienneté                               |
 
 Chaque rubrique correspond à un écran ou bloc de saisie ; une modification ciblée n'emporte pas les autres champs.
 
 ### Valeurs déduites recalculées à chaque lecture
 
-| Valeur | Motif |
-| --- | --- |
-| État actif/inactif | Dépend des emplois ouverts au moment de la consultation |
-| Type de pièce (CIN / carte de séjour) | Dérivé de la nationalité courante |
-| Libellé situation familiale | Accordé selon le sexe (P3) |
-| Mois en cours | Cascade bulletins / emplois (ADR 0012) |
+| Valeur                                | Motif                                                   |
+| ------------------------------------- | ------------------------------------------------------- |
+| État actif/inactif                    | Dépend des emplois ouverts au moment de la consultation |
+| Type de pièce (CIN / carte de séjour) | Dérivé de la nationalité courante                       |
+| Libellé situation familiale           | Accordé selon le sexe (P3)                              |
+| Mois en cours                         | Cascade bulletins / emplois (ADR 0012)                  |
 
 Les stocker créerait des risques de désynchronisation avec les emplois, les bulletins ou les référentiels.
 
@@ -53,8 +53,8 @@ Les stocker créerait des risques de désynchronisation avec les emplois, les bu
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| PATCH unique sur toute la fiche | Couplage des écrans ; risque d'écrasement inter-rubriques |
-| Stocker l'état ou le type de pièce | Violation des règles de stockage de la spec v5 |
-| Mois en cours saisi | Décision 5d / ADR 0012 |
+| Alternative                        | Motif                                                     |
+| ---------------------------------- | --------------------------------------------------------- |
+| PATCH unique sur toute la fiche    | Couplage des écrans ; risque d'écrasement inter-rubriques |
+| Stocker l'état ou le type de pièce | Violation des règles de stockage de la spec v5            |
+| Mois en cours saisi                | Décision 5d / ADR 0012                                    |

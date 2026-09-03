@@ -19,9 +19,7 @@ describe('PermissionServiceProvisoire', () => {
 
   it('refuse les permissions listees dans l en-tete de developpement', () => {
     const refusees = new Set(['salarie.remuneration.lire', 'salarie.lire']);
-    expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(
-      false
-    );
+    expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(false);
     expect(service.possedePermission(contexte, 'salarie.lire', refusees)).toBe(false);
     expect(service.possedePermission(contexte, 'salarie.modifier', refusees)).toBe(true);
   });
@@ -31,9 +29,7 @@ describe('PermissionServiceProvisoire', () => {
     process.env.NODE_ENV = 'production';
     try {
       const refusees = new Set(['salarie.remuneration.lire']);
-      expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(
-        true
-      );
+      expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(true);
     } finally {
       process.env.NODE_ENV = precedent;
     }

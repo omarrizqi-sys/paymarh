@@ -16,13 +16,13 @@ Le module 2 (traitement du mois) possédera la table des bulletins. À ce stade,
 
 ## États du bulletin
 
-| Valeur | Nom | Stocké en base |
-| --- | --- | --- |
-| 0 | NON_CALCULABLE | Non (déduit) |
-| 1 | CALCULABLE | Non (déduit) |
-| 2 | CALCULE | Oui |
-| 3 | VALIDE | Oui |
-| 4 | EDITE | Oui |
+| Valeur | Nom            | Stocké en base |
+| ------ | -------------- | -------------- |
+| 0      | NON_CALCULABLE | Non (déduit)   |
+| 1      | CALCULABLE     | Non (déduit)   |
+| 2      | CALCULE        | Oui            |
+| 3      | VALIDE         | Oui            |
+| 4      | EDITE          | Oui            |
 
 Seuls les états 2, 3 et 4 correspondent à une ligne existante. Les états 0 et 1 se déduisent de l'absence de ligne.
 
@@ -42,10 +42,10 @@ Le mois est une chaîne `AAAA-MM` (ADR 0006), jamais un `DateTime`.
 
 ## Deux fonctions de conversion de mois (ne pas confondre)
 
-| Fonction | Entrée | Règle |
-| --- | --- | --- |
-| `moisDepuisDate` | Date civile **stockée** à minuit UTC (ex. date de début d'emploi) | Lit année et mois en **UTC**. Ne jamais convertir en heure locale : une date au 1er avril minuit UTC reste avril, pas mars. |
-| `moisCalendaireCourant` | Instant présent (`Date.now()`) | Mois courant au fuseau nommé **`Africa/Casablanca`** via `Intl` — jamais un décalage fixe (+1), car le Maroc repasse à UTC+0 pendant le Ramadan. |
+| Fonction                | Entrée                                                            | Règle                                                                                                                                            |
+| ----------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `moisDepuisDate`        | Date civile **stockée** à minuit UTC (ex. date de début d'emploi) | Lit année et mois en **UTC**. Ne jamais convertir en heure locale : une date au 1er avril minuit UTC reste avril, pas mars.                      |
+| `moisCalendaireCourant` | Instant présent (`Date.now()`)                                    | Mois courant au fuseau nommé **`Africa/Casablanca`** via `Intl` — jamais un décalage fixe (+1), car le Maroc repasse à UTC+0 pendant le Ramadan. |
 
 Le cas 3 de la cascade utilise `moisCalendaireCourant` pour « aujourd'hui » et `moisDepuisDate` pour les dates de début d'emploi stockées.
 
@@ -68,7 +68,7 @@ Le cas 3 de la cascade utilise `moisCalendaireCourant` pour « aujourd'hui » et
 
 ## Alternatives rejetées
 
-| Alternative | Motif |
-| --- | --- |
-| Colonne `moisEnCours` sur `Salarie` | Risque de désynchronisation avec les bulletins |
-| Mois en cours au niveau emploi | Décision 5a : un seul mois en cours par salarié |
+| Alternative                         | Motif                                           |
+| ----------------------------------- | ----------------------------------------------- |
+| Colonne `moisEnCours` sur `Salarie` | Risque de désynchronisation avec les bulletins  |
+| Mois en cours au niveau emploi      | Décision 5a : un seul mois en cours par salarié |

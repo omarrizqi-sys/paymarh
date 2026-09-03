@@ -19,9 +19,9 @@ L’héritage (qui utilise la valeur) et l’historisation (conserve-t-on les va
 
 Pour chaque niveau historisé, une table d’historique :
 
-| Table | Clé |
-| --- | --- |
-| `CompanyParametrageHistorique` | `(companyId, moisEffet)` |
+| Table                                | Clé                            |
+| ------------------------------------ | ------------------------------ |
+| `CompanyParametrageHistorique`       | `(companyId, moisEffet)`       |
 | `EtablissementParametrageHistorique` | `(etablissementId, moisEffet)` |
 
 **Règle de validité.** Une ligne vaut à partir de son `moisEffet` jusqu’au `moisEffet` de la ligne suivante (exclus). Pour un mois cible M, on prend la ligne applicable dont `moisEffet ≤ M` et `moisEffet` est le plus grand possible.
@@ -59,13 +59,13 @@ Coefficient **52 / 12**, arrondi à l’unité supérieure via `Decimal.ceil()` 
 
 ## 4. Ce qui n’est pas historisé (et pourquoi)
 
-| Champ | Raison |
-| --- | --- |
-| `regimeDeBase` | Modification **bloquée** dès qu’un salarié existe → ne peut pas varier dans le temps. Correction exceptionnelle possible par `PLATFORM_ADMIN` + `AuditLog` (plus tard). |
-| Identité légale (raison sociale, IF, RC, …) | Pas de recalcul de bulletin dépendant d’une ancienne raison sociale au sens paramètre de paie ; hors scope historisation fiche. |
-| État du dossier / mois de montage / production | Décrivent le cycle de vie du dossier, pas un paramètre de calcul mois par mois. |
-| Matricules (préfixe, longueur, auto) | Règles de génération futures ; les matricules déjà attribués ne bougent jamais. |
-| Comptes bancaires | Cycle de vie propre (`ACTIF` / `CLOTURE`), pas une grille par moisEffet. |
+| Champ                                          | Raison                                                                                                                                                                  |
+| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `regimeDeBase`                                 | Modification **bloquée** dès qu’un salarié existe → ne peut pas varier dans le temps. Correction exceptionnelle possible par `PLATFORM_ADMIN` + `AuditLog` (plus tard). |
+| Identité légale (raison sociale, IF, RC, …)    | Pas de recalcul de bulletin dépendant d’une ancienne raison sociale au sens paramètre de paie ; hors scope historisation fiche.                                         |
+| État du dossier / mois de montage / production | Décrivent le cycle de vie du dossier, pas un paramètre de calcul mois par mois.                                                                                         |
+| Matricules (préfixe, longueur, auto)           | Règles de génération futures ; les matricules déjà attribués ne bougent jamais.                                                                                         |
+| Comptes bancaires                              | Cycle de vie propre (`ACTIF` / `CLOTURE`), pas une grille par moisEffet.                                                                                                |
 
 ---
 
@@ -74,16 +74,16 @@ Coefficient **52 / 12**, arrondi à l’unité supérieure via `Decimal.ceil()` 
 Historique société :
 
 | moisEffet | moisClotureConges |
-| --- | --- |
-| 2025-01 | 12 |
-| 2025-07 | 6 |
+| --------- | ----------------- |
+| 2025-01   | 12                |
+| 2025-07   | 6                 |
 
 | Mois demandé | Ligne retenue | Clôture |
-| --- | --- | --- |
-| 2024-12 | aucune | — |
-| 2025-03 | 2025-01 | 12 |
-| 2025-07 | 2025-07 | 6 |
-| 2025-12 | 2025-07 | 6 |
+| ------------ | ------------- | ------- |
+| 2024-12      | aucune        | —       |
+| 2025-03      | 2025-01       | 12      |
+| 2025-07      | 2025-07       | 6       |
+| 2025-12      | 2025-07       | 6       |
 
 Le piège à éviter : prendre « la ligne la plus récente tout court ». Pour mars 2025, ce serait faux (on obtiendrait 6 au lieu de 12).
 

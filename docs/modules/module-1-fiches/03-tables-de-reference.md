@@ -22,10 +22,10 @@ Aucune de ces tables ne contient de taux, de barème ni de date calendaire calcu
 
 ## 2. `FormeJuridique`
 
-| Colonne | Rôle |
-| --- | --- |
-| `code` | Identifiant stable (unique) |
-| `libelle` | Libellé d’affichage |
+| Colonne   | Rôle                        |
+| --------- | --------------------------- |
+| `code`    | Identifiant stable (unique) |
+| `libelle` | Libellé d’affichage         |
 
 **Seed (15) :** SARL, SARLAU, SA, SAS, SNC, SCS, SCA, GIE, SEP, SUCC, COOP, ASSO, EP, EI, AE.
 
@@ -35,12 +35,12 @@ Aucune de ces tables ne contient de taux, de barème ni de date calendaire calcu
 
 ## 3. `Banque`
 
-| Colonne | Rôle |
-| --- | --- |
-| `nom` | Libellé d’affichage |
-| `ancienNom` | Sigle historique pour la recherche (ex. `SGMB`, `BMCE`) |
+| Colonne      | Rôle                                                     |
+| ------------ | -------------------------------------------------------- |
+| `nom`        | Libellé d’affichage                                      |
+| `ancienNom`  | Sigle historique pour la recherche (ex. `SGMB`, `BMCE`)  |
 | `codeBanque` | 3 premiers chiffres du RIB — **prévu, laissé vide** (X3) |
-| `couleur` | Hex d’affichage |
+| `couleur`    | Hex d’affichage                                          |
 
 **Seed (21 banques).** Libellés particuliers figés en X4 :
 
@@ -55,12 +55,12 @@ CDG Capital est volontairement absente. La saisie libre reste possible sur le co
 
 ## 4. `JourFerie`
 
-| Colonne | Rôle |
-| --- | --- |
-| `code` | **Stable à vie** — ne change jamais, même si le libellé évolue |
-| `libelle` | Affichage |
-| `referenceDate` | Texte (ex. `1er janvier`, `1er Chawal`) — pas une date |
-| `type` | `CIVIL` ou `RELIGIEUX` |
+| Colonne         | Rôle                                                           |
+| --------------- | -------------------------------------------------------------- |
+| `code`          | **Stable à vie** — ne change jamais, même si le libellé évolue |
+| `libelle`       | Affichage                                                      |
+| `referenceDate` | Texte (ex. `1er janvier`, `1er Chawal`) — pas une date         |
+| `type`          | `CIVIL` ou `RELIGIEUX`                                         |
 
 **Seed (18) :** 11 fêtes civiles à date fixe + 7 journées religieuses.
 
@@ -72,11 +72,11 @@ Les cases cochées par établissement pointent vers le `code` via `JourFerieTrav
 
 ## 5. `TypeHeure`
 
-| Colonne | Rôle |
-| --- | --- |
-| `code` | Stable (`NORMALE`, `MAJOREE_25`, …) |
+| Colonne   | Rôle                                              |
+| --------- | ------------------------------------------------- |
+| `code`    | Stable (`NORMALE`, `MAJOREE_25`, …)               |
 | `libelle` | Affichage (les % dans le libellé sont indicatifs) |
-| `ordre` | Ordre d’affichage dans la grille |
+| `ordre`   | Ordre d’affichage dans la grille                  |
 
 **Seed (4) :** NORMALE, MAJOREE_25, MAJOREE_50, MAJOREE_100.
 
@@ -86,9 +86,9 @@ Les cases cochées par établissement pointent vers le `code` via `JourFerieTrav
 
 ## 6. `TypeExoneration`
 
-| Colonne | Rôle |
-| --- | --- |
-| `code` | Stable |
+| Colonne   | Rôle      |
+| --------- | --------- |
+| `code`    | Stable    |
 | `libelle` | Affichage |
 
 **Seed :** `TAHFIZ` seulement. La liste sera complétée plus tard.
@@ -99,11 +99,11 @@ Règle métier : **une seule exonération à la fois** sur un paramétrage soci�
 
 ## 7. Qui fait quoi, concrètement
 
-| Acteur | Droit prévu (à brancher en 1.1.b+) |
-| --- | --- |
+| Acteur           | Droit prévu (à brancher en 1.1.b+)                                               |
+| ---------------- | -------------------------------------------------------------------------------- |
 | `PLATFORM_ADMIN` | Créer / modifier / désactiver les lignes de référence (chemin explicite + audit) |
-| Compte client | Lecture seule pour alimenter les listes déroulantes |
-| Seed | Charge initiale idempotente à chaque `pnpm db:seed` |
+| Compte client    | Lecture seule pour alimenter les listes déroulantes                              |
+| Seed             | Charge initiale idempotente à chaque `pnpm db:seed`                              |
 
 ---
 

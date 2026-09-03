@@ -47,15 +47,15 @@ Conventions : technique en anglais, termes métier réglementaires en français 
 
 ### Champs déduits — AUCUNE colonne en base
 
-| Valeur | Se déduit de |
-| --- | --- |
-| Type de pièce d'identité | Nationalité |
-| Date de sortie du salarié | Clôture du dernier emploi ouvert |
-| État du salarié (actif / inactif) | Existence d'un emploi ouvert |
-| Solde restant d'un prêt | Montant total, mensualité, échéances prélevées |
-| Durée du travail dans l'autre base | Durée stockée et base de saisie |
-| Période d'essai — durée | Date de début emploi et date fin d'essai |
-| Nombre de personnes à charge | Lignes cochées « à charge » |
+| Valeur                             | Se déduit de                                   |
+| ---------------------------------- | ---------------------------------------------- |
+| Type de pièce d'identité           | Nationalité                                    |
+| Date de sortie du salarié          | Clôture du dernier emploi ouvert               |
+| État du salarié (actif / inactif)  | Existence d'un emploi ouvert                   |
+| Solde restant d'un prêt            | Montant total, mensualité, échéances prélevées |
+| Durée du travail dans l'autre base | Durée stockée et base de saisie                |
+| Période d'essai — durée            | Date de début emploi et date fin d'essai       |
+| Nombre de personnes à charge       | Lignes cochées « à charge »                    |
 
 ### Types
 
@@ -159,14 +159,14 @@ Fonction pure `calculerProchainMatricule` : retient le plus grand matricule comm
 
 ## Référentiels seedés
 
-| Table | Entrées |
-| --- | --- |
-| Pays | 195 (Maroc en tête, Palestine libellé exact, pas de Sahara occidental) |
-| TypeContrat | 7 |
-| MotifSortie | 13 |
-| StatutParticulier | 1 (IDMAJ) |
-| SituationFamiliale | 4 |
-| LienParente | 2 |
+| Table              | Entrées                                                                |
+| ------------------ | ---------------------------------------------------------------------- |
+| Pays               | 195 (Maroc en tête, Palestine libellé exact, pas de Sahara occidental) |
+| TypeContrat        | 7                                                                      |
+| MotifSortie        | 13                                                                     |
+| StatutParticulier  | 1 (IDMAJ)                                                              |
+| SituationFamiliale | 4                                                                      |
+| LienParente        | 2                                                                      |
 
 Réutilisés sans recréation : `Banque`, `JourFerie`.
 

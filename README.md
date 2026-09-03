@@ -144,18 +144,16 @@ paymarh/
 
 ### Qualité
 
-| Commande              | Effet                          |
-| --------------------- | ------------------------------ |
-| `pnpm lint`           | ESLint sur tout le dépôt       |
-| `pnpm format`         | Prettier réécrit les fichiers  |
-| `pnpm format:check`   | Prettier vérifie sans réécrire |
-| `pnpm test`           | Vitest sur tout le dépôt       |
-| `pnpm check:circular` | madge — imports circulaires    |
+| Commande        | Effet                                               |
+| --------------- | --------------------------------------------------- |
+| `pnpm verify`   | Vérification complète avant de valider un module    |
+| `pnpm lint:fix` | Corrige automatiquement ce qui peut l'être (ESLint) |
+| `pnpm format`   | Prettier réécrit les fichiers                       |
 
-**Avant de considérer un module comme terminé**, ces cinq commandes doivent toutes passer :
+**Avant de considérer un module comme terminé**, la vérification complète doit passer :
 
 ```bash
-pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm check:circular
+pnpm verify
 ```
 
 ---

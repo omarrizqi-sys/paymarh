@@ -28,12 +28,12 @@ La spécification v7 (décision V1) impose en outre que **l’utilisateur ne sai
 
 ## Pourquoi `AAAA-MM` en texte plutôt qu’une date
 
-| Approche | Problème |
-| --- | --- |
-| `Date` / `timestamptz` au 1er du mois | Invente un jour ; fuseaux et « fin de mois » créent de la confusion. |
-| Entier `202507` | Moins lisible ; conversions manuelles partout. |
-| Deux colonnes `annee` + `mois` | Comparaisons plus lourdes ; risque d’incohérence. |
-| **`TEXT 'AAAA-MM'`** | Comparable, triable, lisible, aligné sur la saisie métier MM/AAAA affichée. |
+| Approche                              | Problème                                                                    |
+| ------------------------------------- | --------------------------------------------------------------------------- |
+| `Date` / `timestamptz` au 1er du mois | Invente un jour ; fuseaux et « fin de mois » créent de la confusion.        |
+| Entier `202507`                       | Moins lisible ; conversions manuelles partout.                              |
+| Deux colonnes `annee` + `mois`        | Comparaisons plus lourdes ; risque d’incohérence.                           |
+| **`TEXT 'AAAA-MM'`**                  | Comparable, triable, lisible, aligné sur la saisie métier MM/AAAA affichée. |
 
 Le format texte `AAAA-MM` est stable pour les index et pour les tests (`'2025-03' < '2025-07'`).
 
@@ -59,9 +59,9 @@ La structure en base reste capable d’accueillir plusieurs `moisEffet` (le seed
 
 ## Alternatives rejetées
 
-| Alternative | Motif de rejet |
-| --- | --- |
-| SCD type 2 avec `validFrom` / `validTo` dates | Surdimensionné ; double borne à maintenir à chaque écriture. |
-| Event sourcing complet | Coût hors de portée pour des paramètres de fiche. |
-| Snapshot JSON par mois | Moins requêtable ; pas de FK vers référentiels (exonération, jours fériés). |
-| Champ `dateEffet` saisi par l’utilisateur | Contredit V1 ; source d’erreurs. |
+| Alternative                                   | Motif de rejet                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------- |
+| SCD type 2 avec `validFrom` / `validTo` dates | Surdimensionné ; double borne à maintenir à chaque écriture.                |
+| Event sourcing complet                        | Coût hors de portée pour des paramètres de fiche.                           |
+| Snapshot JSON par mois                        | Moins requêtable ; pas de FK vers référentiels (exonération, jours fériés). |
+| Champ `dateEffet` saisi par l’utilisateur     | Contredit V1 ; source d’erreurs.                                            |
