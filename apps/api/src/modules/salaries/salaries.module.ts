@@ -6,11 +6,14 @@ import { BulletinPortProvisoire } from './bulletin/bulletin.port.provisoire.js';
 import { EmploisController } from './emplois.controller.js';
 import { EmploisService } from './emplois.service.js';
 import { HistorisationEmploiService } from './historisation-emploi.service.js';
+import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { REFERENTIEL_NATIONAL_PORT } from './referentiel-national/referentiel-national.port.js';
 import { ReferentielNationalPortProvisoire } from './referentiel-national/referentiel-national.port.provisoire.js';
 import { SalariesController } from './salaries.controller.js';
 import { SalariesService } from './salaries.service.js';
+import { TableauxEmploiService } from './tableaux-emploi.service.js';
+import { TableauxSalarieService } from './tableaux-salarie.service.js';
 import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimiste.service.js';
 
 /**
@@ -22,7 +25,10 @@ import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimi
   providers: [
     SalariesService,
     EmploisService,
+    TableauxSalarieService,
+    TableauxEmploiService,
     HistorisationEmploiService,
+    HistorisationLigneTemporelleService,
     MoisEnCoursService,
     VerrouillageOptimisteService,
     {

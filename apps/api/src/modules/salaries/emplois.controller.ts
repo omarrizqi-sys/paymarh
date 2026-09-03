@@ -7,6 +7,7 @@ import {
   Param,
   ParseUUIDPipe,
   Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -22,7 +23,16 @@ import {
   ModifierContratEmploiDto,
   ModifierRemunerationEmploiDto,
 } from './dto/emploi.dto.js';
+import {
+  CreerAvantageEnNatureDto,
+  CreerPrimeContractuelleDto,
+  CreerStatutParticulierDto,
+  ModifierAvantageEnNatureDto,
+  ModifierPrimeContractuelleDto,
+  ModifierStatutParticulierDto,
+} from './dto/tableaux-emploi.dto.js';
 import { EmploisService } from './emplois.service.js';
+import { TableauxEmploiService } from './tableaux-emploi.service.js';
 import {
   EN_TETE_IF_MATCH,
   VerrouillageOptimisteService,
@@ -33,6 +43,7 @@ import {
 export class EmploisController {
   constructor(
     private readonly emplois: EmploisService,
+    private readonly tableaux: TableauxEmploiService,
     private readonly verrouillage: VerrouillageOptimisteService
   ) {}
 
@@ -105,6 +116,135 @@ export class EmploisController {
   ) {
     const version = this.verrouillage.exigerVersion(ifMatch);
     return this.emplois.modifierAffectation(id, dto, version);
+  }
+
+  @Post(':id/primes-contractuelles')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_PRIME_CONTRACTUELLE' })
+  @ExigeIfMatch()
+  creerPrimeContractuelle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerPrimeContractuelleDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerPrimeContractuelle(id, dto, version);
+  }
+
+  @Patch(':id/primes-contractuelles/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'MODIFIER_PRIME_CONTRACTUELLE' })
+  @ExigeIfMatch()
+  modifierPrimeContractuelle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierPrimeContractuelleDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierPrimeContractuelle(id, ligneId, dto, version);
+  }
+
+  @Delete(':id/primes-contractuelles/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'SUPPRIMER_PRIME_CONTRACTUELLE' })
+  @ExigeIfMatch()
+  supprimerPrimeContractuelle(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerPrimeContractuelle(id, ligneId, version);
+  }
+
+  @Post(':id/avantages-en-nature')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_AVANTAGE_EN_NATURE' })
+  @ExigeIfMatch()
+  creerAvantageEnNature(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerAvantageEnNatureDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerAvantageEnNature(id, dto, version);
+  }
+
+  @Patch(':id/avantages-en-nature/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'MODIFIER_AVANTAGE_EN_NATURE' })
+  @ExigeIfMatch()
+  modifierAvantageEnNature(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierAvantageEnNatureDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierAvantageEnNature(id, ligneId, dto, version);
+  }
+
+  @Delete(':id/avantages-en-nature/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'SUPPRIMER_AVANTAGE_EN_NATURE' })
+  @ExigeIfMatch()
+  supprimerAvantageEnNature(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerAvantageEnNature(id, ligneId, version);
+  }
+
+  @Post(':id/statuts-particuliers')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_STATUT_PARTICULIER' })
+  @ExigeIfMatch()
+  creerStatutParticulier(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerStatutParticulierDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerStatutParticulier(id, dto, version);
+  }
+
+  @Patch(':id/statuts-particuliers/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'MODIFIER_STATUT_PARTICULIER' })
+  @ExigeIfMatch()
+  modifierStatutParticulier(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierStatutParticulierDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierStatutParticulier(id, ligneId, dto, version);
+  }
+
+  @Delete(':id/statuts-particuliers/:ligneId')
+  @RequiertPermission('emploi.modifier')
+  @PerimetreEmploi('id')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'SUPPRIMER_STATUT_PARTICULIER' })
+  @ExigeIfMatch()
+  supprimerStatutParticulier(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerStatutParticulier(id, ligneId, version);
   }
 
   @Delete(':id')

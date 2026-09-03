@@ -75,6 +75,45 @@ Les bulletins lus pour cette décision passent par `BulletinPort.listerBulletins
 
 Pourquoi le client n'écrit jamais une version : le front ne doit pas savoir ce qui est historisé (P3) ; une rubrique PATCH = un bloc = un périmètre net pour la décision écraser/versionner (ADR 0016).
 
+### Suppression des lignes historisées (salarié)
+
+Pour les personnes à charge, prêts et saisies :
+
+1. **Aperçu** — `GET …/impact-suppression` indique si la ligne sera supprimée ou close (`mode`).
+2. **Confirmation** — `DELETE …?confirmationJeton=` avec le jeton retourné.
+3. **Sans bulletin** — la ligne disparaît.
+4. **Avec bulletin** — la ligne reste lisible, `etat: INACTIVE`, `moisEffetFin` renseigné.
+
+### Deux règles distinctes pour `moisEffetFin`
+
+La valeur de clôture dépend du **type d'opération**, pas d'une règle unique :
+
+| Opération | Bulletin au mois en cours | `moisEffetFin` de la ligne close |
+| --- | --- | --- |
+| **Suppression** d'une ligne déjà utilisée | Oui | **Mois en cours** (inclus). Supprimer un prêt en mars signifie que la retenue de mars n'est plus prélevée ; les mois antérieurs restent intacts. Fermer au mois précédent rouvrirait un mois déjà produit. |
+| **Modification** d'une ligne (versionnage) | Oui | **Mois précédent** pour l'ancienne ligne ; la nouvelle démarre au **mois en cours**. Remplacement sans chevauchement ni trou. |
+
+Implémentation : `moisFinSuppressionLigneUtilisee(moisEnCours)` vs `moisFinClotureLigneRemplacee(moisEnCours)` dans `HistorisationLigneTemporelleService`.
+
+### Deux lectures d'une même ligne temporelle
+
+Une ligne close possède **deux interprétations distinctes**, volontairement non alignées au mois de clôture :
+
+| Lecture | Fonction | Au mois de clôture (`moisEffetFin = mois en cours`) |
+| --- | --- | --- |
+| **État affiché** | `deduireEtatLigne` | `INACTIVE` — la ligne n'est plus opérationnelle pour les saisies du mois en cours (ex. suppression d'un prêt : plus de retenue à partir de ce mois). |
+| **Lisibilité pour un mois** | `ligneLisiblePourMois` | `true` — le mois de fin est **inclus** : le bulletin du mois en cours couvre encore cette ligne ; le compteur `nombrePersonnesACharge` et le recalcul des bulletins passés s'appuient sur cette lecture. |
+
+**Ne pas aligner** les deux fonctions sur une comparaison stricte (`<` vs `<=`) : faire disparaître la ligne du compteur ou de la résolution bulletin au mois de clôture fausserait la déduction pour charges de famille et la reproductibilité des bulletins déjà produits ou en cours de production.
+
+Les blocs portés par l'emploi (contrat, rémunération, affectation) utilisent le **versionnage par bloc entier** (une ligne par `moisEffet`).
+
+Les tableaux répétables historisés portés par le salarié (personnes à charge, retenues) et certains tableaux emploi (avantages en nature) utilisent la **validité temporelle par ligne** (`moisEffetDebut` / `moisEffetFin` sur chaque ligne).
+
+Pourquoi deux mécanismes : un bloc scalaire se versionne en bloc entier pour garantir la cohérence inter-champs ; dupliquer toutes les lignes d'un tableau à chaque changement serait absurde pour des collections répétables.
+
+Les blocs portés par le **salarié** suivent la règle générale du mois en cours (sans exception D7). Le client ne fournit jamais de mois d'effet.
+
 ---
 
 ## Alternatives rejetées

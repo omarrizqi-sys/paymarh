@@ -30,6 +30,7 @@ import {
   versFicheSalarie,
   versLigneListeSalarie,
 } from './mappers/salarie.mapper.js';
+import { INCLUDE_COLLECTIONS_SALARIE } from './mappers/tableaux.mapper.js';
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { calculerAlertesRapprochement } from './rapprochement-salarie.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
@@ -110,9 +111,10 @@ export class SalariesService {
   async lire(id: string) {
     const salarie = await this.trouverSalarieSociete(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(id);
+    const bulletins = await this.bulletins.listerBulletinsParSalarie(id);
     const emplois = await this.emplois.listerEmploisPourFicheSalarie(id, moisEnCours);
     return {
-      donnees: await versFicheSalarie(this.prisma, salarie, moisEnCours, emplois),
+      donnees: await versFicheSalarie(this.prisma, salarie, moisEnCours, emplois, bulletins),
     };
   }
 
@@ -120,8 +122,9 @@ export class SalariesService {
     salarie: Awaited<ReturnType<typeof this.trouverSalarieSociete>>
   ) {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarie.id);
+    const bulletins = await this.bulletins.listerBulletinsParSalarie(salarie.id);
     const emplois = await this.emplois.listerEmploisPourFicheSalarie(salarie.id, moisEnCours);
-    return versFicheSalarie(this.prisma, salarie, moisEnCours, emplois);
+    return versFicheSalarie(this.prisma, salarie, moisEnCours, emplois, bulletins);
   }
 
   async lister(query: ListerSalariesQueryDto) {
@@ -776,7 +779,7 @@ export class SalariesService {
     const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
     const salarie = await this.prisma.salarie.findFirst({
       where: { id, companyId, company: { accountId } },
-      include: INCLUDE_FICHE_SALARIE,
+      include: { ...INCLUDE_FICHE_SALARIE, ...INCLUDE_COLLECTIONS_SALARIE },
     });
     if (salarie === null) {
       throw new NotFoundException(MESSAGE_NEUTRE);
@@ -787,7 +790,7 @@ export class SalariesService {
   private async chargerFiche(id: string) {
     return this.prisma.salarie.findUniqueOrThrow({
       where: { id },
-      include: INCLUDE_FICHE_SALARIE,
+      include: { ...INCLUDE_FICHE_SALARIE, ...INCLUDE_COLLECTIONS_SALARIE },
     });
   }
 }

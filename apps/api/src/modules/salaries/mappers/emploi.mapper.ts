@@ -7,9 +7,12 @@ import {
   formaterDate,
 } from '../deductions-emploi.js';
 import { emploiEstOuvert } from '../deductions-salarie.js';
+import { mapperCollectionsEmploi } from './tableaux.mapper.js';
 
 declarerCleRubrique('remuneration', RUBRIQUES_REMUNERATION.REMUNERATION);
 declarerCleRubrique('paiement', RUBRIQUES_REMUNERATION.PAIEMENT);
+declarerCleRubrique('primesContractuelles', RUBRIQUES_REMUNERATION.PRIMES_CONTRACTUELLES);
+declarerCleRubrique('avantagesEnNature', RUBRIQUES_REMUNERATION.AVANTAGES_EN_NATURE);
 
 type EmploiCharge = Prisma.EmploiGetPayload<{
   include: {
@@ -117,7 +120,14 @@ function resoudrePourAffichage<T extends { moisEffet: string }>(
   return versions.reduce((a, b) => (a.moisEffet <= b.moisEffet ? a : b));
 }
 
-export function versEmploiComplet(emploi: EmploiCharge, moisEnCours: string) {
+export function versEmploiComplet(
+  emploi: EmploiCharge & {
+    primesContractuelles?: Parameters<typeof mapperCollectionsEmploi>[0]['primesContractuelles'];
+    avantagesEnNature?: Parameters<typeof mapperCollectionsEmploi>[0]['avantagesEnNature'];
+    statutsParticuliers?: Parameters<typeof mapperCollectionsEmploi>[0]['statutsParticuliers'];
+  },
+  moisEnCours: string
+) {
   const contrat = resoudrePourAffichage(emploi.contratVersions, moisEnCours);
   const remuneration = resoudrePourAffichage(emploi.remunerationVersions, moisEnCours);
   const affectation = resoudrePourAffichage(emploi.affectationVersions, moisEnCours);
@@ -126,7 +136,7 @@ export function versEmploiComplet(emploi: EmploiCharge, moisEnCours: string) {
     throw new Error(`Emploi ${emploi.id} incomplet au mois ${moisEnCours}`);
   }
 
-  return {
+  const base = {
     id: emploi.id,
     version: emploi.version,
     numeroOrdre: emploi.numeroOrdre,
@@ -135,6 +145,26 @@ export function versEmploiComplet(emploi: EmploiCharge, moisEnCours: string) {
     paiement: versPaiement(remuneration),
     affectation: versAffectation(affectation),
   };
+
+  if (
+    emploi.primesContractuelles !== undefined ||
+    emploi.avantagesEnNature !== undefined ||
+    emploi.statutsParticuliers !== undefined
+  ) {
+    return {
+      ...base,
+      ...mapperCollectionsEmploi(
+        {
+          primesContractuelles: emploi.primesContractuelles ?? [],
+          avantagesEnNature: emploi.avantagesEnNature ?? [],
+          statutsParticuliers: emploi.statutsParticuliers ?? [],
+        },
+        moisEnCours
+      ),
+    };
+  }
+
+  return base;
 }
 
 export function versVersionsContrat(versions: readonly ContratVersion[]) {

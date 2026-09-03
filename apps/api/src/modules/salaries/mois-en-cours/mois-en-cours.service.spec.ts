@@ -5,6 +5,7 @@ import {
   MoisEnCoursService,
   moisCalendaireCourant,
   moisDepuisDate,
+  moisPrecedent,
   moisSuivant,
 } from './mois-en-cours.service.js';
 
@@ -79,6 +80,14 @@ describe('MoisEnCoursService — cascade a trois cas', () => {
 });
 
 describe('utilitaires mois', () => {
+  it('moisPrecedent recule d un mois dans la meme annee', () => {
+    expect(moisPrecedent('2025-07')).toBe('2025-06');
+  });
+
+  it('moisPrecedent en janvier bascule sur decembre de l annee precedente', () => {
+    expect(moisPrecedent('2027-01')).toBe('2026-12');
+  });
+
   it('moisSuivant en decembre bascule sur janvier', () => {
     expect(moisSuivant('2025-12')).toBe('2026-01');
   });

@@ -33,6 +33,7 @@ import {
   versVersionsContrat,
   versVersionsRemuneration,
 } from './mappers/emploi.mapper.js';
+import { INCLUDE_COLLECTIONS_EMPLOI } from './mappers/tableaux.mapper.js';
 import { moisDepuisDate, MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import {
   REFERENTIEL_NATIONAL_PORT,
@@ -444,7 +445,7 @@ export class EmploisService {
   async listerEmploisPourFicheSalarie(salarieId: string, moisEnCours: string) {
     const emplois = await this.prisma.emploi.findMany({
       where: { salarieId },
-      include: INCLUDE_EMPLOI_COMPLET,
+      include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });
     return trierEmploisPourFiche(emplois.map((e) => versEmploiComplet(e, moisEnCours)));
   }
@@ -630,7 +631,7 @@ export class EmploisService {
   private async chargerEmploi(id: string) {
     return this.prisma.emploi.findUniqueOrThrow({
       where: { id },
-      include: INCLUDE_EMPLOI_COMPLET,
+      include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });
   }
 
@@ -641,7 +642,7 @@ export class EmploisService {
         id,
         salarie: { company: accountScope(ctx) },
       },
-      include: INCLUDE_EMPLOI_COMPLET,
+      include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });
     if (emploi === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return emploi;

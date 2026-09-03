@@ -2,6 +2,21 @@ import { Inject, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../../common/prisma/prisma.service.js';
 import { BULLETIN_PORT, EtatBulletin, type BulletinPort } from '../bulletin/bulletin.port.js';
 
+/** Retire un mois au format AAAA-MM. */
+export function moisPrecedent(mois: string): string {
+  const [anneeStr, moisStr] = mois.split('-');
+  let annee = Number(anneeStr);
+  let numMois = Number(moisStr);
+
+  numMois -= 1;
+  if (numMois < 1) {
+    numMois = 12;
+    annee -= 1;
+  }
+
+  return `${annee}-${String(numMois).padStart(2, '0')}`;
+}
+
 /** Ajoute un mois au format AAAA-MM. */
 export function moisSuivant(mois: string): string {
   const [anneeStr, moisStr] = mois.split('-');

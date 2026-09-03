@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
+import { deduireEtatLigne } from './deductions-tableaux.js';
 import {
   ligneCloseAvantMois,
   ligneLisiblePourMois,
@@ -91,5 +92,11 @@ describe('historisation temporelle (lignes repetables)', () => {
   it('une ligne de pret close par un mois de fin reste lisible pour un mois anterieur', () => {
     expect(ligneLisiblePourMois(pret, '2025-03')).toBe(true);
     expect(ligneLisiblePourMois(pret, '2025-07')).toBe(false);
+  });
+
+  it('une ligne closee au mois evalue diverge etat affiche et lisibilite inclusive', () => {
+    const ligne = { moisEffetDebut: '2025-01', moisEffetFin: '2025-07' as string | null };
+    expect(ligneLisiblePourMois(ligne, '2025-07')).toBe(true);
+    expect(deduireEtatLigne(ligne, '2025-07')).toBe('INACTIVE');
   });
 });

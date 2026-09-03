@@ -76,6 +76,50 @@ export const CODES_REPONSE = {
     code: 'DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE',
     message: 'La somme des durees contractuelles des emplois actifs depasse le seuil legal.',
   },
+  PART_VIREMENT_INVALIDE: {
+    code: 'PART_VIREMENT_INVALIDE',
+    message: 'La somme des parts de virement doit etre exactement 100 %.',
+  },
+  MONTANT_MENSUEL_SUPERIEUR_TOTAL: {
+    code: 'MONTANT_MENSUEL_SUPERIEUR_TOTAL',
+    message: 'Le montant mensuel ne peut pas depasser le montant total.',
+  },
+  CHEVAUCHEMENT_STATUTS: {
+    code: 'CHEVAUCHEMENT_STATUTS',
+    message: 'Deux statuts particuliers ont des periodes qui se chevauchent.',
+  },
+  STATUT_PROPAGE_LECTURE_SEULE: {
+    code: 'STATUT_PROPAGE_LECTURE_SEULE',
+    message: 'Ce statut particulier ne peut pas etre modifie depuis la fiche salarie.',
+  },
+  RIB_DEJA_UTILISE: {
+    code: 'RIB_DEJA_UTILISE',
+    message: 'Ce RIB est deja utilise dans la societe.',
+  },
+  FORMAT_IDENTIFIANT_BANCAIRE: {
+    code: 'FORMAT_IDENTIFIANT_BANCAIRE',
+    message: 'Le format du RIB, de l IBAN ou du BIC est inattendu.',
+  },
+  BANQUE_INCOHERENTE: {
+    code: 'BANQUE_INCOHERENTE',
+    message: 'La banque selectionnee ne correspond pas aux premiers chiffres du RIB.',
+  },
+  PERSONNE_A_CHARGE_DOUBLON: {
+    code: 'PERSONNE_A_CHARGE_DOUBLON',
+    message: 'Une personne a charge porte deja ce nom, prenom et date de naissance.',
+  },
+  ENFANT_AGE_DEPASSE: {
+    code: 'ENFANT_AGE_DEPASSE',
+    message: 'L enfant a charge depasse l age maximal prevu.',
+  },
+  MENSUALITE_ECHEANCES_INCOHERENTE: {
+    code: 'MENSUALITE_ECHEANCES_INCOHERENTE',
+    message: 'La mensualite multipliee par le nombre d echeances ne correspond pas au montant total.',
+  },
+  STATUT_HORS_INTERVALLE_EMPLOI: {
+    code: 'STATUT_HORS_INTERVALLE_EMPLOI',
+    message: 'Les dates du statut particulier sont hors de l intervalle de l emploi.',
+  },
 } as const;
 
 export type CodeReponse = keyof typeof CODES_REPONSE;

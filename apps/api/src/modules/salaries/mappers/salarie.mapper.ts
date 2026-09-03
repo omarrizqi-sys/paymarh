@@ -1,4 +1,5 @@
 import type { Prisma } from '../../generated/prisma/client.js';
+import { declarerCleRubrique, RUBRIQUES_REMUNERATION } from '../../../common/remuneration/rubriques-remuneration.js';
 import {
   deduireEtatSalarie,
   deduireLibelleSituationFamiliale,
@@ -6,6 +7,10 @@ import {
 } from '../deductions-salarie.js';
 import type { PrismaService } from '../../../common/prisma/prisma.service.js';
 import { trierEmploisPourFiche } from './emploi.mapper.js';
+import { mapperCollectionsSalarie } from './tableaux.mapper.js';
+import type { MoisBulletin } from '../bulletin/bulletin.port.js';
+
+declarerCleRubrique('comptesBancaires', RUBRIQUES_REMUNERATION.COMPTES_BANCAIRES);
 
 type SalarieAvecRelations = Prisma.SalarieGetPayload<{
   include: {
@@ -21,9 +26,15 @@ function formaterDate(date: Date): string {
 
 export async function versFicheSalarie(
   prisma: PrismaService,
-  salarie: SalarieAvecRelations,
+  salarie: SalarieAvecRelations & {
+    personnesACharge?: Parameters<typeof mapperCollectionsSalarie>[0]['personnesACharge'];
+    comptesBancaires?: Parameters<typeof mapperCollectionsSalarie>[0]['comptesBancaires'];
+    prets?: Parameters<typeof mapperCollectionsSalarie>[0]['prets'];
+    saisiesSurSalaire?: Parameters<typeof mapperCollectionsSalarie>[0]['saisiesSurSalaire'];
+  },
   moisEnCours: string,
-  emplois: readonly unknown[] = []
+  emplois: readonly unknown[] = [],
+  bulletins: readonly MoisBulletin[] = []
 ) {
   const etat = await deduireEtatSalarie(prisma, salarie.id);
   const typePieceIdentite = deduireTypePieceIdentite(salarie.nationalite?.codeIso ?? null);
@@ -82,10 +93,24 @@ export async function versFicheSalarie(
     emplois: trierEmploisPourFiche(
       emplois as Parameters<typeof trierEmploisPourFiche>[0]
     ),
-    personnesACharge: [] as readonly unknown[],
-    comptesBancaires: [] as readonly unknown[],
-    prets: [] as readonly unknown[],
-    saisiesSurSalaire: [] as readonly unknown[],
+    ...(salarie.personnesACharge !== undefined
+      ? mapperCollectionsSalarie(
+          {
+            personnesACharge: salarie.personnesACharge,
+            comptesBancaires: salarie.comptesBancaires ?? [],
+            prets: salarie.prets ?? [],
+            saisiesSurSalaire: salarie.saisiesSurSalaire ?? [],
+          },
+          moisEnCours,
+          bulletins
+        )
+      : {
+          nombrePersonnesACharge: 0,
+          personnesACharge: [] as readonly unknown[],
+          comptesBancaires: [] as readonly unknown[],
+          prets: [] as readonly unknown[],
+          saisiesSurSalaire: [] as readonly unknown[],
+        }),
   };
 }
 

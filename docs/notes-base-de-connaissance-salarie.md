@@ -77,3 +77,29 @@ Quand vous modifiez une rubrique (contrat, rémunération, temps de travail), le
 La **suppression d'un emploi** n'est possible que si aucun bulletin n'a été produit **pour cet emploi** — même si un autre emploi du même salarié a des bulletins.
 
 Sans droit de voir la rémunération, les montants et modes de paiement **n'apparaissent pas** — y compris dans l'historique des versions.
+
+---
+
+## Personnes à charge et lignes « inactives »
+
+Quand une ligne de prêt, de saisie ou de personne à charge a déjà servi à calculer un bulletin, la supprimer entièrement fausserait l'historique de paie. Le logiciel la **clôt** alors : elle reste visible avec l'état « inactive » et une date de fin, pour que les bulletins passés restent explicables.
+
+---
+
+## Répartition du virement sur plusieurs comptes
+
+Si le salarié est payé sur plusieurs comptes, la somme des pourcentages doit faire **exactement 100 %**. C'est la seule façon de garantir que la totalité du net à payer est répartie sans reste ni excédent.
+
+Un seul compte suffit : aucun pourcentage n'est demandé (100 % implicite).
+
+---
+
+## Primes contractuelles sans montant
+
+Une prime rattachée à l'emploi indique **quelle** prime s'applique et **quels mois** — pas combien. Le montant et le mode de calcul appartiennent au paramétrage des primes et aux éléments variables du mois.
+
+---
+
+## Statuts particuliers non modifiables
+
+Certaines lignes de statut particulier sont **propagées depuis la société** : elles apparaissent sur la fiche mais ne peuvent ni être modifiées ni supprimées depuis le dossier salarié. Seule la société peut les retirer ou les ajuster.

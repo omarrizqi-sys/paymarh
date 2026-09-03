@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -32,8 +33,18 @@ import {
   VerifierSalarieDto,
 } from './dto/salarie.dto.js';
 import { CreerEmploiDto } from './dto/emploi.dto.js';
+import {
+  CreerPersonneAChargeDto,
+  CreerPretDto,
+  CreerSaisieSurSalaireDto,
+  ModifierPersonneAChargeDto,
+  ModifierPretDto,
+  ModifierSaisieSurSalaireDto,
+  RemplacerComptesBancairesDto,
+} from './dto/tableaux-salarie.dto.js';
 import { EmploisService } from './emplois.service.js';
 import { SalariesService } from './salaries.service.js';
+import { TableauxSalarieService } from './tableaux-salarie.service.js';
 import {
   EN_TETE_IF_MATCH,
   VerrouillageOptimisteService,
@@ -45,6 +56,7 @@ export class SalariesController {
   constructor(
     private readonly salaries: SalariesService,
     private readonly emplois: EmploisService,
+    private readonly tableaux: TableauxSalarieService,
     private readonly verrouillage: VerrouillageOptimisteService
   ) {}
 
@@ -86,6 +98,182 @@ export class SalariesController {
   @PerimetreSalarie('id')
   impactSuppression(@Param('id', ParseUUIDPipe) id: string) {
     return this.salaries.impactSuppression(id);
+  }
+
+  @Post(':id/personnes-a-charge')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'CREER_PERSONNE_A_CHARGE' })
+  @ExigeIfMatch()
+  creerPersonneACharge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerPersonneAChargeDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerPersonneACharge(id, dto, version);
+  }
+
+  @Patch(':id/personnes-a-charge/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'MODIFIER_PERSONNE_A_CHARGE' })
+  @ExigeIfMatch()
+  modifierPersonneACharge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierPersonneAChargeDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierPersonneACharge(id, ligneId, dto, version);
+  }
+
+  @Get(':id/personnes-a-charge/:ligneId/impact-suppression')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  impactSuppressionPersonneACharge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string
+  ) {
+    return this.tableaux.impactSuppressionPersonneACharge(id, ligneId);
+  }
+
+  @Delete(':id/personnes-a-charge/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'SUPPRIMER_PERSONNE_A_CHARGE' })
+  @ExigeIfMatch()
+  supprimerPersonneACharge(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Query('confirmationJeton') confirmationJeton: string | undefined,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerPersonneACharge(id, ligneId, confirmationJeton, version);
+  }
+
+  @Put(':id/comptes-bancaires')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'REMPLACER_COMPTES_BANCAIRES' })
+  @ExigeIfMatch()
+  remplacerComptesBancaires(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: RemplacerComptesBancairesDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.remplacerComptesBancaires(id, dto, version);
+  }
+
+  @Post(':id/prets')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'CREER_PRET' })
+  @ExigeIfMatch()
+  creerPret(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerPretDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerPret(id, dto, version);
+  }
+
+  @Patch(':id/prets/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'MODIFIER_PRET' })
+  @ExigeIfMatch()
+  modifierPret(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierPretDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierPret(id, ligneId, dto, version);
+  }
+
+  @Get(':id/prets/:ligneId/impact-suppression')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  impactSuppressionPret(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string
+  ) {
+    return this.tableaux.impactSuppressionPret(id, ligneId);
+  }
+
+  @Delete(':id/prets/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'SUPPRIMER_PRET' })
+  @ExigeIfMatch()
+  supprimerPret(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Query('confirmationJeton') confirmationJeton: string | undefined,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerPret(id, ligneId, confirmationJeton, version);
+  }
+
+  @Post(':id/saisies-sur-salaire')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'CREER_SAISIE_SUR_SALAIRE' })
+  @ExigeIfMatch()
+  creerSaisieSurSalaire(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: CreerSaisieSurSalaireDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.creerSaisieSurSalaire(id, dto, version);
+  }
+
+  @Patch(':id/saisies-sur-salaire/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'MODIFIER_SAISIE_SUR_SALAIRE' })
+  @ExigeIfMatch()
+  modifierSaisieSurSalaire(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Body() dto: ModifierSaisieSurSalaireDto,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.modifierSaisieSurSalaire(id, ligneId, dto, version);
+  }
+
+  @Get(':id/saisies-sur-salaire/:ligneId/impact-suppression')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  impactSuppressionSaisie(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string
+  ) {
+    return this.tableaux.impactSuppressionSaisie(id, ligneId);
+  }
+
+  @Delete(':id/saisies-sur-salaire/:ligneId')
+  @RequiertPermission('salarie.modifier')
+  @PerimetreSalarie('id')
+  @JournaliserEcriture({ entite: 'Salarie', action: 'SUPPRIMER_SAISIE_SUR_SALAIRE' })
+  @ExigeIfMatch()
+  supprimerSaisieSurSalaire(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string,
+    @Query('confirmationJeton') confirmationJeton: string | undefined,
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+  ) {
+    const version = this.verrouillage.exigerVersion(ifMatch);
+    return this.tableaux.supprimerSaisie(id, ligneId, confirmationJeton, version);
   }
 
   @Get(':id')
