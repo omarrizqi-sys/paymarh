@@ -68,6 +68,8 @@ export interface AlerteApi {
   readonly code: string;
   readonly champ?: string;
   readonly message: string;
+  /** Identifiant d un salarie existant (alerte de reembauche). */
+  readonly salarieExistantId?: string;
 }
 
 /**

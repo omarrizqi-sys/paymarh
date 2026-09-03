@@ -41,3 +41,23 @@ Un utilisateur autorisé à consulter mais pas à modifier la rémunération ne 
 ## Confirmation des opérations sensibles
 
 Certaines actions (notamment les suppressions à impact large) demandent une **confirmation explicite** après un aperçu des conséquences. Si le dossier a changé entre l'aperçu et la confirmation, l'opération est suspendue : il faut relancer l'aperçu.
+
+---
+
+## Matricule laissé vide à la création
+
+Lors de la création d'une fiche, si le matricule n'est pas renseigné, le logiciel en attribue un automatiquement selon les règles de numérotation de la société. Si vous saisissez un matricule vous-même (par exemple lors d'une reprise de dossier), il est conservé tel quel.
+
+---
+
+## Alerte de réembauche
+
+Lors de la création ou de la vérification d'une fiche, le logiciel peut signaler qu'un **salarié inactif** de la même société correspond déjà (même pièce d'identité, ou à défaut même nom, prénom et date de naissance). L'alerte permet d'ouvrir la fiche existante pour la consulter.
+
+**Ce que l'alerte ne fait pas :** elle ne crée aucun emploi, ne réactive personne et n'enregistre aucune donnée. C'est à vous de décider si vous poursuivez la création ou si vous rouvrez le dossier existant pour y ajouter un nouvel emploi.
+
+---
+
+## Suppression d'une fiche salarié
+
+Une fiche peut être supprimée tant qu'**aucun bulletin de paie** n'a été produit pour ce salarié (sur tous ses emplois). Dès qu'un bulletin existe, la suppression est refusée : la fiche reste en place. Cette règle protège l'historique de paie déjà calculé ou validé.

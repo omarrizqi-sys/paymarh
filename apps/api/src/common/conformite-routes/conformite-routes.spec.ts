@@ -1,4 +1,4 @@
-import { Controller, Get, Module, Patch } from '@nestjs/common';
+import { Controller, Get, Module, Patch, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterEach, describe, expect, it } from 'vitest';
 import { JournaliserEcriture } from '../audit/journaliser-ecriture.decorator.js';
@@ -6,6 +6,10 @@ import { ConformiteRoutesModule } from './conformite-routes.module.js';
 import { ExigeIfMatch } from './exige-if-match.decorator.js';
 import { ErreurConformiteRoutes, VerificateurRoutesService } from './verificateur-routes.service.js';
 import { RequiertPermission } from '../permissions/requiert-permission.decorator.js';
+import {
+  RouteSansEcriture,
+  SansIfMatch,
+} from './route-sans-ecriture.decorator.js';
 
 async function demarrerModule(module: typeof Module): Promise<void> {
   const moduleRef = await Test.createTestingModule({
@@ -30,8 +34,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
 
     @Module({ controllers: [ProbeLectureSansPermission] })
     class ProbeModule {
-      /** Ancre de module NestJS pour le test. */
-      static readonly test = true;
+      readonly probe = true;
     }
 
     await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
@@ -55,7 +58,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
 
     @Module({ controllers: [ProbeEcritureSansPermission] })
     class ProbeModule {
-      static readonly test = true;
+      readonly probe = true;
     }
 
     await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
@@ -79,7 +82,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
 
     @Module({ controllers: [ProbeSansJournal] })
     class ProbeModule {
-      static readonly test = true;
+      readonly probe = true;
     }
 
     await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
@@ -103,7 +106,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
 
     @Module({ controllers: [ProbeSansIfMatch] })
     class ProbeModule {
-      static readonly test = true;
+      readonly probe = true;
     }
 
     await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
@@ -122,5 +125,114 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
     const verificateur = moduleRef.get(VerificateurRoutesService);
     expect(() => verificateur.verifier()).not.toThrow();
     await moduleRef.close();
+  });
+
+  it('un PATCH marque @SansIfMatch fait echouer le demarrage', async () => {
+    @Controller('probe-conformite')
+    class ProbePatchSansIfMatch {
+      @Patch('patch-sans-if-match')
+      @RequiertPermission('salarie.modifier')
+      @JournaliserEcriture({ entite: 'Salarie', action: 'PROBE' })
+      @SansIfMatch()
+      ecrire() {
+        return {};
+      }
+    }
+
+    @Module({ controllers: [ProbePatchSansIfMatch] })
+    class ProbeModule {
+      readonly probe = true;
+    }
+
+    await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
+      (erreur: unknown) =>
+        erreur instanceof ErreurConformiteRoutes &&
+        erreur.message.includes('@SansIfMatch n est autorise que sur POST') &&
+        erreur.message.includes('PATCH /probe-conformite/patch-sans-if-match')
+    );
+  });
+
+  it('@RouteSansEcriture dispense de @JournaliserEcriture et @ExigeIfMatch au demarrage', async () => {
+    @Controller('probe-conformite')
+    class ProbeRouteSansEcriture {
+      @Post('lecture-seule')
+      @RequiertPermission('salarie.lire')
+      @RouteSansEcriture()
+      lire() {
+        return {};
+      }
+    }
+
+    @Module({ controllers: [ProbeRouteSansEcriture] })
+    class ProbeModule {
+      readonly probe = true;
+    }
+
+    await expect(demarrerModule(ProbeModule)).resolves.toBeUndefined();
+  });
+
+  it('@SansIfMatch sur POST dispense de @ExigeIfMatch mais exige @JournaliserEcriture', async () => {
+    @Controller('probe-conformite')
+    class ProbePostSansIfMatch {
+      @Post('creation')
+      @RequiertPermission('salarie.creer')
+      @JournaliserEcriture({ entite: 'Salarie', action: 'PROBE' })
+      @SansIfMatch()
+      creer() {
+        return {};
+      }
+    }
+
+    @Module({ controllers: [ProbePostSansIfMatch] })
+    class ProbeModule {
+      readonly probe = true;
+    }
+
+    await expect(demarrerModule(ProbeModule)).resolves.toBeUndefined();
+  });
+
+  it('@RouteSansEcriture n dispense pas de @RequiertPermission au demarrage', async () => {
+    @Controller('probe-conformite')
+    class ProbeSansPermission {
+      @Post('sans-permission')
+      @RouteSansEcriture()
+      ecrire() {
+        return {};
+      }
+    }
+
+    @Module({ controllers: [ProbeSansPermission] })
+    class ProbeModule {
+      readonly probe = true;
+    }
+
+    await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
+      (erreur: unknown) =>
+        erreur instanceof ErreurConformiteRoutes &&
+        erreur.message.includes('@RequiertPermission') &&
+        erreur.message.includes('POST /probe-conformite/sans-permission')
+    );
+  });
+
+  it('@SansIfMatch n dispense pas de @RequiertPermission au demarrage', async () => {
+    @Controller('probe-conformite')
+    class ProbeSansIfMatchSansPermission {
+      @Post('creation-sans-permission')
+      @SansIfMatch()
+      creer() {
+        return {};
+      }
+    }
+
+    @Module({ controllers: [ProbeSansIfMatchSansPermission] })
+    class ProbeModule {
+      readonly probe = true;
+    }
+
+    await expect(demarrerModule(ProbeModule)).rejects.toSatisfy(
+      (erreur: unknown) =>
+        erreur instanceof ErreurConformiteRoutes &&
+        erreur.message.includes('@RequiertPermission')
+    );
   });
 });

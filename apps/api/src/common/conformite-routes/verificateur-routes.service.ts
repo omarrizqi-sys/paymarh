@@ -5,6 +5,7 @@ import type { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
 import { CLE_JOURNALISER_ECRITURE } from '../audit/journaliser-ecriture.decorator.js';
 import { CLE_PERMISSION } from '../permissions/requiert-permission.decorator.js';
 import { CLE_EXIGE_IF_MATCH } from './exige-if-match.decorator.js';
+import { CLE_ROUTE_SANS_ECRITURE, CLE_SANS_IF_MATCH } from './route-sans-ecriture.decorator.js';
 import { EXEMPTIONS_ROUTES_MODULE_1 } from './exemptions-module-1.js';
 
 const METHODES_ECRITURE = new Set<number>([
@@ -128,11 +129,32 @@ export class VerificateurRoutesService implements OnApplicationBootstrap {
         continue;
       }
 
+      const sansEcriture = this.reflector.get(CLE_ROUTE_SANS_ECRITURE, handler) === true;
+      if (sansEcriture) {
+        continue;
+      }
+
       const journal = this.reflector.get(CLE_JOURNALISER_ECRITURE, handler);
       if (journal === undefined) {
         manquements.push(
           `Route ${route} (${metatype.name}.${nomMethode}) : etiquette manquante @JournaliserEcriture`
         );
+      }
+
+      const sansIfMatch = this.reflector.get(CLE_SANS_IF_MATCH, handler) === true;
+      if (
+        sansIfMatch &&
+        (methodeHttp === RequestMethod.PATCH ||
+          methodeHttp === RequestMethod.PUT ||
+          methodeHttp === RequestMethod.DELETE)
+      ) {
+        manquements.push(
+          `Route ${route} (${metatype.name}.${nomMethode}) : @SansIfMatch n est autorise que sur POST (creation)`
+        );
+      }
+
+      if (sansIfMatch) {
+        continue;
       }
 
       const ifMatch = this.reflector.get(CLE_EXIGE_IF_MATCH, handler);

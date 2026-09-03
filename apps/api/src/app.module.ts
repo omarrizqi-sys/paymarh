@@ -15,6 +15,7 @@ import { ReferentielsController } from './modules/companies/referentiels.control
 import { SocietesController } from './modules/companies/societes.controller.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { SalariesModule } from './modules/salaries/salaries.module.js';
+import { SalariesController } from './modules/salaries/salaries.controller.js';
 import { UsersController } from './modules/users/users.controller.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { ConformiteRoutesModule } from './common/conformite-routes/conformite-routes.module.js';
@@ -60,7 +61,8 @@ export class AppModule implements NestModule {
         EtablissementsController,
         ComptesBancairesController,
         ReferentielsController,
-        AdminSocietesController
+        AdminSocietesController,
+        SalariesController
       );
   }
 }

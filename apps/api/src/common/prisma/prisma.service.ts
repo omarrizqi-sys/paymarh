@@ -2,6 +2,8 @@ import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@ne
 import { ConfigService } from '@nestjs/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../generated/prisma/client.js';
+import { RequeteSansEcritureContextService } from '../conformite-routes/requete-sans-ecriture-context.service.js';
+import { creerExtensionGardeSansEcriture } from './prisma-sans-ecriture-extension.js';
 
 /**
  * Unique porte d entree vers PostgreSQL.
@@ -16,7 +18,10 @@ import { PrismaClient } from '../../generated/prisma/client.js';
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    sansEcriture: RequeteSansEcritureContextService
+  ) {
     const connectionString = configService.get<string>('DATABASE_URL');
 
     if (!connectionString) {
@@ -26,6 +31,8 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     }
 
     super({ adapter: new PrismaPg({ connectionString }) });
+    const etendu = this.$extends(creerExtensionGardeSansEcriture(sansEcriture));
+    return etendu as unknown as this;
   }
 
   async onModuleInit(): Promise<void> {

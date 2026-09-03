@@ -32,6 +32,7 @@ export default defineConfig({
           include: ['test/**/*.spec.ts'],
           globalSetup: ['./test/global-setup.ts'],
           globalTeardown: ['./test/global-teardown.ts'],
+          hookTimeout: 30_000,
         },
       },
       {

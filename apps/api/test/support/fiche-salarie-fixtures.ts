@@ -62,6 +62,9 @@ export async function creerSocieteTest(
 
 export interface DonneesSalarieMin {
   matricule: string;
+  nom?: string;
+  prenom?: string;
+  dateNaissance?: Date;
   numeroPiece?: string | null;
   numeroCnss?: string | null;
   codePostal?: string | null;
@@ -76,10 +79,10 @@ export async function creerSalarieMin(
     data: {
       companyId,
       matricule: donnees.matricule,
-      nom: 'Alami',
-      prenom: 'Said',
+      nom: donnees.nom ?? 'Alami',
+      prenom: donnees.prenom ?? 'Said',
       sexe: 'HOMME',
-      dateNaissance: new Date('1990-05-15'),
+      dateNaissance: donnees.dateNaissance ?? new Date('1990-05-15'),
       numeroPiece: donnees.numeroPiece ?? null,
       numeroCnss: donnees.numeroCnss ?? null,
       codePostal: donnees.codePostal ?? null,

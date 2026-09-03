@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { ConformiteRoutesModule } from '../conformite-routes/conformite-routes.module.js';
 import { PrismaService } from './prisma.service.js';
 
 /**
@@ -8,6 +9,7 @@ import { PrismaService } from './prisma.service.js';
  */
 @Global()
 @Module({
+  imports: [ConformiteRoutesModule],
   providers: [PrismaService],
   exports: [PrismaService],
 })
