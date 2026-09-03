@@ -1,6 +1,73 @@
 # Notes — base de connaissance fiche salarié
 
 > Accumulation en vue de l'article utilisateur. Point de vue utilisateur uniquement.
+>
+> **Article publié en brouillon :** `base-de-connaissance/fiche-salarie.md` (2026-09-03)
+> Couvre les règles de gestion — pas l'interface. Voir ci-dessous ce qui reste pour l'article écrans.
+
+---
+
+## Repris dans l'article (fiche-salarie.md)
+
+| Sujet des notes | Section de l'article |
+| --- | --- |
+| Structure identité / emplois, pas d'objet contrat, CDD → CDI | Comprendre la structure |
+| Plusieurs emplois en parallèle | Comprendre la structure + Deux emplois simultanés |
+| Matricule vide, saisie libre, refus « non disponible », reprise | Le matricule |
+| État actif/inactif déduit, date de sortie déduite | L'état du salarié |
+| Champs vides = héritage, valeur effective et origine, jours fériés, pas de « tout hériter » | L'héritage du paramétrage |
+| Correction vs historique, pas de date d'effet saisie, première version au mois de début d'emploi | L'historisation des modifications |
+| Suppression fiche / emploi / lignes, lignes inactives, personne à charge comptée au mois en cours | Les suppressions et les lignes inactives |
+| Alertes vs blocages (principe + exemples) | Alertes et blocages |
+| Droits rémunération : absent, pas masqué | Droits sur la rémunération |
+| Statuts propagés société, apparition seule, retrait | Statuts particuliers propagés |
+| Primes contractuelles sans montant | Comprendre la structure (mention brève) |
+| Répartition virement 100 % | Cas d'erreur |
+| Confirmation date de sortie (règle métier uniquement) | Les suppressions (renvoi article écrans) |
+
+---
+
+## En attente de l'article écrans (2.1.c)
+
+Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figurent pas dans l'article règles de gestion.
+
+### Navigation et interaction
+
+- **Modification simultanée d'une fiche** — rechargement obligatoire si la fiche a changé entre-temps (If-Match).
+- **Confirmation des opérations sensibles** — déroulé aperçu → jeton → confirmation ; jeton périmé si le dossier a changé entre l'aperçu et la confirmation.
+- **Alerte de réembauche** — ouverture de la fiche existante depuis l'alerte ; ce que l'utilisateur voit et décide.
+- **Date de sortie** — écran de confirmation lors de la première saisie d'une date de sortie (pas lors d'une modification ou d'une effacement ultérieur).
+
+### Affichage et libellés
+
+- Libellés exacts des boutons, rubriques et messages à l'écran.
+- Présentation de la valeur héritée (champ vide + valeur effective en grisé).
+- Affichage des alertes vs blocages (bandeau, liste, couleurs).
+- Masquage rémunération côté interface (adaptation des écrans).
+
+### Bulletin et mois en cours (complément)
+
+- **États d'un bulletin de paie** — non calculable, calculable, calculé, validé, édité (détail pour le gestionnaire).
+- **Mois en cours** — cascade complète (bulletins calculés, édités, emplois actifs, calendrier Maroc).
+- Conséquences visibles à l'écran quand on modifie une rubrique selon l'état du bulletin du mois.
+
+### Saisie et formulaires
+
+- Création d'une fiche pas à pas.
+- Création et modification d'un emploi pas à pas.
+- Saisie des personnes à charge, prêts, saisies, comptes bancaires.
+- Répartition du virement — interaction formulaire (un compte vs plusieurs).
+- Primes contractuelles — sélection du code et des mois.
+
+### Cas d'erreur écran par écran
+
+- Messages exacts et marche à suivre pour chaque écran (complément de la section Cas d'erreur de l'article règles).
+
+---
+
+## Notes brutes (archive)
+
+Les sections ci-dessous reprennent le contenu initial des cinq prompts de développement, conservé pour référence.
 
 ---
 
