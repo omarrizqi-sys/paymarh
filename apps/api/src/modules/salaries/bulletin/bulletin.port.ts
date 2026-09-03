@@ -18,7 +18,9 @@ export interface MoisBulletin {
 
 export const BULLETIN_PORT = Symbol('BULLETIN_PORT');
 
-/** Port vers le module bulletins (module 2). Une seule operation a ce stade. */
+/** Port vers le module bulletins (module 2). */
 export interface BulletinPort {
   listerBulletinsParSalarie(salarieId: string): Promise<readonly MoisBulletin[]>;
+  /** Bulletins rattaches a un emploi (suppression B5 uniquement). */
+  listerBulletinsParEmploi(emploiId: string): Promise<readonly MoisBulletin[]>;
 }

@@ -5,6 +5,7 @@ import {
   deduireTypePieceIdentite,
 } from '../deductions-salarie.js';
 import type { PrismaService } from '../../../common/prisma/prisma.service.js';
+import { trierEmploisPourFiche } from './emploi.mapper.js';
 
 type SalarieAvecRelations = Prisma.SalarieGetPayload<{
   include: {
@@ -21,7 +22,8 @@ function formaterDate(date: Date): string {
 export async function versFicheSalarie(
   prisma: PrismaService,
   salarie: SalarieAvecRelations,
-  moisEnCours: string
+  moisEnCours: string,
+  emplois: readonly unknown[] = []
 ) {
   const etat = await deduireEtatSalarie(prisma, salarie.id);
   const typePieceIdentite = deduireTypePieceIdentite(salarie.nationalite?.codeIso ?? null);
@@ -77,7 +79,9 @@ export async function versFicheSalarie(
     urgenceEmail: salarie.urgenceEmail,
     dateEntree: formaterDate(salarie.dateEntree),
     dateAnciennete: formaterDate(salarie.dateAnciennete),
-    emplois: [] as readonly unknown[],
+    emplois: trierEmploisPourFiche(
+      emplois as Parameters<typeof trierEmploisPourFiche>[0]
+    ),
     personnesACharge: [] as readonly unknown[],
     comptesBancaires: [] as readonly unknown[],
     prets: [] as readonly unknown[],

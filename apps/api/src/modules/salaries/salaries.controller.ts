@@ -31,6 +31,8 @@ import {
   ModifierIdentiteSalarieDto,
   VerifierSalarieDto,
 } from './dto/salarie.dto.js';
+import { CreerEmploiDto } from './dto/emploi.dto.js';
+import { EmploisService } from './emplois.service.js';
 import { SalariesService } from './salaries.service.js';
 import {
   EN_TETE_IF_MATCH,
@@ -42,6 +44,7 @@ import {
 export class SalariesController {
   constructor(
     private readonly salaries: SalariesService,
+    private readonly emplois: EmploisService,
     private readonly verrouillage: VerrouillageOptimisteService
   ) {}
 
@@ -64,6 +67,18 @@ export class SalariesController {
   @SansIfMatch()
   creer(@Body() dto: CreerSalarieDto) {
     return this.salaries.creer(dto);
+  }
+
+  @Post(':salarieId/emplois')
+  @RequiertPermission('emploi.creer')
+  @PerimetreSalarie('salarieId')
+  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_EMPLOI' })
+  @SansIfMatch()
+  creerEmploi(
+    @Param('salarieId', ParseUUIDPipe) salarieId: string,
+    @Body() dto: CreerEmploiDto
+  ) {
+    return this.emplois.creer(salarieId, dto);
   }
 
   @Get(':id/impact-suppression')

@@ -61,3 +61,19 @@ Lors de la création ou de la vérification d'une fiche, le logiciel peut signal
 ## Suppression d'une fiche salarié
 
 Une fiche peut être supprimée tant qu'**aucun bulletin de paie** n'a été produit pour ce salarié (sur tous ses emplois). Dès qu'un bulletin existe, la suppression est refusée : la fiche reste en place. Cette règle protège l'historique de paie déjà calculé ou validé.
+
+---
+
+## Emplois et historique
+
+Un salarié peut cumuler **plusieurs emplois** en parallèle (y compris dans des établissements différents). Chaque emploi a son propre contrat, sa rémunération et son affectation.
+
+Quand vous modifiez une rubrique (contrat, rémunération, temps de travail), le logiciel enregistre la nouvelle valeur. Selon l'état de la paie du mois, il **corrige la ligne en cours** ou **conserve l'ancienne valeur dans l'historique** et ouvre une nouvelle ligne pour le mois de paie courant. Vous n'avez pas à choisir : le serveur décide seul. Vous ne saisissez jamais de « date d'effet ».
+
+**Transformer un CDD en CDI** sur le même poste, c'est modifier le type de contrat **du même emploi** — le logiciel ne crée pas un second emploi.
+
+**Date de sortie** : lorsque vous renseignez une date de sortie là où il n'y en avait pas, une **confirmation explicite** est demandée (comme pour une suppression sensible). Changer le poste sans toucher à la sortie ne demande rien. Modifier ou effacer une date de sortie déjà enregistrée ne redemande pas de confirmation.
+
+La **suppression d'un emploi** n'est possible que si aucun bulletin n'a été produit **pour cet emploi** — même si un autre emploi du même salarié a des bulletins.
+
+Sans droit de voir la rémunération, les montants et modes de paiement **n'apparaissent pas** — y compris dans l'historique des versions.

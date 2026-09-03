@@ -15,7 +15,7 @@ Les réponses de lecture ont la forme `{ donnees }`. Les réponses d'écriture :
 | Méthode | Route | Permission | Effet |
 | --- | --- | --- | --- |
 | GET | `/salaries` | `salarie.lire` | Liste paginée par curseur (société courante). Filtres : état, établissement, recherche nom/prénom/matricule. |
-| GET | `/salaries/:id` | `salarie.lire` | Fiche complète (niveau salarié) + valeurs déduites + collections vides |
+| GET | `/salaries/:id` | `salarie.lire` | Fiche complète (niveau salarié) + emplois + valeurs déduites + collections vides |
 | POST | `/salaries` | `salarie.creer` | Crée une fiche sans emploi. Matricule auto si vide. |
 | POST | `/salaries/verifier` | `salarie.lire` | Pré-contrôle : alertes et blocages sans écriture |
 | PATCH | `/salaries/:id/identite` | `salarie.modifier` | Rubrique identité |
@@ -50,4 +50,4 @@ Les écritures (sauf création et pré-contrôle) exigent l'en-tête **If-Match*
 
 ## Hors périmètre de ce document
 
-Emplois, tableaux répétables, blocs historisés : prompt 3.
+Tableaux répétables et blocs historisés portés par le salarié : prompt suivant. Emplois : voir [03-api-emplois.md](./03-api-emplois.md).

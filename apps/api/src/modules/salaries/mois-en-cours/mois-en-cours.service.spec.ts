@@ -18,6 +18,7 @@ function creerService(
 ): MoisEnCoursService {
   const bulletinsPort: BulletinPort = {
     listerBulletinsParSalarie: vi.fn().mockResolvedValue(bulletins),
+    listerBulletinsParEmploi: vi.fn().mockResolvedValue([]),
   };
 
   const prisma = {

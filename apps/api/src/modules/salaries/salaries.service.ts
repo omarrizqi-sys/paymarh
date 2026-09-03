@@ -15,6 +15,7 @@ import {
   creerSalarieMatriculeAuto,
 } from './compteurs-salarie.js';
 import { deduireEtatSalarie, emploiEstOuvert } from './deductions-salarie.js';
+import { EmploisService } from './emplois.service.js';
 import type {
   CreerSalarieDto,
   ListerSalariesQueryDto,
@@ -102,15 +103,25 @@ export class SalariesService {
     private readonly tenantContext: TenantContextService,
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
+    private readonly emplois: EmploisService,
     @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort
   ) {}
 
   async lire(id: string) {
     const salarie = await this.trouverSalarieSociete(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(id);
+    const emplois = await this.emplois.listerEmploisPourFicheSalarie(id, moisEnCours);
     return {
-      donnees: await versFicheSalarie(this.prisma, salarie, moisEnCours),
+      donnees: await versFicheSalarie(this.prisma, salarie, moisEnCours, emplois),
     };
+  }
+
+  private async versFicheComplete(
+    salarie: Awaited<ReturnType<typeof this.trouverSalarieSociete>>
+  ) {
+    const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarie.id);
+    const emplois = await this.emplois.listerEmploisPourFicheSalarie(salarie.id, moisEnCours);
+    return versFicheSalarie(this.prisma, salarie, moisEnCours, emplois);
   }
 
   async lister(query: ListerSalariesQueryDto) {
@@ -295,8 +306,7 @@ export class SalariesService {
     }
 
     const complet = await this.chargerFiche(salarie.id);
-    const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarie.id);
-    return okEcriture(await versFicheSalarie(this.prisma, complet, moisEnCours), alertes);
+    return okEcriture(await this.versFicheComplete(complet), alertes);
   }
 
   async verifier(dto: VerifierSalarieDto) {
@@ -622,8 +632,7 @@ export class SalariesService {
     }
 
     const complet = await this.chargerFiche(id);
-    const moisEnCours = await this.moisEnCours.calculerPourSalarie(id);
-    return okEcriture(await versFicheSalarie(this.prisma, complet, moisEnCours), alertes);
+    return okEcriture(await this.versFicheComplete(complet), alertes);
   }
 
   private async controlerBlocages(params: {

@@ -52,6 +52,30 @@ export const CODES_REPONSE = {
     code: 'SUPPRESSION_INTERDITE',
     message: 'Cette fiche ne peut pas etre supprimee.',
   },
+  DATE_FIN_ANTERIEURE_DEBUT: {
+    code: 'DATE_FIN_ANTERIEURE_DEBUT',
+    message: 'La date de fin ne peut pas etre anterieure a la date de debut.',
+  },
+  DATE_SORTIE_HORS_INTERVALLE: {
+    code: 'DATE_SORTIE_HORS_INTERVALLE',
+    message: 'La date de sortie est hors de l intervalle de l emploi.',
+  },
+  FIN_ESSAI_HORS_INTERVALLE: {
+    code: 'FIN_ESSAI_HORS_INTERVALLE',
+    message: 'La fin de periode d essai est hors de l intervalle de l emploi.',
+  },
+  RENOUVELLEMENT_ESSAI_ANTERIEUR: {
+    code: 'RENOUVELLEMENT_ESSAI_ANTERIEUR',
+    message: 'Le renouvellement de l essai est anterieur a la fin de la periode d essai initiale.',
+  },
+  SALAIRE_INFERIEUR_SMIG: {
+    code: 'SALAIRE_INFERIEUR_SMIG',
+    message: 'Le salaire est inferieur au SMIG en vigueur.',
+  },
+  DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE: {
+    code: 'DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE',
+    message: 'La somme des durees contractuelles des emplois actifs depasse le seuil legal.',
+  },
 } as const;
 
 export type CodeReponse = keyof typeof CODES_REPONSE;

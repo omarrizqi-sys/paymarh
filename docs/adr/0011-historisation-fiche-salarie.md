@@ -62,6 +62,19 @@ Les blocs portés par le salarié suivent la règle générale sans exception.
 - La résolution d'une version applicable reprend la fonction `resoudreLigneHistorique` (ADR 0006).
 - Les lignes temporelles se résolvent via `moisEffetDebut` / `moisEffetFin`.
 
+### Versionnage côté serveur (étape 2.1.b-3)
+
+Le client envoie une modification ordinaire sur une **rubrique** ; il ne crée jamais de version ni ne fournit de date d'effet. Le serveur décide seul, pour le bloc concerné :
+
+1. **Sans bulletin** (état ≥ calculé) au mois en cours du salarié → **écraser** la version courante résolue à ce mois.
+2. **Avec bulletin** au mois en cours → **versionner** : nouvelle ligne au mois en cours, sauf si une version existe déjà à ce mois ( alors écrasement de cette ligne ).
+
+Le mois en cours est toujours celui du **salarié** (tous emplois confondus), via `MoisEnCoursService`. La première version d'un bloc porté par un emploi prend le mois de la **date de début** de cet emploi (D7, E11).
+
+Les bulletins lus pour cette décision passent par `BulletinPort.listerBulletinsParSalarie`. `listerBulletinsParEmploi` sert uniquement à la suppression (B5), pas à l'historisation.
+
+Pourquoi le client n'écrit jamais une version : le front ne doit pas savoir ce qui est historisé (P3) ; une rubrique PATCH = un bloc = un périmètre net pour la décision écraser/versionner (ADR 0016).
+
 ---
 
 ## Alternatives rejetées
