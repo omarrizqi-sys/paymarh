@@ -21,6 +21,15 @@ export const PERMISSIONS = [
   'compte-bancaire.supprimer',
   'referentiel.lire',
   'referentiel.gerer',
+  'salarie.lire',
+  'salarie.creer',
+  'salarie.modifier',
+  'salarie.supprimer',
+  'emploi.creer',
+  'emploi.modifier',
+  'emploi.supprimer',
+  'salarie.remuneration.lire',
+  'salarie.remuneration.ecrire',
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];

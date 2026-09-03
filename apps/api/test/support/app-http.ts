@@ -2,9 +2,12 @@ import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { AddressInfo } from 'node:net';
 import { AppModule } from '../../src/app.module.js';
+import { SocleTestModule } from '../../src/modules/salaries/test/socle-test.module.js';
 
 export async function creerAppHttp(): Promise<INestApplication> {
-  const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule, SocleTestModule],
+  }).compile();
   const app = moduleRef.createNestApplication();
   app.useGlobalPipes(
     new ValidationPipe({

@@ -115,8 +115,9 @@ Dans `.env` :
 | --- | --- | --- |
 | API (curl, tests HTTP) | En-tête `x-paymarh-user-id` | `apps/api/src/common/tenancy/tenant-context.middleware.ts` |
 | Back-office (navigateur) | Variable `NEXT_PUBLIC_PAYMARH_USER_ID` → même en-tête | `apps/back-office/src/lib/api/client.ts` |
+| API (tests droits salarié) | En-tête `x-paymarh-permissions-refusees` (liste de permissions à refuser, ignoré en production) | `apps/api/src/common/permissions/permissions-refusees.header.ts` |
 
-> **Béquilles de développement — pas une authentification.** À remplacer par Auth.js. **Bloquent toute mise en production tant qu'elles existent.**
+> **Béquilles de développement — pas une authentification.** À remplacer par Auth.js. **Bloquent toute mise en production tant qu'elles existent** (sauf `x-paymarh-permissions-refusees`, sans effet en production).
 
 ---
 

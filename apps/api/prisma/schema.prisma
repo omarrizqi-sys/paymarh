@@ -208,8 +208,10 @@ model User {
 
 /// Journal d audit.
 model AuditLog {
-  id     String @id @default(uuid()) @db.Uuid
-  userId String @db.Uuid
+  id        String  @id @default(uuid()) @db.Uuid
+  userId    String  @db.Uuid
+  accountId String? @db.Uuid
+  companyId String? @db.Uuid
 
   /// Verbe de l action, en majuscules (ex. "READ_ACROSS_ACCOUNTS").
   action String
@@ -220,11 +222,16 @@ model AuditLog {
   /// Identifiant de la ressource visee, nul si l action est globale.
   targetId String?
 
+  /// Ecart avant/apres sous forme de structure JSON listant les champs modifies.
+  ecart Json?
+
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Restrict)
 
   @@index([userId])
+  @@index([accountId])
+  @@index([companyId])
   @@index([createdAt])
 }
 
@@ -608,6 +615,8 @@ model CompteurNumeroOrdreEmploi {
 model Salarie {
   id        String   @id @default(uuid()) @db.Uuid
   companyId String   @db.Uuid
+  /// Verrouillage optimiste — incremente a chaque ecriture sur le salarie ou ses lignes portees.
+  version   Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -672,6 +681,8 @@ model Emploi {
   salarieId   String   @db.Uuid
   /// Ordre technique de calcul ; jamais reutilise apres suppression.
   numeroOrdre Int
+  /// Verrouillage optimiste — incremente a chaque ecriture sur l emploi ou ses lignes portees.
+  version     Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

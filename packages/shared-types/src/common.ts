@@ -60,3 +60,20 @@ export interface ApiResponse<T> {
   readonly data: T;
   readonly warnings: readonly ApiWarning[];
 }
+
+/**
+ * Alerte non bloquante dans une reponse d ecriture fiche salarie.
+ */
+export interface AlerteApi {
+  readonly code: string;
+  readonly champ?: string;
+  readonly message: string;
+}
+
+/**
+ * Enveloppe standard des reponses d ecriture fiche salarie (etape 2.1.b).
+ */
+export interface ReponseEcriture<T> {
+  readonly donnees: T;
+  readonly alertes: readonly AlerteApi[];
+}

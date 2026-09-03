@@ -11,6 +11,15 @@ export async function nettoyerCompteTest(prisma: PrismaClient, prefixe: string):
   });
 
   for (const compte of comptes) {
+    const utilisateurs = await prisma.user.findMany({
+      where: { accountId: compte.id },
+      select: { id: true },
+    });
+    const utilisateurIds = utilisateurs.map((u) => u.id);
+    if (utilisateurIds.length > 0) {
+      await prisma.auditLog.deleteMany({ where: { userId: { in: utilisateurIds } } });
+    }
+
     const societes = await prisma.company.findMany({
       where: { accountId: compte.id },
       select: { id: true },

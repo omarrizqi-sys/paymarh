@@ -14,8 +14,12 @@ import { EtablissementsController } from './modules/companies/etablissements.con
 import { ReferentielsController } from './modules/companies/referentiels.controller.js';
 import { SocietesController } from './modules/companies/societes.controller.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { SalariesModule } from './modules/salaries/salaries.module.js';
 import { UsersController } from './modules/users/users.controller.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { ConformiteRoutesModule } from './common/conformite-routes/conformite-routes.module.js';
+import { PermissionsModule } from './common/permissions/permissions.module.js';
+import { RemunerationModule } from './common/remuneration/remuneration.module.js';
 
 /**
  * Module racine de l API.
@@ -36,8 +40,12 @@ import { UsersModule } from './modules/users/users.module.js';
     TenancyModule,
     AuditModule,
     HealthModule,
+    ConformiteRoutesModule,
+    PermissionsModule,
+    RemunerationModule,
     AccountsModule,
     CompaniesModule,
+    SalariesModule,
     UsersModule,
   ],
 })

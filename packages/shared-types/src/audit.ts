@@ -11,6 +11,8 @@ import type { IsoDateTime, Uuid } from './common';
 export interface AuditLog {
   readonly id: Uuid;
   readonly userId: Uuid;
+  readonly accountId: Uuid | null;
+  readonly companyId: Uuid | null;
 
   /** Verbe de l action, en majuscules (ex. "READ_ACROSS_ACCOUNTS"). */
   readonly action: string;
@@ -21,5 +23,19 @@ export interface AuditLog {
   /** Identifiant de la ressource visee, ou null si l action est globale. */
   readonly targetId: string | null;
 
+  /** Ecart avant/apres : champs modifies avec ancienne et nouvelle valeur. */
+  readonly ecart: AuditEcart | null;
+
   readonly createdAt: IsoDateTime;
+}
+
+/** Ecart journalise entre l etat avant et apres une ecriture. */
+export interface AuditEcart {
+  readonly champs: readonly AuditChampModifie[];
+}
+
+export interface AuditChampModifie {
+  readonly nom: string;
+  readonly ancienne: unknown;
+  readonly nouvelle: unknown;
 }

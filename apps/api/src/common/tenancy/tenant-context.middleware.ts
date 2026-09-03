@@ -20,9 +20,13 @@ import { TenantContextService } from './tenant-context.service.js';
  * Cote back-office, la variable NEXT_PUBLIC_PAYMARH_USER_ID alimente le meme
  * en-tete (apps/back-office/src/lib/api/client.ts) — meme béquille, memes
  * contraintes.
+ *
+ * En developpement, l en-tete x-paymarh-permissions-refusees permet de simuler
+ * l absence de permissions nommees (ignore en production). Voir ADR 0007 amendement.
  */
 export const HEADER_USER_ID = 'x-paymarh-user-id';
 export const HEADER_COMPANY_ID = 'x-paymarh-company-id';
+export { HEADER_PERMISSIONS_REFUSEES } from '../permissions/permissions-refusees.header.js';
 
 /** Un UUID et rien d autre : evite d envoyer une chaine arbitraire a la base. */
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

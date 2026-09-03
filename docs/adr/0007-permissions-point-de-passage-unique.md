@@ -32,6 +32,16 @@ Si chaque service teste `role === 'MANAGER'`, le jour du vrai moteur de droits i
 
 ---
 
+## Amendement (étape 2.1.b — fiche salarié)
+
+1. **Garde NestJS unique** — `@RequiertPermission('...')` + `PermissionGuard` : seul point de passage pour les endpoints salarié/emploi. Le module 1 conserve provisoirement `peutFaire` / `assertPeutFaire`.
+2. **Permissions nommées** — `salarie.lire`, `salarie.creer`, `salarie.modifier`, `salarie.supprimer`, `emploi.creer`, `emploi.modifier`, `emploi.supprimer`, `salarie.remuneration.lire`, `salarie.remuneration.ecrire`.
+3. **Masquage par absence de champ** — sans `salarie.remuneration.lire`, les rubriques rémunération / paiement / primes / avantages / comptes bancaires sont **absentes** de la réponse (jamais à `null`).
+4. **403 vs 404** — ressource d’un autre compte → **404** (message neutre) ; ressource du bon compte, permission manquante → **403**.
+5. **Béquille de développement** — en-tête `x-paymarh-permissions-refusees` (liste de permissions à refuser, ignoré en production).
+
+---
+
 ## Alternatives rejetées
 
 | Alternative | Motif |

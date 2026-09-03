@@ -94,7 +94,8 @@ export async function creerEmploiOuvert(
   salarieId: string,
   etablissementId: string,
   numeroOrdre: number,
-  moisEffet = '2025-01'
+  moisEffet = '2025-01',
+  dateDebut = new Date('2025-01-01')
 ) {
   const emploi = await prisma.emploi.create({
     data: { salarieId, numeroOrdre },
@@ -105,7 +106,7 @@ export async function creerEmploiOuvert(
       emploiId: emploi.id,
       moisEffet,
       libellePoste: 'Comptable',
-      dateDebut: new Date('2025-01-01'),
+      dateDebut,
       typeContratCode: 'CDI',
     },
   });

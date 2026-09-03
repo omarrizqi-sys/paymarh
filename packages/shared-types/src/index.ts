@@ -12,6 +12,8 @@ export type {
   ListResponse,
   ApiWarning,
   ApiResponse,
+  AlerteApi,
+  ReponseEcriture,
 } from './common';
 export type { Role } from './role';
 export type { Account, AccountType } from './account';
@@ -27,7 +29,7 @@ export type {
 } from './impact-suppression';
 export type { User } from './user';
 export type { TenantContext, PlatformAccessReason } from './tenancy';
-export type { AuditLog } from './audit';
+export type { AuditLog, AuditEcart, AuditChampModifie } from './audit';
 export type { HealthResponse } from './health';
 export type { Permission } from './permission';
 export { PERMISSIONS } from './permission';
