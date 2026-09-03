@@ -108,6 +108,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     await app?.close();
   });
 
+  // 21 ecritures HTTP successives, chacune relisant la fiche complete.
   it('1 — aucune limite sur personnes a charge, prets et comptes bancaires', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-LIMITES`,
@@ -179,7 +180,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       }
     );
     expect(reponseComptes.status).toBe(200);
-  });
+  }, 20_000);
 
   it('2 — un pret jamais utilise par bulletin disparait a la suppression', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {

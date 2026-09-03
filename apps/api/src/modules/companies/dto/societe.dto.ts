@@ -10,6 +10,7 @@ import {
   IsUUID,
   Max,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 
@@ -264,14 +265,17 @@ export class ParametrageSocieteDto {
   moisClotureConges!: number;
 
   @IsOptional()
+  @ValidateIf((_, valeur) => valeur !== null)
   @IsUUID()
   typeExonerationId?: string | null;
 
   @IsOptional()
+  @ValidateIf((_, valeur) => valeur !== null)
   @IsString()
   exonerationDateDebut?: string | null;
 
   @IsOptional()
+  @ValidateIf((_, valeur) => valeur !== null)
   @IsString()
   exonerationDateFin?: string | null;
 }

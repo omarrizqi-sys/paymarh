@@ -70,6 +70,7 @@ Le client ne fournit jamais `moisEffet`. Le serveur décide écraser vs versionn
 | `RENOUVELLEMENT_ESSAI_ANTERIEUR` | Alerte | C6 |
 | `SALAIRE_INFERIEUR_SMIG` | Alerte | C19 — si port référentiel renvoie un SMIG |
 | `DUREE_CONTRACTUELLE_TOTALE_EXCESSIVE` | Alerte | C20 — si port référentiel renvoie le seuil |
+| `REPOS_HEBDOMADAIRE_JOUR_TRAVAILLE` | Alerte | C24 — repos sur un jour travaillé de la grille résolue |
 | `CHAMP_INTERDIT` | Blocage 400 | `moisEffet` fourni par le client |
 | `CONFIRMATION_REQUISE` | Blocage 409 | Apparition d'une date de sortie (D9) |
 | `CONFIRMATION_OBSOLETE` | Blocage 409 | Jeton périmé |
@@ -94,8 +95,8 @@ Clés `remuneration` et `paiement` (emploi et versions) soumises à `salarie.rem
 
 ---
 
-## Laissé de côté (prompt 4)
+## Laissé de côté (prompts suivants)
 
 | Élément | Raison |
 | --- | --- |
-| **C24** — repos hebdomadaire vs grille horaire | Dépend du service de résolution de l'héritage (grille horaire). Une résolution partielle serait un contrôle bâtard ; un contrôle qui ne se déclenche jamais est pire qu'un contrôle absent. Report au prompt 4 avec son test. |
+| Alimentation du moteur de paie | Moteur vide en phase 2 (ADR 0017) |

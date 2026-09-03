@@ -17,6 +17,7 @@ import {
   PAYS,
   SITUATIONS_FAMILIALES,
   STATUTS_PARTICULIERS,
+  STATUT_TECHNIQUE_TAHFIZ,
   TYPES_CONTRAT,
 } from './reference-data-fiche-salarie.js';
 
@@ -157,6 +158,12 @@ async function seedReferences(): Promise<{
       create: { code: statut.code, libelle: statut.libelle },
     });
   }
+
+  await prisma.statutParticulier.upsert({
+    where: { code: STATUT_TECHNIQUE_TAHFIZ.code },
+    update: { libelle: STATUT_TECHNIQUE_TAHFIZ.libelle },
+    create: { code: STATUT_TECHNIQUE_TAHFIZ.code, libelle: STATUT_TECHNIQUE_TAHFIZ.libelle },
+  });
 
   for (const situation of SITUATIONS_FAMILIALES) {
     await prisma.situationFamiliale.upsert({

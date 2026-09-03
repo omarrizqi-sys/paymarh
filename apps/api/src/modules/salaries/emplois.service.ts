@@ -15,6 +15,7 @@ import { accountScope, companyScope } from '../../common/tenancy/tenant-scope.js
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
 import { incrementerCompteurNumeroOrdre } from './compteurs-salarie.js';
 import { versDate } from './deductions-emploi.js';
+import { emploiEstOuvert } from './deductions-salarie.js';
 import type {
   AffectationEmploiSaisieDto,
   ContratEmploiSaisieDto,
@@ -24,7 +25,10 @@ import type {
   ModifierRemunerationEmploiDto,
   RemunerationEmploiSaisieDto,
 } from './dto/emploi.dto.js';
+import { collecterAlerteReposVsGrille } from './heritage/alerte-c24.js';
+import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import { HistorisationEmploiService } from './historisation-emploi.service.js';
+import { PropagationTahfizService } from './tahfiz/propagation-tahfiz.service.js';
 import {
   INCLUDE_EMPLOI_COMPLET,
   trierEmploisPourFiche,
@@ -78,6 +82,8 @@ export class EmploisService {
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
     private readonly historisation: HistorisationEmploiService,
+    private readonly heritage: ResolutionHeritageService,
+    private readonly tahfiz: PropagationTahfizService,
     @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort,
     @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort
   ) {}
@@ -97,6 +103,8 @@ export class EmploisService {
     }
 
     const contratCtx = this.contexteContratDepuisSaisie(dto.contrat, dateDebut, dateFin);
+    const moisEffet = moisDepuisDate(dateDebut);
+    const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const alertes: AlerteApi[] = [
       ...collecterAlertesContrat(contratCtx),
       ...(await this.alertesRemuneration(salarieId, dto.remuneration, null)),
@@ -106,9 +114,42 @@ export class EmploisService {
         undefined
       )),
     ];
+    const alerteC24 = await this.alerteC24DepuisSaisie(
+      {
+        remunerationVersions: [
+          {
+            moisEffet,
+            teletravailIndemniteVersee: dto.remuneration.teletravailIndemniteVersee ?? null,
+            teletravailMontant:
+              dto.remuneration.teletravailMontant !== null &&
+              dto.remuneration.teletravailMontant !== undefined
+                ? new Decimal(dto.remuneration.teletravailMontant)
+                : null,
+          },
+        ],
+        affectationVersions: [
+          {
+            moisEffet,
+            etablissementId: dto.affectation.etablissementId,
+            dureeContractuelle:
+              dto.affectation.dureeContractuelle !== null &&
+              dto.affectation.dureeContractuelle !== undefined
+                ? new Decimal(dto.affectation.dureeContractuelle)
+                : null,
+            reposHebdomadaire: dto.affectation.reposHebdomadaire ?? null,
+            teletravailAutorise: dto.affectation.teletravailAutorise ?? null,
+            repartitionHoraireRef: dto.affectation.repartitionHoraireRef ?? null,
+            suivreJoursFeriesEtablissement: dto.affectation.suivreJoursFeriesEtablissement ?? true,
+          },
+        ],
+        joursFeriesTravailles: [],
+      },
+      moisEnCours
+    );
+    if (alerteC24 !== null) alertes.push(alerteC24);
 
-    const moisEffet = moisDepuisDate(dateDebut);
     const montant = new Decimal(dto.remuneration.montant);
+    const dateSortieInitiale = parseDateNullable(dto.contrat.dateSortie ?? undefined) ?? null;
 
     const emploi = await this.prisma.$transaction(async (tx) => {
       const numeroOrdre = await incrementerCompteurNumeroOrdre(tx, salarieId);
@@ -126,18 +167,24 @@ export class EmploisService {
         data: this.donneesAffectation(dto.affectation, moisEffet, cree.id),
       });
 
+      await this.tahfiz.poserSurNouvelEmploi(
+        tx,
+        salarie.companyId,
+        cree.id,
+        emploiEstOuvert(dateSortieInitiale)
+      );
+
       return cree;
     });
 
     const complet = await this.chargerEmploi(emploi.id);
-    const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
-    return okEcriture(versEmploiComplet(complet, moisEnCours), alertes);
+    return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
 
   async lire(id: string) {
     const emploi = await this.trouverEmploi(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
-    return { donnees: versEmploiComplet(emploi, moisEnCours) };
+    return { donnees: await this.avecResolutions(emploi, moisEnCours) };
   }
 
   async listerVersionsContrat(id: string) {
@@ -265,7 +312,7 @@ export class EmploisService {
     await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
 
     const complet = await this.chargerEmploi(id);
-    return okEcriture(versEmploiComplet(complet, moisEnCours), alertes);
+    return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
 
   async modifierRemuneration(
@@ -337,7 +384,7 @@ export class EmploisService {
     await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
 
     const complet = await this.chargerEmploi(id);
-    return okEcriture(versEmploiComplet(complet, moisEnCours), alertes);
+    return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
 
   async modifierAffectation(
@@ -396,6 +443,18 @@ export class EmploisService {
           : courante.teletravailAutorise,
     };
 
+    const alerteC24 = await this.alerteC24DepuisSaisie(
+      {
+        remunerationVersions: emploi.remunerationVersions,
+        affectationVersions: emploi.affectationVersions.map((v) =>
+          v.id === courante.id ? { ...v, ...fusion } : v
+        ),
+        joursFeriesTravailles: emploi.joursFeriesTravailles,
+      },
+      moisEnCours
+    );
+    if (alerteC24 !== null) alertes.push(alerteC24);
+
     await this.prisma.$transaction(async (tx) => {
       if (decision.mode === 'ecraser' && decision.versionId !== undefined) {
         await tx.emploiAffectationVersion.update({
@@ -412,7 +471,7 @@ export class EmploisService {
     await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
 
     const complet = await this.chargerEmploi(id);
-    return okEcriture(versEmploiComplet(complet, moisEnCours), alertes);
+    return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
 
   async supprimer(id: string, versionAttendue: number) {
@@ -447,7 +506,32 @@ export class EmploisService {
       where: { salarieId },
       include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });
-    return trierEmploisPourFiche(emplois.map((e) => versEmploiComplet(e, moisEnCours)));
+    const resolutions = await this.heritage.resoudrePourEmplois(emplois, moisEnCours);
+    return trierEmploisPourFiche(
+      emplois.map((e, index) => ({
+        ...versEmploiComplet(e, moisEnCours),
+        resolutions: resolutions[index],
+      }))
+    );
+  }
+
+  private async avecResolutions(
+    emploi: Awaited<ReturnType<typeof this.chargerEmploi>>,
+    moisEnCours: string
+  ) {
+    const resolutions = await this.heritage.resoudrePourEmploi(emploi, moisEnCours);
+    return { ...versEmploiComplet(emploi, moisEnCours), resolutions };
+  }
+
+  private async alerteC24DepuisSaisie(
+    emploi: Parameters<ResolutionHeritageService['resoudrePourEmploi']>[0],
+    mois: string
+  ): Promise<AlerteApi | null> {
+    const resolutions = await this.heritage.resoudrePourEmploi(emploi, mois);
+    return collecterAlerteReposVsGrille(
+      resolutions.reposHebdomadaire?.valeur ?? null,
+      resolutions.grilleHoraire?.valeur ?? null
+    );
   }
 
   private exigerConfirmationSortie(

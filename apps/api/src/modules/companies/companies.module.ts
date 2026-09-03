@@ -9,8 +9,10 @@ import { ReferentielsController } from './referentiels.controller.js';
 import { ReferentielsService } from './referentiels.service.js';
 import { SocietesController } from './societes.controller.js';
 import { SocietesService } from './societes.service.js';
+import { SalariesModule } from '../salaries/salaries.module.js';
 
 @Module({
+  imports: [SalariesModule],
   controllers: [
     SocietesController,
     EtablissementsController,

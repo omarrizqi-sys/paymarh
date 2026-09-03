@@ -23,4 +23,11 @@ export interface BulletinPort {
   listerBulletinsParSalarie(salarieId: string): Promise<readonly MoisBulletin[]>;
   /** Bulletins rattaches a un emploi (suppression B5 uniquement). */
   listerBulletinsParEmploi(emploiId: string): Promise<readonly MoisBulletin[]>;
+  /**
+   * Bulletins de plusieurs salaries en un seul appel.
+   * Une cle absente signifie l absence de bulletin pour ce salarie.
+   */
+  listerBulletinsParSalaries(
+    salarieIds: readonly string[]
+  ): Promise<Readonly<Record<string, readonly MoisBulletin[]>>>;
 }

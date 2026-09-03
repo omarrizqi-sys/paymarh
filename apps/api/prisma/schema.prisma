@@ -559,7 +559,8 @@ model MotifSortie {
   contrats EmploiContratVersion[]
 }
 
-/// Statut particulier (liste ouverte). TAHFIZ n y figure pas (propagation societe).
+/// Statut particulier (liste ouverte). TAHFIZ n y figure pas comme statut
+/// saisissable : un code technique sert uniquement aux lignes propagees.
 model StatutParticulier {
   id      String @id @default(uuid()) @db.Uuid
   code    String @unique

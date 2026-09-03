@@ -14,4 +14,10 @@ export class BulletinPortProvisoire implements BulletinPort {
   async listerBulletinsParEmploi(_emploiId: string): Promise<readonly MoisBulletin[]> {
     return [];
   }
+
+  async listerBulletinsParSalaries(
+    _salarieIds: readonly string[]
+  ): Promise<Readonly<Record<string, readonly MoisBulletin[]>>> {
+    return {};
+  }
 }

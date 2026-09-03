@@ -231,6 +231,12 @@ export const STATUTS_PARTICULIERS = [
   { code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
 ] as const;
 
+/** Code technique des lignes TAHFIZ propagees — jamais propose a la saisie. */
+export const STATUT_TECHNIQUE_TAHFIZ = {
+  code: 'TAHFIZ',
+  libelle: 'TAHFIZ — exonération société',
+} as const;
+
 export const SITUATIONS_FAMILIALES = [
   { code: 'CELIBATAIRE', libelleMasculin: 'Célibataire', libelleFeminin: 'Célibataire' },
   { code: 'MARIE', libelleMasculin: 'Marié', libelleFeminin: 'Mariée' },

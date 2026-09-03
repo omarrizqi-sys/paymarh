@@ -57,6 +57,16 @@ export function collecterAlerteStatutHorsEmploi(
   return null;
 }
 
+export function refuserStatutNonSaisissable(statutCode: string | undefined): void {
+  if (statutCode === 'TAHFIZ') {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.CHAMP_INTERDIT.code,
+      CODES_REPONSE.CHAMP_INTERDIT.message,
+      'statutCode'
+    );
+  }
+}
+
 export function refuserModificationStatutPropage(origine: string): void {
   if (origine === 'PROPAGE_SOCIETE') {
     throw new ValidationBloquanteTableauEmploiError(

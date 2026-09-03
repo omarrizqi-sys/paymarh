@@ -209,4 +209,5 @@ export const INCLUDE_EMPLOI_COMPLET = {
   contratVersions: true,
   remunerationVersions: true,
   affectationVersions: true,
+  joursFeriesTravailles: true,
 } as const;

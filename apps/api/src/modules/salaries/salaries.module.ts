@@ -10,10 +10,12 @@ import { HistorisationLigneTemporelleService } from './historisation-ligne-tempo
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { REFERENTIEL_NATIONAL_PORT } from './referentiel-national/referentiel-national.port.js';
 import { ReferentielNationalPortProvisoire } from './referentiel-national/referentiel-national.port.provisoire.js';
+import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import { SalariesController } from './salaries.controller.js';
 import { SalariesService } from './salaries.service.js';
 import { TableauxEmploiService } from './tableaux-emploi.service.js';
 import { TableauxSalarieService } from './tableaux-salarie.service.js';
+import { PropagationTahfizService } from './tahfiz/propagation-tahfiz.service.js';
 import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimiste.service.js';
 
 /**
@@ -31,6 +33,8 @@ import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimi
     HistorisationLigneTemporelleService,
     MoisEnCoursService,
     VerrouillageOptimisteService,
+    ResolutionHeritageService,
+    PropagationTahfizService,
     {
       provide: BULLETIN_PORT,
       useClass: BulletinPortProvisoire,
@@ -47,6 +51,7 @@ import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimi
     REFERENTIEL_NATIONAL_PORT,
     SalariesService,
     EmploisService,
+    PropagationTahfizService,
   ],
 })
 export class SalariesModule {}

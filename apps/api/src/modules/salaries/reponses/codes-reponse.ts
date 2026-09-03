@@ -120,6 +120,11 @@ export const CODES_REPONSE = {
     code: 'STATUT_HORS_INTERVALLE_EMPLOI',
     message: 'Les dates du statut particulier sont hors de l intervalle de l emploi.',
   },
+  REPOS_HEBDOMADAIRE_JOUR_TRAVAILLE: {
+    code: 'REPOS_HEBDOMADAIRE_JOUR_TRAVAILLE',
+    message:
+      'Le repos hebdomadaire est positionne sur un jour ou la grille horaire resolue porte des heures.',
+  },
 } as const;
 
 export type CodeReponse = keyof typeof CODES_REPONSE;

@@ -5,6 +5,7 @@ import {
   deduireEtatLigne,
   deduireSoldeRestantPret,
 } from '../deductions-tableaux.js';
+import { moisDepuisDate } from '../mois-en-cours/mois-en-cours.service.js';
 
 function formaterDate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -193,19 +194,29 @@ export function versAvantageEnNature(
   };
 }
 
-export function versStatutParticulier(statut: {
-  id: string;
-  statutCode: string;
-  dateDebut: Date;
-  dateFin: Date | null;
-  origine: 'SAISIE_MANUELLE' | 'PROPAGE_SOCIETE';
-}) {
+export function versStatutParticulier(
+  statut: {
+    id: string;
+    statutCode: string;
+    dateDebut: Date;
+    dateFin: Date | null;
+    origine: 'SAISIE_MANUELLE' | 'PROPAGE_SOCIETE';
+  },
+  moisEnCours: string
+) {
   return {
     id: statut.id,
     statutCode: statut.statutCode,
     dateDebut: formaterDate(statut.dateDebut),
     dateFin: statut.dateFin !== null ? formaterDate(statut.dateFin) : null,
     origine: statut.origine,
+    etat: deduireEtatLigne(
+      {
+        moisEffetDebut: moisDepuisDate(statut.dateDebut),
+        moisEffetFin: statut.dateFin !== null ? moisDepuisDate(statut.dateFin) : null,
+      },
+      moisEnCours
+    ),
   };
 }
 
@@ -269,6 +280,8 @@ export function mapperCollectionsEmploi(
     avantagesEnNature: trierParOrdreSaisie(emploi.avantagesEnNature).map((a) =>
       versAvantageEnNature(a, moisEnCours)
     ),
-    statutsParticuliers: trierParDateDebut(emploi.statutsParticuliers).map(versStatutParticulier),
+    statutsParticuliers: trierParDateDebut(emploi.statutsParticuliers).map((s) =>
+      versStatutParticulier(s, moisEnCours)
+    ),
   };
 }

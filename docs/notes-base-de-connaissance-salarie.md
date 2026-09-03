@@ -103,3 +103,20 @@ Une prime rattachée à l'emploi indique **quelle** prime s'applique et **quels 
 ## Statuts particuliers non modifiables
 
 Certaines lignes de statut particulier sont **propagées depuis la société** : elles apparaissent sur la fiche mais ne peuvent ni être modifiées ni supprimées depuis le dossier salarié. Seule la société peut les retirer ou les ajuster.
+
+Quand la société active une exonération qui se propage à l'effectif, ces lignes apparaissent **seules** sur les dossiers des salariés encore en poste (au moins un emploi ouvert). Les dossiers entièrement sortis n'en reçoivent pas. Si la société retire ensuite l'exonération, une ligne jamais utilisée pour un bulletin disparaît ; une ligne déjà prise en compte dans un bulletin reste visible, close, pour que les bulletins passés restent explicables.
+
+---
+
+## Champs laissés vides et valeurs héritées
+
+Sur le temps de travail et le télétravail, **laisser un champ vide** signifie que le salarié suit le paramétrage de l'établissement (ou, à défaut, le niveau supérieur disponible). Ce n'est pas une information manquante : c'est un choix d'héritage.
+
+À l'écran, la valeur propre vide reste vide. À côté (ou en grisé), le logiciel montre **la valeur effective** et **d'où elle vient** — par exemple « 44 h — établissement Casablanca ». Si vous saisissez une valeur dans le champ, c'est cette valeur qui s'applique, et l'origine indique alors le niveau salarié.
+
+Si aucun niveau ne fournit de valeur, le logiciel n'en invente aucune.
+
+**Jours fériés travaillés :** tant que l'option de suivi de l'établissement est active, la grille de l'établissement s'applique. Si vous désactivez ce suivi, le salarié porte **sa propre** liste de jours, même entièrement vide — ce n'est plus un héritage.
+
+Il n'existe pas d'action « tout hériter » : chaque champ vide hérite indépendamment.
+

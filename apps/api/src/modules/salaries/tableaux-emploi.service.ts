@@ -19,6 +19,7 @@ import type {
   ModifierStatutParticulierDto,
 } from './dto/tableaux-emploi.dto.js';
 import { versDate } from './deductions-emploi.js';
+import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
 import {
   INCLUDE_COLLECTIONS_EMPLOI,
@@ -35,6 +36,7 @@ import {
   assertPasChevauchementStatuts,
   collecterAlerteStatutHorsEmploi,
   refuserChampMoisEffetEmploi,
+  refuserStatutNonSaisissable,
   ValidationBloquanteTableauEmploiError,
 } from './validation-tableaux-emploi.js';
 import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimiste.service.js';
@@ -65,7 +67,8 @@ export class TableauxEmploiService {
     private readonly tenantContext: TenantContextService,
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
-    private readonly historisation: HistorisationLigneTemporelleService
+    private readonly historisation: HistorisationLigneTemporelleService,
+    private readonly heritage: ResolutionHeritageService
   ) {}
 
   async creerPrimeContractuelle(
@@ -213,6 +216,7 @@ export class TableauxEmploiService {
     versionAttendue: number
   ) {
     refuserChampMoisEffetEmploi(dto);
+    refuserStatutNonSaisissable(dto.statutCode);
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contrat = this.contratAuMois(emploi, moisEnCours);
@@ -261,6 +265,7 @@ export class TableauxEmploiService {
     versionAttendue: number
   ) {
     refuserChampMoisEffetEmploi(dto);
+    refuserStatutNonSaisissable(dto.statutCode);
     const existant = await this.trouverStatut(emploiId, ligneId);
     this.refuserStatutPropage(existant.origine);
 
@@ -345,7 +350,8 @@ export class TableauxEmploiService {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const base = versEmploiComplet(emploi, moisEnCours);
     const collections = mapperCollectionsEmploi(emploi, moisEnCours);
-    return okEcriture({ ...base, ...collections }, alertes);
+    const resolutions = await this.heritage.resoudrePourEmploi(emploi, moisEnCours);
+    return okEcriture({ ...base, ...collections, resolutions }, alertes);
   }
 
   private async chargerEmploi(id: string) {

@@ -40,6 +40,7 @@ import { resoudreLigneHistorique } from './historisation.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from './jeton-confirmation.js';
 import { enrichirSociete } from './enrichir-operations.js';
 import { toSociete } from './mappers.js';
+import { PropagationTahfizService } from '../salaries/tahfiz/propagation-tahfiz.service.js';
 import {
   assertAlphabetique,
   assertChiffres,
@@ -72,7 +73,8 @@ export class SocietesService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenantContext: TenantContextService,
-    private readonly audit: AuditService
+    private readonly audit: AuditService,
+    private readonly tahfiz: PropagationTahfizService
   ) {}
 
   async lister(): Promise<ApiResponse<ListResponseAvecOperations<SocieteListe>>> {
@@ -443,24 +445,39 @@ export class SocietesService {
     }
 
     const moisEffet = societe.moisEnCours;
-    const ligne = await this.prisma.companyParametrageHistorique.upsert({
-      where: {
-        companyId_moisEffet: { companyId: id, moisEffet },
-      },
-      create: {
-        companyId: id,
-        moisEffet,
-        moisClotureConges: dto.moisClotureConges,
-        typeExonerationId: dto.typeExonerationId ?? null,
-        exonerationDateDebut: dto.exonerationDateDebut ?? null,
-        exonerationDateFin: dto.exonerationDateFin ?? null,
-      },
-      update: {
-        moisClotureConges: dto.moisClotureConges,
-        typeExonerationId: dto.typeExonerationId,
-        exonerationDateDebut: dto.exonerationDateDebut,
-        exonerationDateFin: dto.exonerationDateFin,
-      },
+
+    const ligne = await this.prisma.$transaction(async (tx) => {
+      const enregistree = await tx.companyParametrageHistorique.upsert({
+        where: {
+          companyId_moisEffet: { companyId: id, moisEffet },
+        },
+        create: {
+          companyId: id,
+          moisEffet,
+          moisClotureConges: dto.moisClotureConges,
+          typeExonerationId: dto.typeExonerationId ?? null,
+          exonerationDateDebut: dto.exonerationDateDebut ?? null,
+          exonerationDateFin: dto.exonerationDateFin ?? null,
+        },
+        update: {
+          moisClotureConges: dto.moisClotureConges,
+          typeExonerationId: dto.typeExonerationId,
+          exonerationDateDebut: dto.exonerationDateDebut,
+          exonerationDateFin: dto.exonerationDateFin,
+        },
+      });
+
+      await this.tahfiz.synchroniserDansTransaction(
+        tx,
+        id,
+        {
+          typeExonerationId: enregistree.typeExonerationId,
+          exonerationDateDebut: enregistree.exonerationDateDebut,
+          exonerationDateFin: enregistree.exonerationDateFin,
+        },
+        moisEffet
+      );
+      return enregistree;
     });
 
     return ok(ligne);
