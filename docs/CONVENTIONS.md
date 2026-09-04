@@ -194,3 +194,15 @@ Les décisions contre-intuitives, les contraintes réglementaires et les pièges
 - Une branche par module : `module-1-fiches`, `module-2-traitement-du-mois`…
 - Messages de commit à l'impératif, en français : `Ajoute le filtrage par société sur les fiches`.
 - **Le fichier `.env` n'est jamais versionné.** Seul `.env.example`, avec des valeurs factices, l'est.
+
+---
+
+## 12. Tables back-office — module 2
+
+Dans le **module 2**, une table qui **ne trie ni ne pagine côté client** n'utilise **pas** TanStack Table.
+
+On compose directement les composants shadcn `Table` (`TableHeader`, `TableBody`, etc.). TanStack Table apporte tri et pagination client : l'afficher sur une liste paginée par curseur côté serveur, ou sur un tableau sans tri autorisé, créerait des affordances trompeuses.
+
+**Premier cas d'application :** la liste des salariés (2.1.c-1). **Prochains cas :** les sept tableaux répétables de la fiche salarié (2.1.c-2).
+
+**Hors périmètre :** la liste des sociétés (module 1), qui trie et pagine entièrement côté client et conserve TanStack Table.

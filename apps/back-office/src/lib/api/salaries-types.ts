@@ -38,3 +38,30 @@ export interface FicheSalarie {
 }
 
 export type FicheSalarieAvecOperations = RessourceAvecOperations<FicheSalarie>;
+
+/** Ligne telle que renvoyee par GET /salaries. */
+export interface LigneListeSalarie {
+  readonly id: string;
+  readonly matricule: string;
+  readonly nom: string;
+  readonly prenom: string;
+  readonly etat: 'ACTIF' | 'INACTIF';
+  readonly dateEntree: string;
+  readonly poste: string | null;
+  readonly nombreEmploisOuverts: number;
+  readonly etablissement: { readonly id: string; readonly libelle: string } | null;
+}
+
+export interface ListeSalariesDonnees {
+  readonly items: readonly LigneListeSalarie[];
+  readonly prochainCurseur: string | null;
+  readonly operations: readonly Permission[];
+}
+
+export interface ListerSalariesParams {
+  readonly recherche?: string;
+  readonly curseur?: string;
+  readonly etat?: 'ACTIF' | 'INACTIF';
+  readonly etablissementId?: string;
+  readonly limite?: number;
+}

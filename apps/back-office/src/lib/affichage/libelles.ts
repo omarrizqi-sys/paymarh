@@ -18,6 +18,15 @@ export function libelleEtatDossier(etat: string): string {
   return LIBELLES_ETAT[etat] ?? etat;
 }
 
+const LIBELLES_ETAT_SALARIE: Record<'ACTIF' | 'INACTIF', string> = {
+  ACTIF: 'Actif',
+  INACTIF: 'Inactif',
+};
+
+export function libelleEtatSalarie(etat: 'ACTIF' | 'INACTIF'): string {
+  return LIBELLES_ETAT_SALARIE[etat];
+}
+
 export function libelleJourSemaine(jour: string): string {
   return LIBELLES_JOUR[jour] ?? jour;
 }
