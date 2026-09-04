@@ -5,15 +5,25 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { AlerteApi } from '@paymarh/shared-types';
+import type { AlerteApi, Permission } from '@paymarh/shared-types';
 import { estConflitUnicite } from '../../common/errors/conflit-unicite.js';
+import {
+  operationsEmploi,
+  operationsListeSalaries,
+  operationsSalarie,
+} from '../../common/permissions/operations-ressource.js';
+import {
+  PERMISSION_SERVICE,
+  type PermissionService,
+} from '../../common/permissions/permission.service.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { companyScope } from '../../common/tenancy/tenant-scope.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
 import { creerSalarieMatriculeAuto, marquerMatriculeConsomme } from './compteurs-salarie.js';
-import { deduireEtatSalarie, emploiEstOuvert } from './deductions-salarie.js';
+import { deduireLignesListeSalaries, emploiEstOuvert } from './deductions-salarie.js';
+import { enrichirFicheSalarie, enrichirListeSalaries } from './enrichir-operations.js';
 import { EmploisService } from './emplois.service.js';
 import type {
   CreerSalarieDto,
@@ -104,16 +114,25 @@ export class SalariesService {
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
     private readonly emplois: EmploisService,
-    @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort
+    @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort,
+    @Inject(PERMISSION_SERVICE) private readonly permissionService: PermissionService
   ) {}
 
+  private evaluateurPermissions(): (permission: Permission) => boolean {
+    const context = this.tenantContext.getOrThrow();
+    return (permission) => this.permissionService.possedePermission(context, permission);
+  }
+
   async lire(id: string) {
+    const possede = this.evaluateurPermissions();
     const salarie = await this.trouverSalarieSociete(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(id);
     const bulletins = await this.bulletins.listerBulletinsParSalarie(id);
     const emplois = await this.emplois.listerEmploisPourFicheSalarie(id, moisEnCours);
+    const fiche = await versFicheSalarie(this.prisma, salarie, moisEnCours, emplois, bulletins);
+    const opsEmploi = operationsEmploi(possede);
     return {
-      donnees: await versFicheSalarie(this.prisma, salarie, moisEnCours, emplois, bulletins),
+      donnees: enrichirFicheSalarie(fiche, operationsSalarie(possede), opsEmploi),
     };
   }
 
@@ -126,6 +145,7 @@ export class SalariesService {
 
   async lister(query: ListerSalariesQueryDto) {
     const { companyId } = companyScope(this.tenantContext.getOrThrow());
+    const possede = this.evaluateurPermissions();
     const limite = Math.min(Math.max(query.limite ?? LIMITE_DEFAUT, 1), LIMITE_MAX);
 
     let idsEtablissement: string[] | undefined;
@@ -135,7 +155,12 @@ export class SalariesService {
         query.etablissementId
       );
       if (idsEtablissement.length === 0) {
-        return { donnees: { items: [], prochainCurseur: null } };
+        return {
+          donnees: enrichirListeSalaries(
+            { items: [], prochainCurseur: null },
+            operationsListeSalaries(possede)
+          ),
+        };
       }
     }
 
@@ -180,14 +205,22 @@ export class SalariesService {
       },
       orderBy: [{ nom: 'asc' }, { prenom: 'asc' }, { id: 'asc' }],
       take: limite + 1,
-      select: { id: true, matricule: true, nom: true, prenom: true },
+      select: { id: true, matricule: true, nom: true, prenom: true, dateEntree: true },
     });
+
+    const lignesParSalarie =
+      candidats.length > 0
+        ? await deduireLignesListeSalaries(
+            this.prisma,
+            candidats.map((salarie) => salarie.id)
+          )
+        : new Map();
 
     let page = candidats;
     if (query.etat !== undefined) {
       const filtres: typeof candidats = [];
       for (const salarie of candidats) {
-        const etat = await deduireEtatSalarie(this.prisma, salarie.id);
+        const etat = lignesParSalarie.get(salarie.id)?.etat ?? 'INACTIF';
         if (etat === query.etat) {
           filtres.push(salarie);
         }
@@ -199,11 +232,14 @@ export class SalariesService {
     const aPlus = page.length > limite;
     const itemsBruts = aPlus ? page.slice(0, limite) : page;
 
-    const items = await Promise.all(
-      itemsBruts.map(async (salarie) =>
-        versLigneListeSalarie(salarie, await deduireEtatSalarie(this.prisma, salarie.id))
-      )
-    );
+    const items = itemsBruts.map((salarie) => {
+      const ligne = lignesParSalarie.get(salarie.id) ?? {
+        etat: 'INACTIF' as const,
+        poste: null,
+        etablissement: null,
+      };
+      return versLigneListeSalarie(salarie, ligne);
+    });
 
     const dernier = itemsBruts.at(-1);
     const prochainCurseur =
@@ -211,7 +247,9 @@ export class SalariesService {
         ? encoderCurseur({ nom: dernier.nom, prenom: dernier.prenom, id: dernier.id })
         : null;
 
-    return { donnees: { items, prochainCurseur } };
+    return {
+      donnees: enrichirListeSalaries({ items, prochainCurseur }, operationsListeSalaries(possede)),
+    };
   }
 
   async creer(dto: CreerSalarieDto) {

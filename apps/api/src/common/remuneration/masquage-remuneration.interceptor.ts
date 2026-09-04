@@ -11,10 +11,6 @@ import type { Request } from 'express';
 import type { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PERMISSION_SERVICE, type PermissionService } from '../permissions/permission.service.js';
-import {
-  HEADER_PERMISSIONS_REFUSEES,
-  lirePermissionsRefuseesDepuisEnTete,
-} from '../permissions/permissions-refusees.header.js';
 import { TenantContextService } from '../tenancy/tenant-context.service.js';
 import {
   contientRubriqueMasquee,
@@ -56,20 +52,17 @@ export class MasquageRemunerationInterceptor implements NestInterceptor {
         .pipe(map((donnees) => retirerRubriquesMasquees(donnees, toutesRubriques)));
     }
 
-    const refusees = lirePermissionsRefuseesDepuisEnTete(
-      request.headers[HEADER_PERMISSIONS_REFUSEES]
-    );
     const toutesRubriques = new Set(TOUTES_RUBRIQUES_REMUNERATION);
 
     if (
       this.estEcriture(request.method) &&
-      !this.permissions.possedePermission(ctx, PERMISSION_ECRITURE, refusees) &&
+      !this.permissions.possedePermission(ctx, PERMISSION_ECRITURE) &&
       contientRubriqueMasquee(request.body, toutesRubriques)
     ) {
       throw new ForbiddenException(MESSAGE_INTERDIT);
     }
 
-    const rubriquesMasquees = this.rubriquesMasqueesLecture(ctx, refusees);
+    const rubriquesMasquees = this.rubriquesMasqueesLecture(ctx);
     if (rubriquesMasquees.size > 0) {
       return next
         .handle()
@@ -84,10 +77,9 @@ export class MasquageRemunerationInterceptor implements NestInterceptor {
   }
 
   private rubriquesMasqueesLecture(
-    ctx: ReturnType<TenantContextService['getOrThrow']>,
-    permissionsRefusees: ReadonlySet<string>
+    ctx: ReturnType<TenantContextService['getOrThrow']>
   ): ReadonlySet<RubriqueRemuneration> {
-    if (this.permissions.possedePermission(ctx, PERMISSION_LECTURE, permissionsRefusees)) {
+    if (this.permissions.possedePermission(ctx, PERMISSION_LECTURE)) {
       return new Set();
     }
     return new Set(TOUTES_RUBRIQUES_REMUNERATION);

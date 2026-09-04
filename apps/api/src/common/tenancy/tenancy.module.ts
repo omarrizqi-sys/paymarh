@@ -1,4 +1,5 @@
 import { Global, Module } from '@nestjs/common';
+import { PermissionsRefuseesContext } from '../permissions/permissions-refusees.context.js';
 import { TenantContextMiddleware } from './tenant-context.middleware.js';
 import { TenantContextService } from './tenant-context.service.js';
 import { TenantGuard } from './tenant.guard.js';
@@ -11,7 +12,12 @@ import { TenantGuard } from './tenant.guard.js';
  */
 @Global()
 @Module({
-  providers: [TenantContextService, TenantGuard, TenantContextMiddleware],
-  exports: [TenantContextService, TenantGuard, TenantContextMiddleware],
+  providers: [
+    TenantContextService,
+    TenantGuard,
+    TenantContextMiddleware,
+    PermissionsRefuseesContext,
+  ],
+  exports: [TenantContextService, TenantGuard, TenantContextMiddleware, PermissionsRefuseesContext],
 })
 export class TenancyModule {}

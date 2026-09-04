@@ -19,10 +19,6 @@ import {
   CLE_PERIMETRE_SALARIE,
   CLE_PERMISSION,
 } from './requiert-permission.decorator.js';
-import {
-  HEADER_PERMISSIONS_REFUSEES,
-  lirePermissionsRefuseesDepuisEnTete,
-} from './permissions-refusees.header.js';
 import { EXEMPTIONS_ROUTES_MODULE_1 } from '../conformite-routes/exemptions-module-1.js';
 import { cleRouteHttp } from '../conformite-routes/route-cle.js';
 
@@ -77,10 +73,7 @@ export class PermissionGuard implements CanActivate {
     }
 
     const ctx = this.tenantContext.getOrThrow();
-    const refusees = lirePermissionsRefuseesDepuisEnTete(
-      request.headers[HEADER_PERMISSIONS_REFUSEES]
-    );
-    if (!this.permissions.possedePermission(ctx, permission, refusees)) {
+    if (!this.permissions.possedePermission(ctx, permission)) {
       throw new ForbiddenException(MESSAGE_INTERDIT);
     }
 

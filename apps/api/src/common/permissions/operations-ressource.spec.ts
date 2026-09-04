@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { TenantContext } from '@paymarh/shared-types';
 import {
   operationsCompteBancaire,
+  operationsEmploi,
+  operationsListeSalaries,
   operationsListeSocietes,
+  operationsSalarie,
   operationsSociete,
 } from './operations-ressource.js';
 
@@ -32,5 +35,23 @@ describe('operations-ressource', () => {
 
   it('expose les operations compte bancaire', () => {
     expect(operationsCompteBancaire(admin, 'c1')).toContain('compte-bancaire.cloturer');
+  });
+
+  it('expose salarie.creer au niveau liste salariés', () => {
+    const possede = (permission: string) => permission !== 'salarie.supprimer';
+    expect(operationsListeSalaries(possede)).toContain('salarie.creer');
+    expect(operationsListeSalaries(possede)).not.toContain('salarie.supprimer');
+  });
+
+  it('refuse salarie.supprimer quand non autorise', () => {
+    const possede = (permission: string) => permission !== 'salarie.supprimer';
+    expect(operationsSalarie(possede)).not.toContain('salarie.supprimer');
+    expect(operationsSalarie(() => true)).toContain('salarie.supprimer');
+  });
+
+  it('expose les operations emploi avec remuneration', () => {
+    const possede = (permission: string) =>
+      permission === 'emploi.modifier' || permission === 'salarie.remuneration.lire';
+    expect(operationsEmploi(possede)).toEqual(['emploi.modifier', 'salarie.remuneration.lire']);
   });
 });

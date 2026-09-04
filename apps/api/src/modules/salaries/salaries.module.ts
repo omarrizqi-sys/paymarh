@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { PermissionsModule } from '../../common/permissions/permissions.module.js';
 import { PrismaModule } from '../../common/prisma/prisma.module.js';
 import { TenancyModule } from '../../common/tenancy/tenancy.module.js';
 import { BULLETIN_PORT } from './bulletin/bulletin.port.js';
@@ -22,7 +23,7 @@ import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimi
  * Module fiche salarie — socle transverse, endpoints salarie et emplois (etapes 2.1.b).
  */
 @Module({
-  imports: [PrismaModule, TenancyModule],
+  imports: [PrismaModule, TenancyModule, PermissionsModule],
   controllers: [SalariesController, EmploisController],
   providers: [
     SalariesService,

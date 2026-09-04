@@ -2,13 +2,14 @@ import type { CallHandler, ExecutionContext } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { of, firstValueFrom } from 'rxjs';
 import { PermissionServiceProvisoire } from '../permissions/permission.service.provisoire.js';
+import { PermissionsRefuseesContext } from '../permissions/permissions-refusees.context.js';
 import { TenantContextService } from '../tenancy/tenant-context.service.js';
 import { MasquageRemunerationInterceptor } from './masquage-remuneration.interceptor.js';
 
 describe('MasquageRemunerationInterceptor', () => {
   it('sans contexte de tenant, ne rend aucune donnee de remuneration', async () => {
     const interceptor = new MasquageRemunerationInterceptor(
-      new PermissionServiceProvisoire(),
+      new PermissionServiceProvisoire(new PermissionsRefuseesContext()),
       new TenantContextService()
     );
 

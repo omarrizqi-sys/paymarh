@@ -116,15 +116,18 @@ export async function versFicheSalarie(
 }
 
 export function versLigneListeSalarie(
-  salarie: Pick<Salarie, 'id' | 'matricule' | 'nom' | 'prenom'>,
-  etat: 'ACTIF' | 'INACTIF'
+  salarie: Pick<Salarie, 'id' | 'matricule' | 'nom' | 'prenom' | 'dateEntree'>,
+  ligne: { etat: 'ACTIF' | 'INACTIF'; poste: string | null; etablissement: string | null }
 ) {
   return {
     id: salarie.id,
     matricule: salarie.matricule,
     nom: salarie.nom,
     prenom: salarie.prenom,
-    etat,
+    etat: ligne.etat,
+    dateEntree: formaterDate(salarie.dateEntree),
+    poste: ligne.poste,
+    etablissement: ligne.etablissement,
   };
 }
 

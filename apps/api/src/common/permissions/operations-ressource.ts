@@ -61,3 +61,46 @@ export function operationsCompteBancaire(
   ajouterSi(ops, context, 'compte-bancaire.supprimer', companyId);
   return ops;
 }
+
+/** Evalue si l appelant possede une permission (PermissionService ou peutFaire). */
+export type EvaluateurPermission = (permission: Permission) => boolean;
+
+function ajouterSiAutorise(
+  liste: Permission[],
+  possede: EvaluateurPermission,
+  permission: Permission
+): void {
+  if (possede(permission)) {
+    liste.push(permission);
+  }
+}
+
+/** Operations au niveau liste salariés (ex. bouton créer). */
+export function operationsListeSalaries(possede: EvaluateurPermission): readonly Permission[] {
+  const ops: Permission[] = [];
+  ajouterSiAutorise(ops, possede, 'salarie.lire');
+  ajouterSiAutorise(ops, possede, 'salarie.creer');
+  return ops;
+}
+
+/** Operations autorisees sur un salarie donne. */
+export function operationsSalarie(possede: EvaluateurPermission): readonly Permission[] {
+  const ops: Permission[] = [];
+  ajouterSiAutorise(ops, possede, 'salarie.lire');
+  ajouterSiAutorise(ops, possede, 'salarie.modifier');
+  ajouterSiAutorise(ops, possede, 'salarie.supprimer');
+  ajouterSiAutorise(ops, possede, 'emploi.creer');
+  ajouterSiAutorise(ops, possede, 'salarie.remuneration.lire');
+  ajouterSiAutorise(ops, possede, 'salarie.remuneration.ecrire');
+  return ops;
+}
+
+/** Operations autorisees sur un emploi donne. */
+export function operationsEmploi(possede: EvaluateurPermission): readonly Permission[] {
+  const ops: Permission[] = [];
+  ajouterSiAutorise(ops, possede, 'emploi.modifier');
+  ajouterSiAutorise(ops, possede, 'emploi.supprimer');
+  ajouterSiAutorise(ops, possede, 'salarie.remuneration.lire');
+  ajouterSiAutorise(ops, possede, 'salarie.remuneration.ecrire');
+  return ops;
+}

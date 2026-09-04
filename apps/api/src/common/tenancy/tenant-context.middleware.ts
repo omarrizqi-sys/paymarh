@@ -1,5 +1,10 @@
 import { Injectable, Logger, type NestMiddleware } from '@nestjs/common';
 import type { NextFunction, Request, Response } from 'express';
+import {
+  HEADER_PERMISSIONS_REFUSEES,
+  lirePermissionsRefuseesDepuisEnTete,
+} from '../permissions/permissions-refusees.header.js';
+import { PermissionsRefuseesContext } from '../permissions/permissions-refusees.context.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { TenantContextService } from './tenant-context.service.js';
 
@@ -44,7 +49,8 @@ export class TenantContextMiddleware implements NestMiddleware {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly tenantContext: TenantContextService
+    private readonly tenantContext: TenantContextService,
+    private readonly permissionsRefusees: PermissionsRefuseesContext
   ) {}
 
   async use(request: Request, _response: Response, next: NextFunction): Promise<void> {
@@ -75,6 +81,10 @@ export class TenantContextMiddleware implements NestMiddleware {
         ? requestedCompanyId
         : null;
 
+    const permissionsRefusees = lirePermissionsRefuseesDepuisEnTete(
+      request.headers[HEADER_PERMISSIONS_REFUSEES]
+    );
+
     this.tenantContext.run(
       {
         userId: user.id,
@@ -83,7 +93,9 @@ export class TenantContextMiddleware implements NestMiddleware {
         companyId,
       },
       () => {
-        next();
+        this.permissionsRefusees.run(permissionsRefusees, () => {
+          next();
+        });
       }
     );
   }
