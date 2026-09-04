@@ -10,25 +10,29 @@ function emploi(
 ): EmploiPourDeductionListe {
   return {
     dateSortie: null,
-    etablissementNom: 'Siege',
+    etablissement: { id: 'etab-1', libelle: 'Siege' },
     ...surcharges,
   };
 }
 
 describe('deduireLigneListeSalarie', () => {
-  it('affiche le poste et l etablissement d un seul emploi ouvert', () => {
+  it('rend poste, nombreEmploisOuverts 1 et etablissement pour un seul emploi ouvert', () => {
     expect(
       deduireLigneListeSalarie([
-        emploi({ libellePoste: 'Comptable', etablissementNom: 'Casablanca' }),
+        emploi({
+          libellePoste: 'Comptable',
+          etablissement: { id: 'etab-casa', libelle: 'Casablanca' },
+        }),
       ])
     ).toEqual({
       etat: 'ACTIF',
       poste: 'Comptable',
-      etablissement: 'Casablanca',
+      nombreEmploisOuverts: 1,
+      etablissement: { id: 'etab-casa', libelle: 'Casablanca' },
     });
   });
 
-  it('affiche N emplois sans etablissement quand plusieurs emplois ouverts', () => {
+  it('rend poste null, nombreEmploisOuverts 2 et etablissement null pour deux emplois ouverts', () => {
     expect(
       deduireLigneListeSalarie([
         emploi({ libellePoste: 'Comptable' }),
@@ -36,32 +40,35 @@ describe('deduireLigneListeSalarie', () => {
       ])
     ).toEqual({
       etat: 'ACTIF',
-      poste: '2 emplois',
+      poste: null,
+      nombreEmploisOuverts: 2,
       etablissement: null,
     });
   });
 
-  it('affiche le poste du dernier emploi clos quand aucun emploi ouvert', () => {
+  it('rend le poste du dernier emploi clos avec nombreEmploisOuverts 0', () => {
     const datePassee = new Date('2020-01-01');
     expect(
       deduireLigneListeSalarie([
         emploi({
           libellePoste: 'Ancien poste',
           dateSortie: datePassee,
-          etablissementNom: 'Rabat',
+          etablissement: { id: 'etab-rabat', libelle: 'Rabat' },
         }),
       ])
     ).toEqual({
       etat: 'INACTIF',
       poste: 'Ancien poste',
-      etablissement: 'Rabat',
+      nombreEmploisOuverts: 0,
+      etablissement: { id: 'etab-rabat', libelle: 'Rabat' },
     });
   });
 
-  it('sans aucun emploi : inactif, ni poste ni etablissement', () => {
+  it('sans aucun emploi : inactif, poste null, nombreEmploisOuverts 0, etablissement null', () => {
     expect(deduireLigneListeSalarie([])).toEqual({
       etat: 'INACTIF',
       poste: null,
+      nombreEmploisOuverts: 0,
       etablissement: null,
     });
   });
@@ -72,18 +79,19 @@ describe('deduireLigneListeSalarie', () => {
         emploi({
           libellePoste: 'Premier',
           dateSortie: new Date('2019-06-01'),
-          etablissementNom: 'A',
+          etablissement: { id: 'a', libelle: 'A' },
         }),
         emploi({
           libellePoste: 'Dernier',
           dateSortie: new Date('2021-03-01'),
-          etablissementNom: 'B',
+          etablissement: { id: 'b', libelle: 'B' },
         }),
       ])
     ).toEqual({
       etat: 'INACTIF',
       poste: 'Dernier',
-      etablissement: 'B',
+      nombreEmploisOuverts: 0,
+      etablissement: { id: 'b', libelle: 'B' },
     });
   });
 });

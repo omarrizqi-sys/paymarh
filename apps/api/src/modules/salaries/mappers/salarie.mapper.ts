@@ -117,7 +117,12 @@ export async function versFicheSalarie(
 
 export function versLigneListeSalarie(
   salarie: Pick<Salarie, 'id' | 'matricule' | 'nom' | 'prenom' | 'dateEntree'>,
-  ligne: { etat: 'ACTIF' | 'INACTIF'; poste: string | null; etablissement: string | null }
+  ligne: {
+    etat: 'ACTIF' | 'INACTIF';
+    poste: string | null;
+    nombreEmploisOuverts: number;
+    etablissement: { id: string; libelle: string } | null;
+  }
 ) {
   return {
     id: salarie.id,
@@ -127,6 +132,7 @@ export function versLigneListeSalarie(
     etat: ligne.etat,
     dateEntree: formaterDate(salarie.dateEntree),
     poste: ligne.poste,
+    nombreEmploisOuverts: ligne.nombreEmploisOuverts,
     etablissement: ligne.etablissement,
   };
 }

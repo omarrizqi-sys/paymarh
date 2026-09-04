@@ -2,6 +2,11 @@ import type { PrismaClient } from '../../generated/prisma/client.js';
 
 export type EtatSalarie = 'ACTIF' | 'INACTIF';
 
+export interface EtablissementListe {
+  readonly id: string;
+  readonly libelle: string;
+}
+
 /** Emploi ouvert : pas de date de sortie ou sortie future ou egale a aujourd hui. */
 export function emploiEstOuvert(dateSortie: Date | null, reference = new Date()): boolean {
   if (dateSortie === null) return true;
@@ -15,16 +20,17 @@ export function emploiEstOuvert(dateSortie: Date | null, reference = new Date())
 export interface EmploiPourDeductionListe {
   readonly dateSortie: Date | null;
   readonly libellePoste: string;
-  readonly etablissementNom: string | null;
+  readonly etablissement: EtablissementListe | null;
 }
 
 export interface LigneListeSalarieDeduite {
   readonly etat: EtatSalarie;
   readonly poste: string | null;
-  readonly etablissement: string | null;
+  readonly nombreEmploisOuverts: number;
+  readonly etablissement: EtablissementListe | null;
 }
 
-/** Regle unique de deduction pour la liste — etat, poste et etablissement. */
+/** Regle unique de deduction pour la liste — etat, poste, nombre d emplois ouverts, etablissement. */
 export function deduireLigneListeSalarie(
   emplois: readonly EmploiPourDeductionListe[]
 ): LigneListeSalarieDeduite {
@@ -33,25 +39,27 @@ export function deduireLigneListeSalarie(
   if (ouverts.length === 1) {
     const emploi = ouverts[0];
     if (emploi === undefined) {
-      return { etat: 'INACTIF', poste: null, etablissement: null };
+      return { etat: 'INACTIF', poste: null, nombreEmploisOuverts: 0, etablissement: null };
     }
     return {
       etat: 'ACTIF',
       poste: emploi.libellePoste,
-      etablissement: emploi.etablissementNom,
+      nombreEmploisOuverts: 1,
+      etablissement: emploi.etablissement,
     };
   }
 
   if (ouverts.length > 1) {
     return {
       etat: 'ACTIF',
-      poste: `${ouverts.length} emplois`,
+      poste: null,
+      nombreEmploisOuverts: ouverts.length,
       etablissement: null,
     };
   }
 
   if (emplois.length === 0) {
-    return { etat: 'INACTIF', poste: null, etablissement: null };
+    return { etat: 'INACTIF', poste: null, nombreEmploisOuverts: 0, etablissement: null };
   }
 
   const clos = emplois.filter((emploi) => !emploiEstOuvert(emploi.dateSortie));
@@ -64,23 +72,28 @@ export function deduireLigneListeSalarie(
   return {
     etat: 'INACTIF',
     poste: dernierClos.libellePoste,
-    etablissement: dernierClos.etablissementNom,
+    nombreEmploisOuverts: 0,
+    etablissement: dernierClos.etablissement,
   };
 }
 
 function formaterEmploiPourDeduction(emploi: {
   contratVersions: { dateSortie: Date | null; libellePoste: string }[];
-  affectationVersions: { etablissement: { nom: string } | null }[];
+  affectationVersions: { etablissement: { id: string; nom: string } | null }[];
 }): EmploiPourDeductionListe | null {
   const contrat = emploi.contratVersions[0];
   if (contrat === undefined) return null;
 
   const affectation = emploi.affectationVersions[0];
+  const etablissement =
+    affectation?.etablissement !== null && affectation?.etablissement !== undefined
+      ? { id: affectation.etablissement.id, libelle: affectation.etablissement.nom }
+      : null;
 
   return {
     dateSortie: contrat.dateSortie,
     libellePoste: contrat.libellePoste,
-    etablissementNom: affectation?.etablissement?.nom ?? null,
+    etablissement,
   };
 }
 
@@ -93,7 +106,12 @@ export async function deduireLignesListeSalaries(
   if (salarieIds.length === 0) return resultat;
 
   for (const salarieId of salarieIds) {
-    resultat.set(salarieId, { etat: 'INACTIF', poste: null, etablissement: null });
+    resultat.set(salarieId, {
+      etat: 'INACTIF',
+      poste: null,
+      nombreEmploisOuverts: 0,
+      etablissement: null,
+    });
   }
 
   const emplois = await prisma.emploi.findMany({
@@ -109,7 +127,7 @@ export async function deduireLignesListeSalaries(
         orderBy: { moisEffet: 'desc' },
         take: 1,
         select: {
-          etablissement: { select: { nom: true } },
+          etablissement: { select: { id: true, nom: true } },
         },
       },
     },

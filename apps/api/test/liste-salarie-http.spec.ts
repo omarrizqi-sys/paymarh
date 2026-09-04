@@ -78,18 +78,21 @@ describe('API salarié — colonnes liste (2.1.c-1 temps 1.2)', () => {
       donnees: {
         items: {
           poste: string | null;
-          etablissement: string | null;
+          nombreEmploisOuverts: number;
+          etablissement: { id: string; libelle: string } | null;
           dateEntree: string;
         }[];
       };
     };
     const ligne = corps.donnees.items[0];
     expect(ligne?.poste).toBe('Analyste paie');
-    expect(ligne?.etablissement).toContain('Siege');
+    expect(ligne?.nombreEmploisOuverts).toBe(1);
+    expect(ligne?.etablissement?.id).toBe(societeA.etablissementPrincipalId);
+    expect(ligne?.etablissement?.libelle).toContain('Siege');
     expect(ligne?.dateEntree).toBe('2025-01-01');
   });
 
-  it('deux emplois ouverts affichent « 2 emplois » sans établissement', async () => {
+  it('deux emplois ouverts : poste null, nombreEmploisOuverts 2, etablissement null', async () => {
     const salarie = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-DEUX-EMP`,
     });
@@ -101,10 +104,17 @@ describe('API salarié — colonnes liste (2.1.c-1 temps 1.2)', () => {
       { headers: entetes(utilisateurId, societeA.companyId) }
     );
     const corps = (await reponse.json()) as {
-      donnees: { items: { poste: string | null; etablissement: string | null }[] };
+      donnees: {
+        items: {
+          poste: string | null;
+          nombreEmploisOuverts: number;
+          etablissement: { id: string; libelle: string } | null;
+        }[];
+      };
     };
     const ligne = corps.donnees.items[0];
-    expect(ligne?.poste).toBe('2 emplois');
+    expect(ligne?.poste).toBeNull();
+    expect(ligne?.nombreEmploisOuverts).toBe(2);
     expect(ligne?.etablissement).toBeNull();
   });
 
@@ -136,14 +146,17 @@ describe('API salarié — colonnes liste (2.1.c-1 temps 1.2)', () => {
         items: {
           etat: string;
           poste: string | null;
-          etablissement: string | null;
+          nombreEmploisOuverts: number;
+          etablissement: { id: string; libelle: string } | null;
         }[];
       };
     };
     const ligne = corps.donnees.items[0];
     expect(ligne?.etat).toBe('INACTIF');
     expect(ligne?.poste).toBe('Stagiaire');
-    expect(ligne?.etablissement).toContain('Atelier');
+    expect(ligne?.nombreEmploisOuverts).toBe(0);
+    expect(ligne?.etablissement?.id).toBe(societeA.etablissementSecondaireId);
+    expect(ligne?.etablissement?.libelle).toContain('Atelier');
   });
 
   it('un salarié sans emploi est inactif sans poste ni établissement', async () => {
@@ -160,13 +173,15 @@ describe('API salarié — colonnes liste (2.1.c-1 temps 1.2)', () => {
         items: {
           etat: string;
           poste: string | null;
-          etablissement: string | null;
+          nombreEmploisOuverts: number;
+          etablissement: { id: string; libelle: string } | null;
         }[];
       };
     };
     const ligne = corps.donnees.items[0];
     expect(ligne?.etat).toBe('INACTIF');
     expect(ligne?.poste).toBeNull();
+    expect(ligne?.nombreEmploisOuverts).toBe(0);
     expect(ligne?.etablissement).toBeNull();
   });
 });

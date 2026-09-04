@@ -13,16 +13,12 @@ import { PermissionsRefuseesContext } from './permissions-refusees.context.js';
 export class PermissionServiceProvisoire implements PermissionService {
   constructor(private readonly permissionsRefusees: PermissionsRefuseesContext) {}
 
-  possedePermission(
-    _context: TenantContext,
-    permission: Permission,
-    permissionsRefusees?: ReadonlySet<string>
-  ): boolean {
+  possedePermission(_context: TenantContext, permission: Permission): boolean {
     if (process.env.NODE_ENV === 'production') {
       return true;
     }
 
-    const refusees = permissionsRefusees ?? this.permissionsRefusees.lire();
+    const refusees = this.permissionsRefusees.lire();
     return !refusees.has(permission);
   }
 }

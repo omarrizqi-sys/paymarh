@@ -6,11 +6,7 @@ import type { Permission } from './permissions.js';
  * Seul le garde de permissions consomme cette interface.
  */
 export interface PermissionService {
-  possedePermission(
-    context: TenantContext,
-    permission: Permission,
-    permissionsRefusees?: ReadonlySet<string>
-  ): boolean;
+  possedePermission(context: TenantContext, permission: Permission): boolean;
 }
 
 export const PERMISSION_SERVICE = Symbol('PERMISSION_SERVICE');

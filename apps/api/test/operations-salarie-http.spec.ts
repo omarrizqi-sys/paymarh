@@ -97,7 +97,7 @@ describe('API salarié — operations autorisées (2.1.c-1 temps 1.1)', () => {
     expect(corps.donnees.operations).toContain('salarie.lire');
   });
 
-  it('GET /salaries/:id — sans salarie.remuneration.lire : operations ne le contient pas et rubriques masquées absentes', async () => {
+  it('GET /salaries/:id — garde et masquage : sans salarie.remuneration.lire, operations et rubriques masquées absentes', async () => {
     const reponse = await fetch(urlLocale(app, `/salaries/${salarieAId}`), {
       headers: entetes(utilisateurId, societeA.companyId, {
         [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.lire',

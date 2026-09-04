@@ -236,6 +236,7 @@ export class SalariesService {
       const ligne = lignesParSalarie.get(salarie.id) ?? {
         etat: 'INACTIF' as const,
         poste: null,
+        nombreEmploisOuverts: 0,
         etablissement: null,
       };
       return versLigneListeSalarie(salarie, ligne);

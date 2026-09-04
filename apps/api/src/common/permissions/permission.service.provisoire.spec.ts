@@ -19,11 +19,12 @@ describe('PermissionServiceProvisoire', () => {
     expect(service.possedePermission(contexte, 'salarie.remuneration.lire')).toBe(true);
   });
 
-  it('refuse les permissions listees dans l en-tete de developpement', () => {
-    const refusees = new Set(['salarie.remuneration.lire', 'salarie.lire']);
-    expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(false);
-    expect(service.possedePermission(contexte, 'salarie.lire', refusees)).toBe(false);
-    expect(service.possedePermission(contexte, 'salarie.modifier', refusees)).toBe(true);
+  it('refuse les permissions presentes dans le contexte de requete', () => {
+    permissionsRefusees.run(new Set(['salarie.remuneration.lire', 'salarie.lire']), () => {
+      expect(service.possedePermission(contexte, 'salarie.remuneration.lire')).toBe(false);
+      expect(service.possedePermission(contexte, 'salarie.lire')).toBe(false);
+      expect(service.possedePermission(contexte, 'salarie.modifier')).toBe(true);
+    });
   });
 
   it('lit les permissions refusees depuis le contexte de requete', () => {
@@ -33,12 +34,13 @@ describe('PermissionServiceProvisoire', () => {
     });
   });
 
-  it('ignore l en-tete de permissions refusees en production', () => {
+  it('ignore le contexte de permissions refusees en production', () => {
     const precedent = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
     try {
-      const refusees = new Set(['salarie.remuneration.lire']);
-      expect(service.possedePermission(contexte, 'salarie.remuneration.lire', refusees)).toBe(true);
+      permissionsRefusees.run(new Set(['salarie.remuneration.lire']), () => {
+        expect(service.possedePermission(contexte, 'salarie.remuneration.lire')).toBe(true);
+      });
     } finally {
       process.env.NODE_ENV = precedent;
     }
