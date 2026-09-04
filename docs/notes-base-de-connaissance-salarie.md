@@ -9,21 +9,21 @@
 
 ## Repris dans l'article (fiche-salarie.md)
 
-| Sujet des notes | Section de l'article |
-| --- | --- |
-| Structure identité / emplois, pas d'objet contrat, CDD → CDI | Comprendre la structure |
-| Plusieurs emplois en parallèle | Comprendre la structure + Deux emplois simultanés |
-| Matricule vide, saisie libre, refus « non disponible », reprise | Le matricule |
-| État actif/inactif déduit, date de sortie déduite | L'état du salarié |
-| Champs vides = héritage, valeur effective et origine, jours fériés, pas de « tout hériter » | L'héritage du paramétrage |
-| Correction vs historique, pas de date d'effet saisie, première version au mois de début d'emploi | L'historisation des modifications |
-| Suppression fiche / emploi / lignes, lignes inactives, personne à charge comptée au mois en cours | Les suppressions et les lignes inactives |
-| Alertes vs blocages (principe + exemples) | Alertes et blocages |
-| Droits rémunération : absent, pas masqué | Droits sur la rémunération |
-| Statuts propagés société, apparition seule, retrait | Statuts particuliers propagés |
-| Primes contractuelles sans montant | Comprendre la structure (mention brève) |
-| Répartition virement 100 % | Cas d'erreur |
-| Confirmation date de sortie (règle métier uniquement) | Les suppressions (renvoi article écrans) |
+| Sujet des notes                                                                                   | Section de l'article                              |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Structure identité / emplois, pas d'objet contrat, CDD → CDI                                      | Comprendre la structure                           |
+| Plusieurs emplois en parallèle                                                                    | Comprendre la structure + Deux emplois simultanés |
+| Matricule vide, saisie libre, refus « non disponible », reprise                                   | Le matricule                                      |
+| État actif/inactif déduit, date de sortie déduite                                                 | L'état du salarié                                 |
+| Champs vides = héritage, valeur effective et origine, jours fériés, pas de « tout hériter »       | L'héritage du paramétrage                         |
+| Correction vs historique, pas de date d'effet saisie, première version au mois de début d'emploi  | L'historisation des modifications                 |
+| Suppression fiche / emploi / lignes, lignes inactives, personne à charge comptée au mois en cours | Les suppressions et les lignes inactives          |
+| Alertes vs blocages (principe + exemples)                                                         | Alertes et blocages                               |
+| Droits rémunération : absent, pas masqué                                                          | Droits sur la rémunération                        |
+| Statuts propagés société, apparition seule, retrait                                               | Statuts particuliers propagés                     |
+| Primes contractuelles sans montant                                                                | Comprendre la structure (mention brève)           |
+| Répartition virement 100 %                                                                        | Cas d'erreur                                      |
+| Confirmation date de sortie (règle métier uniquement)                                             | Les suppressions (renvoi article écrans)          |
 
 ---
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import type {
@@ -117,6 +118,14 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         <p className="text-muted-foreground text-sm">
           {societe.codeDossier} · {libelleEtatDossier(societe.etatDossier)} · Mois :{' '}
           {formaterMoisAAAA_MM(societe.moisEnCours)}
+        </p>
+        <p className="mt-2">
+          <Link
+            href={`/societes/${societe.id}/salaries`}
+            className="text-primary text-sm hover:underline"
+          >
+            Voir les salaries
+          </Link>
         </p>
       </header>
 
