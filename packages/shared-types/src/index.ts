@@ -27,6 +27,18 @@ export type {
   ImpactSuppressionCompteBancaire,
   ResultatSuppression,
 } from './impact-suppression';
+export type {
+  EtatSalarie,
+  EtatLigneFiche,
+  SexePersonne,
+  SituationFamilialeSalarie,
+  PersonneACharge,
+  CompteBancaireSalarie,
+  PretSalarie,
+  SaisieSurSalaire,
+  EmploiFicheNonType,
+  FicheSalarie,
+} from './salarie';
 export type { User } from './user';
 export type { TenantContext, PlatformAccessReason } from './tenancy';
 export type { AuditLog, AuditEcart, AuditChampModifie } from './audit';

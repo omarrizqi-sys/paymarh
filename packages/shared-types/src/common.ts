@@ -68,6 +68,18 @@ export interface AlerteApi {
   readonly code: string;
   readonly champ?: string;
   readonly message: string;
+  /**
+   * Position de la ligne concernee DANS LE TABLEAU ENVOYE PAR LE CLIENT,
+   * numerotee a partir de 0. Ce n est PAS un identifiant de ligne en base :
+   * au moment de la validation, une ligne nouvelle n en a pas encore.
+   *
+   * Renseignee uniquement par le remplacement global des comptes bancaires
+   * (PUT /salaries/:id/comptes-bancaires), seule ecriture qui traite plusieurs
+   * lignes en un appel et ou l alerte serait sinon impossible a rattacher.
+   * Absente partout ailleurs : sur une route ligne par ligne, la reponse ne
+   * peut concerner que la ligne envoyee.
+   */
+  readonly indexLigne?: number;
   /** Identifiant d un salarie existant (alerte de reembauche). */
   readonly salarieExistantId?: string;
 }

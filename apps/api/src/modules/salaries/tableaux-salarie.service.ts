@@ -44,6 +44,7 @@ import {
   collecterAlertePretIncoherent,
   collecterAlerteRibDejaUtilise,
   collecterAlertesIdentifiantsBancaires,
+  rattacherIndexLigne,
   refuserChampMoisEffet,
   refuserSituationHandicapConjoint,
   resoudreBanqueDepuisRib,
@@ -254,23 +255,24 @@ export class TableauxSalarieService {
       partVirement: Decimal | null;
     }[] = [];
 
-    for (const compte of dto.comptes) {
+    for (const [indexLigne, compte] of dto.comptes.entries()) {
       validerRibCompte(compte.rib);
-      alertes.push(...collecterAlertesIdentifiantsBancaires(compte));
+      const alertesCompte: AlerteApi[] = [...collecterAlertesIdentifiantsBancaires(compte)];
       const banqueId = await resoudreBanqueDepuisRib(this.prisma, compte.rib, compte.banqueId);
       const alerteBanque = await collecterAlerteBanqueIncoherente(
         this.prisma,
         banqueId,
         compte.rib
       );
-      if (alerteBanque !== null) alertes.push(alerteBanque);
+      if (alerteBanque !== null) alertesCompte.push(alerteBanque);
       const alerteRib = await collecterAlerteRibDejaUtilise(
         this.prisma,
         salarie.companyId,
         compte.rib,
         compte.id
       );
-      if (alerteRib !== null) alertes.push(alerteRib);
+      if (alerteRib !== null) alertesCompte.push(alerteRib);
+      alertes.push(...rattacherIndexLigne(alertesCompte, indexLigne));
 
       donneesComptes.push({
         id: compte.id,

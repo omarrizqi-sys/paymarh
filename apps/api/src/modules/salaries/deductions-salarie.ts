@@ -28,6 +28,16 @@ export interface LigneListeSalarieDeduite {
   readonly poste: string | null;
   readonly nombreEmploisOuverts: number;
   readonly etablissement: EtablissementListe | null;
+  /**
+   * Sortie DU SALARIE, tous emplois confondus : la plus recente des dates de
+   * sortie une fois tous ses emplois clos, null tant qu il en reste un ouvert
+   * et null quand il n a aucun emploi.
+   *
+   * Deduite ici, et nulle part ailleurs, pour qu elle repose sur le meme
+   * predicat « emploi ouvert » que l etat : deux implementations divergeraient
+   * un jour, et un salarie apparaitrait ACTIF avec une date de sortie.
+   */
+  readonly dateSortie: Date | null;
 }
 
 /** Regle unique de deduction pour la liste — etat, poste, nombre d emplois ouverts, etablissement. */
@@ -39,13 +49,20 @@ export function deduireLigneListeSalarie(
   if (ouverts.length === 1) {
     const emploi = ouverts[0];
     if (emploi === undefined) {
-      return { etat: 'INACTIF', poste: null, nombreEmploisOuverts: 0, etablissement: null };
+      return {
+        etat: 'INACTIF',
+        poste: null,
+        nombreEmploisOuverts: 0,
+        etablissement: null,
+        dateSortie: null,
+      };
     }
     return {
       etat: 'ACTIF',
       poste: emploi.libellePoste,
       nombreEmploisOuverts: 1,
       etablissement: emploi.etablissement,
+      dateSortie: null,
     };
   }
 
@@ -55,14 +72,24 @@ export function deduireLigneListeSalarie(
       poste: null,
       nombreEmploisOuverts: ouverts.length,
       etablissement: null,
+      dateSortie: null,
     };
   }
 
   if (emplois.length === 0) {
-    return { etat: 'INACTIF', poste: null, nombreEmploisOuverts: 0, etablissement: null };
+    return {
+      etat: 'INACTIF',
+      poste: null,
+      nombreEmploisOuverts: 0,
+      etablissement: null,
+      dateSortie: null,
+    };
   }
 
   const clos = emplois.filter((emploi) => !emploiEstOuvert(emploi.dateSortie));
+  // Gardes dateSortie === null inatteignables ici : sans date de sortie, emploiEstOuvert
+  // renvoie true, donc l emploi est ouvert et absent de clos. Conservees telles quelles
+  // (heritage du reduce du poste).
   const dernierClos = clos.reduce((courant, candidat) => {
     if (courant.dateSortie === null) return candidat;
     if (candidat.dateSortie === null) return courant;
@@ -74,6 +101,7 @@ export function deduireLigneListeSalarie(
     poste: dernierClos.libellePoste,
     nombreEmploisOuverts: 0,
     etablissement: dernierClos.etablissement,
+    dateSortie: dernierClos.dateSortie,
   };
 }
 
@@ -111,6 +139,7 @@ export async function deduireLignesListeSalaries(
       poste: null,
       nombreEmploisOuverts: 0,
       etablissement: null,
+      dateSortie: null,
     });
   }
 
@@ -151,12 +180,33 @@ export async function deduireLignesListeSalaries(
   return resultat;
 }
 
+/**
+ * Deduction complete pour un salarie — une seule requete, celle qui sert deja
+ * a l etat. La fiche y prend son etat ET sa date de sortie : les deux sortent
+ * du meme jeu d emplois et du meme predicat, donc ne peuvent pas se
+ * contredire.
+ */
+export async function deduireLigneSalarie(
+  prisma: PrismaClient,
+  salarieId: string
+): Promise<LigneListeSalarieDeduite> {
+  const lignes = await deduireLignesListeSalaries(prisma, [salarieId]);
+  return (
+    lignes.get(salarieId) ?? {
+      etat: 'INACTIF',
+      poste: null,
+      nombreEmploisOuverts: 0,
+      etablissement: null,
+      dateSortie: null,
+    }
+  );
+}
+
 export async function deduireEtatSalarie(
   prisma: PrismaClient,
   salarieId: string
 ): Promise<EtatSalarie> {
-  const lignes = await deduireLignesListeSalaries(prisma, [salarieId]);
-  return lignes.get(salarieId)?.etat ?? 'INACTIF';
+  return (await deduireLigneSalarie(prisma, salarieId)).etat;
 }
 
 export function deduireTypePieceIdentite(

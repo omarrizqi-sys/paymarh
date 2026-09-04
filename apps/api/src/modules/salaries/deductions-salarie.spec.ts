@@ -29,6 +29,7 @@ describe('deduireLigneListeSalarie', () => {
       poste: 'Comptable',
       nombreEmploisOuverts: 1,
       etablissement: { id: 'etab-casa', libelle: 'Casablanca' },
+      dateSortie: null,
     });
   });
 
@@ -43,6 +44,7 @@ describe('deduireLigneListeSalarie', () => {
       poste: null,
       nombreEmploisOuverts: 2,
       etablissement: null,
+      dateSortie: null,
     });
   });
 
@@ -61,6 +63,7 @@ describe('deduireLigneListeSalarie', () => {
       poste: 'Ancien poste',
       nombreEmploisOuverts: 0,
       etablissement: { id: 'etab-rabat', libelle: 'Rabat' },
+      dateSortie: datePassee,
     });
   });
 
@@ -70,28 +73,35 @@ describe('deduireLigneListeSalarie', () => {
       poste: null,
       nombreEmploisOuverts: 0,
       etablissement: null,
+      dateSortie: null,
     });
   });
 
-  it('choisit le dernier emploi clos quand plusieurs emplois clos', () => {
+  it('choisit l emploi clos le plus recent (poste et dateSortie) quand plusieurs emplois clos', () => {
     expect(
       deduireLigneListeSalarie([
         emploi({
           libellePoste: 'Premier',
-          dateSortie: new Date('2019-06-01'),
+          dateSortie: new Date('2024-03-10'),
           etablissement: { id: 'a', libelle: 'A' },
         }),
         emploi({
-          libellePoste: 'Dernier',
-          dateSortie: new Date('2021-03-01'),
+          libellePoste: 'Milieu',
+          dateSortie: new Date('2025-06-30'),
           etablissement: { id: 'b', libelle: 'B' },
+        }),
+        emploi({
+          libellePoste: 'Troisieme',
+          dateSortie: new Date('2023-01-15'),
+          etablissement: { id: 'c', libelle: 'C' },
         }),
       ])
     ).toEqual({
       etat: 'INACTIF',
-      poste: 'Dernier',
+      poste: 'Milieu',
       nombreEmploisOuverts: 0,
       etablissement: { id: 'b', libelle: 'B' },
+      dateSortie: new Date('2025-06-30'),
     });
   });
 });

@@ -82,6 +82,22 @@ export function collecterAlertesIdentifiantsBancaires(saisie: {
   }));
 }
 
+/**
+ * Rattache des alertes a la ligne qui les a produites, pour le seul cas du
+ * remplacement global des comptes bancaires : le client envoie la liste
+ * entiere, donc deux comptes mal saisis renverraient sinon deux alertes
+ * identiques que l ecran ne saurait pas placer.
+ *
+ * L index est celui du TABLEAU ENVOYE PAR LE CLIENT, pas un identifiant en
+ * base : au moment de la validation, un compte nouveau n en a pas encore.
+ */
+export function rattacherIndexLigne(
+  alertes: readonly AlerteApi[],
+  indexLigne: number
+): AlerteApi[] {
+  return alertes.map((alerte) => ({ ...alerte, indexLigne }));
+}
+
 export async function collecterAlerteBanqueIncoherente(
   prisma: PrismaService,
   banqueId: string | null | undefined,

@@ -1,11 +1,12 @@
+import type { EmploiFicheNonType, FicheSalarie } from '@paymarh/shared-types';
 import type { Prisma, Salarie } from '../../../generated/prisma/client.js';
 import {
   declarerCleRubrique,
   RUBRIQUES_REMUNERATION,
 } from '../../../common/remuneration/rubriques-remuneration.js';
 import {
-  deduireEtatSalarie,
   deduireLibelleSituationFamiliale,
+  deduireLigneSalarie,
   deduireTypePieceIdentite,
 } from '../deductions-salarie.js';
 import type { PrismaService } from '../../../common/prisma/prisma.service.js';
@@ -38,8 +39,8 @@ export async function versFicheSalarie(
   moisEnCours: string,
   emplois: readonly unknown[] = [],
   bulletins: readonly MoisBulletin[] = []
-) {
-  const etat = await deduireEtatSalarie(prisma, salarie.id);
+): Promise<FicheSalarie> {
+  const deduite = await deduireLigneSalarie(prisma, salarie.id);
   const typePieceIdentite = deduireTypePieceIdentite(salarie.nationalite?.codeIso ?? null);
 
   let situationFamiliale: {
@@ -63,8 +64,9 @@ export async function versFicheSalarie(
   return {
     id: salarie.id,
     version: salarie.version,
-    etat,
+    etat: deduite.etat,
     moisEnCours,
+    dateSortie: deduite.dateSortie !== null ? formaterDate(deduite.dateSortie) : null,
     matricule: salarie.matricule,
     nom: salarie.nom,
     prenom: salarie.prenom,
@@ -93,7 +95,9 @@ export async function versFicheSalarie(
     urgenceEmail: salarie.urgenceEmail,
     dateEntree: formaterDate(salarie.dateEntree),
     dateAnciennete: formaterDate(salarie.dateAnciennete),
-    emplois: trierEmploisPourFiche(emplois as Parameters<typeof trierEmploisPourFiche>[0]),
+    emplois: trierEmploisPourFiche(
+      emplois as Parameters<typeof trierEmploisPourFiche>[0]
+    ) as readonly EmploiFicheNonType[],
     ...(salarie.personnesACharge !== undefined
       ? mapperCollectionsSalarie(
           {
@@ -107,10 +111,10 @@ export async function versFicheSalarie(
         )
       : {
           nombrePersonnesACharge: 0,
-          personnesACharge: [] as readonly unknown[],
-          comptesBancaires: [] as readonly unknown[],
-          prets: [] as readonly unknown[],
-          saisiesSurSalaire: [] as readonly unknown[],
+          personnesACharge: [],
+          comptesBancaires: [],
+          prets: [],
+          saisiesSurSalaire: [],
         }),
   };
 }
