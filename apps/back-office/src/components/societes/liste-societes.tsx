@@ -12,14 +12,8 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import type {
-  FormeJuridique,
-  Permission,
-  RessourceAvecOperations,
-  SocieteListe,
-} from '@paymarh/shared-types';
 import { libelleEtatDossier, formaterMoisAAAA_MM } from '@/lib/affichage/libelles';
-import { possedePermission } from '@/lib/permissions';
+import { type LigneSocieteListe } from '@/lib/affichage/liste-societes';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,10 +24,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-
-export interface LigneSocieteListe extends RessourceAvecOperations<SocieteListe> {
-  readonly libelleFormeJuridique: string;
-}
 
 interface Props {
   readonly societes: readonly LigneSocieteListe[];
@@ -180,14 +170,4 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
       </div>
     </div>
   );
-}
-
-/** Utilitaire pour verifier le droit de creation depuis les operations liste. */
-export function peutCreerSociete(operations: readonly Permission[]): boolean {
-  return possedePermission(operations, 'societe.creer');
-}
-
-/** Resout le libelle de forme juridique depuis le referentiel. */
-export function libelleForme(formes: readonly FormeJuridique[], formeJuridiqueId: string): string {
-  return formes.find((f) => f.id === formeJuridiqueId)?.libelle ?? '—';
 }

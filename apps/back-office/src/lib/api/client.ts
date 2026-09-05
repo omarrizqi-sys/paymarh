@@ -1,4 +1,5 @@
 import type { ApiResponse } from '@paymarh/shared-types';
+import { journaliserErreurServeur } from './ecrire-trace-stderr';
 
 const HEADER_USER_ID = 'x-paymarh-user-id';
 
@@ -64,15 +65,22 @@ function extraireErreur(corps: unknown, statut: number): ErreurApi {
 
 /** Appel GET JSON vers l API avec enveloppe { data, warnings }. */
 export async function appelerApiGet<T>(chemin: string): Promise<ApiResponse<T>> {
-  const reponse = await fetch(`${urlApi()}${chemin}`, {
-    cache: 'no-store',
-    headers: entetesApi(),
-  });
-  const corps = await lireCorps(reponse);
-  if (!reponse.ok) {
-    throw new AppelApiEchoue(reponse.status, extraireErreur(corps, reponse.status));
+  const methode = 'GET';
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      cache: 'no-store',
+      headers: entetesApi(),
+    });
+    const corps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(corps, reponse.status));
+    }
+    return corps as ApiResponse<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
   }
-  return corps as ApiResponse<T>;
 }
 
 /** Appel mutatif JSON (POST, PATCH, PUT, DELETE). */
@@ -81,15 +89,21 @@ export async function appelerApiMutation<T>(
   chemin: string,
   corps?: unknown
 ): Promise<ApiResponse<T>> {
-  const reponse = await fetch(`${urlApi()}${chemin}`, {
-    method: methode,
-    cache: 'no-store',
-    headers: entetesApi(),
-    body: corps !== undefined ? JSON.stringify(corps) : undefined,
-  });
-  const reponseCorps = await lireCorps(reponse);
-  if (!reponse.ok) {
-    throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      method: methode,
+      cache: 'no-store',
+      headers: entetesApi(),
+      body: corps !== undefined ? JSON.stringify(corps) : undefined,
+    });
+    const reponseCorps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+    }
+    return reponseCorps as ApiResponse<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
   }
-  return reponseCorps as ApiResponse<T>;
 }

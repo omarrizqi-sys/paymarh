@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { FicheSalarieClient } from '@/components/salaries/fiche/fiche-salarie-client';
 import { lireSalarie } from '@/lib/api/salaries';
 import { listerPays, listerSituationsFamiliales } from '@/lib/api/referentiels';
+import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
 
 interface Props {
   readonly params: Promise<{ id: string; salarieId: string }>;
@@ -28,7 +29,11 @@ export default async function PageFicheSalarie({ params }: Props) {
         />
       </div>
     );
-  } catch {
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, {
+      methode: 'GET',
+      url: `/societes/${companyId}/salaries/${salarieId}`,
+    });
     return notFound();
   }
 }

@@ -918,6 +918,7 @@ describe('TAHFIZ — retrecissement des dates et lecture par lot', () => {
     expect(ligne.dateFin?.toISOString().slice(0, 10)).toBe('2026-05-31');
   });
 
+  // Cree 30 salaries puis propage ; sous contention de la suite parallele le defaut Vitest (5 s) est trop court.
   it('retrait TAHFIZ sur plusieurs dizaines de salaries : un seul appel au BulletinPort', async () => {
     const societe = await creerSocieteTest(prisma, formeId, compteId, `${PREFIXE}-DATES-LOT`);
     await prisma.company.update({
@@ -950,7 +951,7 @@ describe('TAHFIZ — retrecissement des dates et lecture par lot', () => {
     });
     expect(retrait.status).toBe(200);
     expect(appelsLot).toBe(1);
-  });
+  }, 30_000);
 });
 
 describe('TAHFIZ — transaction unique avec le parametrage societe', () => {

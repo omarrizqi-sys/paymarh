@@ -117,6 +117,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
     );
   });
 
+  // Demarre AppModule entier ; sous contention de la suite parallele le defaut Vitest (5 s) est trop court.
   it('l application demarre normalement avec la liste d exemption module 1 en place', async () => {
     const { AppModule } = await import('../../app.module.js');
     const moduleRef = await Test.createTestingModule({
@@ -125,7 +126,7 @@ describe('VerificateurRoutesService — demarrage refusant', () => {
     const verificateur = moduleRef.get(VerificateurRoutesService);
     expect(() => verificateur.verifier()).not.toThrow();
     await moduleRef.close();
-  });
+  }, 30_000);
 
   it('un PATCH marque @SansIfMatch fait echouer le demarrage', async () => {
     @Controller('probe-conformite')

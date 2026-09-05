@@ -1,12 +1,13 @@
 import { listerSocietes } from '@/lib/api/societes';
 import { chargerReferentielsFiche } from '@/lib/api/referentiels';
-import { identifiantUtilisateurDev } from '@/lib/api/client';
+import { identifiantUtilisateurDev, urlApi } from '@/lib/api/client';
+import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
+import { ListeSocietes } from '@/components/societes/liste-societes';
 import {
-  ListeSocietes,
   libelleForme,
   peutCreerSociete,
   type LigneSocieteListe,
-} from '@/components/societes/liste-societes';
+} from '@/lib/affichage/liste-societes';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default async function PageListeSocietes() {
@@ -41,7 +42,8 @@ export default async function PageListeSocietes() {
         <ListeSocietes societes={lignes} peutCreer={peutCreerSociete(liste.operations)} />
       </div>
     );
-  } catch {
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode: 'GET', url: `${urlApi()}/societes` });
     return (
       <Alert variant="destructive">
         <AlertDescription>

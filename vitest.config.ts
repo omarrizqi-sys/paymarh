@@ -40,6 +40,10 @@ export default defineConfig({
         resolve: {
           alias: {
             '@': resolve(import.meta.dirname, 'apps/back-office/src'),
+            'server-only': resolve(
+              import.meta.dirname,
+              'apps/back-office/src/test/server-only-stub.ts'
+            ),
           },
         },
         test: {

@@ -9,6 +9,7 @@ import {
   normaliserParametrageSociete,
 } from '@/lib/api/parametrage-mapper';
 import { FicheSocieteClient } from '@/components/societes/fiche-societe-client';
+import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
 import { notFound } from 'next/navigation';
 
 interface Props {
@@ -63,7 +64,8 @@ export default async function PageFicheSociete({ params }: Props) {
         />
       </div>
     );
-  } catch {
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode: 'GET', url: `/societes/${id}` });
     notFound();
   }
 }

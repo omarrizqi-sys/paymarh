@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { listerEtablissements } from '@/lib/api/etablissements';
 import { listerSalaries } from '@/lib/api/salaries';
+import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
 import {
   LienRetourFicheSociete,
   ListeSalariesClient,
@@ -30,7 +31,11 @@ export default async function PageListeSalaries({ params }: Props) {
         />
       </div>
     );
-  } catch {
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, {
+      methode: 'GET',
+      url: `/societes/${companyId}/salaries`,
+    });
     return notFound();
   }
 }

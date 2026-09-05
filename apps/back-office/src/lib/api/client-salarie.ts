@@ -1,5 +1,6 @@
 import type { ReponseEcriture } from '@paymarh/shared-types';
 import { AppelApiEchoue, entetesApi, urlApi } from './client.js';
+import { journaliserErreurServeur } from './ecrire-trace-stderr';
 
 const HEADER_COMPANY_ID = 'x-paymarh-company-id';
 const HEADER_IF_MATCH = 'if-match';
@@ -44,15 +45,22 @@ export async function appelerSalarieGet<T>(
   companyId: string,
   chemin: string
 ): Promise<{ donnees: T }> {
-  const reponse = await fetch(`${urlApi()}${chemin}`, {
-    cache: 'no-store',
-    headers: entetesSalarie(companyId),
-  });
-  const corps = await lireCorps(reponse);
-  if (!reponse.ok) {
-    throw new AppelApiEchoue(reponse.status, extraireErreur(corps, reponse.status));
+  const methode = 'GET';
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      cache: 'no-store',
+      headers: entetesSalarie(companyId),
+    });
+    const corps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(corps, reponse.status));
+    }
+    return corps as { donnees: T };
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
   }
-  return corps as { donnees: T };
 }
 
 /** PATCH JSON vers l API salarie ({ donnees, alertes }). */
@@ -62,15 +70,22 @@ export async function appelerSalariePatch<T>(
   corps: unknown,
   ifMatch: number
 ): Promise<ReponseEcriture<T>> {
-  const reponse = await fetch(`${urlApi()}${chemin}`, {
-    method: 'PATCH',
-    cache: 'no-store',
-    headers: entetesSalarie(companyId, ifMatch),
-    body: JSON.stringify(corps),
-  });
-  const reponseCorps = await lireCorps(reponse);
-  if (!reponse.ok) {
-    throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+  const methode = 'PATCH' as const;
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      method: methode,
+      cache: 'no-store',
+      headers: entetesSalarie(companyId, ifMatch),
+      body: JSON.stringify(corps),
+    });
+    const reponseCorps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+    }
+    return reponseCorps as ReponseEcriture<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
   }
-  return reponseCorps as ReponseEcriture<T>;
 }
