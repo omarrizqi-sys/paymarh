@@ -2,19 +2,24 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { Pays, SituationFamiliale } from '@paymarh/shared-types';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
-import { RegistreAlertesSalarie } from '@/components/salaries/formulaire/messages-alerte-salarie';
 import {
   AvertissementNavigationFiche,
   confirmerNavigationAvecModifications,
 } from './avertissement-navigation';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
-import { RubriqueCoordonneesDemo } from './rubrique-coordonnees-demo';
-import { RubriqueDatesDemo } from './rubrique-dates-demo';
-import { RubriqueIdentiteDemo } from './rubrique-identite-demo';
+import { RubriqueIdentite, type ValeursIdentite } from './rubrique-identite';
+import {
+  RubriqueIdentifiantsLegaux,
+  type ValeursIdentifiantsLegaux,
+} from './rubrique-identifiants-legaux';
+import { RubriqueCoordonnees, type ValeursCoordonnees } from './rubrique-coordonnees';
+import { RubriqueDates, type ValeursDates } from './rubrique-dates';
 import { RubriqueRemunerationPlaceholder } from './rubrique-remuneration-placeholder';
 import { RailActionsFiche } from './rail-actions-fiche';
 import { SommaireRubriques } from './sommaire-rubriques';
@@ -24,6 +29,8 @@ interface Props {
   readonly companyId: string;
   readonly salarieId: string;
   readonly initial: FicheSalarieAvecOperations;
+  readonly pays: readonly Pays[];
+  readonly situationsFamiliales: readonly SituationFamiliale[];
 }
 
 function SyncVersion({ version }: { readonly version: number }) {
@@ -57,14 +64,17 @@ function ContenuFicheSalarie({
   companyId,
   salarieId,
   fiche,
+  pays,
+  situationsFamiliales,
   onFicheChange,
 }: {
   readonly companyId: string;
   readonly salarieId: string;
   readonly fiche: FicheSalarieAvecOperations;
+  readonly pays: readonly Pays[];
+  readonly situationsFamiliales: readonly SituationFamiliale[];
   readonly onFicheChange: (fiche: FicheSalarieAvecOperations) => void;
 }) {
-  const { alertesGlobales } = useRegistreFiche();
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
 
   const appliquerSlice = useCallback(
@@ -72,6 +82,80 @@ function ContenuFicheSalarie({
       onFicheChange({ ...fiche, ...patch });
     },
     [fiche, onFicheChange]
+  );
+
+  const valeursIdentite = useMemo(
+    (): ValeursIdentite => ({
+      nom: fiche.nom,
+      prenom: fiche.prenom,
+      sexe: fiche.sexe,
+      dateNaissance: fiche.dateNaissance,
+      villeNaissance: fiche.villeNaissance ?? '',
+      paysNaissanceId: fiche.paysNaissanceId ?? '',
+      nationaliteId: fiche.nationaliteId ?? '',
+      situationFamilialeCode: fiche.situationFamiliale.code ?? '',
+    }),
+    [
+      fiche.nom,
+      fiche.prenom,
+      fiche.sexe,
+      fiche.dateNaissance,
+      fiche.villeNaissance,
+      fiche.paysNaissanceId,
+      fiche.nationaliteId,
+      fiche.situationFamiliale.code,
+    ]
+  );
+
+  const valeursIdentifiantsLegaux = useMemo(
+    (): ValeursIdentifiantsLegaux => ({
+      matricule: fiche.matricule,
+      numeroPiece: fiche.numeroPiece ?? '',
+      numeroCnss: fiche.numeroCnss ?? '',
+      numeroCimr: fiche.numeroCimr ?? '',
+    }),
+    [fiche.matricule, fiche.numeroPiece, fiche.numeroCnss, fiche.numeroCimr]
+  );
+
+  const valeursCoordonnees = useMemo(
+    (): ValeursCoordonnees => ({
+      adresse: fiche.adresse ?? '',
+      complementAdresse: fiche.complementAdresse ?? '',
+      codePostal: fiche.codePostal ?? '',
+      ville: fiche.ville ?? '',
+      paysId: fiche.paysId ?? '',
+      telephonePersonnel: fiche.telephonePersonnel ?? '',
+      telephoneProfessionnel: fiche.telephoneProfessionnel ?? '',
+      emailPersonnel: fiche.emailPersonnel ?? '',
+      emailProfessionnel: fiche.emailProfessionnel ?? '',
+      urgencePrenom: fiche.urgencePrenom ?? '',
+      urgenceNom: fiche.urgenceNom ?? '',
+      urgenceTelephone: fiche.urgenceTelephone ?? '',
+      urgenceEmail: fiche.urgenceEmail ?? '',
+    }),
+    [
+      fiche.adresse,
+      fiche.complementAdresse,
+      fiche.codePostal,
+      fiche.ville,
+      fiche.paysId,
+      fiche.telephonePersonnel,
+      fiche.telephoneProfessionnel,
+      fiche.emailPersonnel,
+      fiche.emailProfessionnel,
+      fiche.urgencePrenom,
+      fiche.urgenceNom,
+      fiche.urgenceTelephone,
+      fiche.urgenceEmail,
+    ]
+  );
+
+  const valeursDates = useMemo(
+    (): ValeursDates => ({
+      dateEntree: fiche.dateEntree,
+      dateAnciennete: fiche.dateAnciennete,
+    }),
+    [fiche.dateEntree, fiche.dateAnciennete]
   );
 
   return (
@@ -88,8 +172,6 @@ function ContenuFicheSalarie({
         </h1>
       </header>
 
-      <RegistreAlertesSalarie alertes={alertesGlobales} />
-
       <SqueletteFicheSalarie
         sommaire={
           <SommaireRubriques
@@ -101,34 +183,48 @@ function ContenuFicheSalarie({
           <>
             {possedePermission(fiche.operations, 'salarie.modifier') ? (
               <>
-                <RubriqueIdentiteDemo
+                <RubriqueIdentite
                   companyId={companyId}
                   salarieId={salarieId}
-                  valeurs={{ nom: fiche.nom, prenom: fiche.prenom }}
-                  onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
-                />
-                <RubriqueCoordonneesDemo
-                  companyId={companyId}
-                  salarieId={salarieId}
-                  valeurs={{
-                    adresse: fiche.adresse ?? '',
-                    ville: fiche.ville ?? '',
-                  }}
-                  onServeurChange={(valeurs, version) =>
+                  valeurs={valeursIdentite}
+                  pays={pays}
+                  situationsFamiliales={situationsFamiliales}
+                  libelleSituationEnregistree={fiche.situationFamiliale.libelle}
+                  onServeurChange={(valeurs, version, extras) =>
                     appliquerSlice({
-                      adresse: valeurs.adresse,
-                      ville: valeurs.ville,
+                      nom: valeurs.nom,
+                      prenom: valeurs.prenom,
+                      sexe: valeurs.sexe,
+                      dateNaissance: valeurs.dateNaissance,
+                      villeNaissance: valeurs.villeNaissance === '' ? null : valeurs.villeNaissance,
+                      paysNaissanceId:
+                        valeurs.paysNaissanceId === '' ? null : valeurs.paysNaissanceId,
+                      nationaliteId: valeurs.nationaliteId === '' ? null : valeurs.nationaliteId,
+                      situationFamiliale: extras.situationFamiliale,
+                      typePieceIdentite: extras.typePieceIdentite,
                       version,
                     })
                   }
                 />
-                <RubriqueDatesDemo
+                <RubriqueIdentifiantsLegaux
                   companyId={companyId}
                   salarieId={salarieId}
-                  valeurs={{
-                    dateEntree: fiche.dateEntree,
-                    dateAnciennete: fiche.dateAnciennete,
-                  }}
+                  valeurs={valeursIdentifiantsLegaux}
+                  typePieceIdentite={fiche.typePieceIdentite}
+                  onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
+                />
+                <RubriqueCoordonnees
+                  companyId={companyId}
+                  salarieId={salarieId}
+                  valeurs={valeursCoordonnees}
+                  pays={pays}
+                  onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
+                />
+                <RubriqueDates
+                  companyId={companyId}
+                  salarieId={salarieId}
+                  valeurs={valeursDates}
+                  dateSortie={fiche.dateSortie}
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
               </>
@@ -144,13 +240,21 @@ function ContenuFicheSalarie({
   );
 }
 
-export function FicheSalarieClient({ companyId, salarieId, initial }: Props) {
+export function FicheSalarieClient({
+  companyId,
+  salarieId,
+  initial,
+  pays,
+  situationsFamiliales,
+}: Props) {
   const router = useRouter();
   const [fiche, setFiche] = useState(initial);
 
   const rechargerServeur = useCallback(async () => {
     const reponse = await lireSalarie(companyId, salarieId);
-    setFiche(reponse.donnees);
+    flushSync(() => {
+      setFiche(reponse.donnees);
+    });
     router.refresh();
   }, [companyId, router, salarieId]);
 
@@ -165,6 +269,8 @@ export function FicheSalarieClient({ companyId, salarieId, initial }: Props) {
         companyId={companyId}
         salarieId={salarieId}
         fiche={fiche}
+        pays={pays}
+        situationsFamiliales={situationsFamiliales}
         onFicheChange={setFiche}
       />
     </RegistreFicheProvider>

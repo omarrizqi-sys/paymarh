@@ -9,7 +9,7 @@ function creerRubrique(
   modifiee: boolean,
   envoyer: RubriqueEnregistrable['envoyer']
 ): RubriqueEnregistrable {
-  return { id, libelle, estModifiee: () => modifiee, envoyer };
+  return { id, libelle, estModifiee: () => modifiee, envoyer, reinitialiser: () => undefined };
 }
 
 describe('enregistrerRubriquesModifiees', () => {

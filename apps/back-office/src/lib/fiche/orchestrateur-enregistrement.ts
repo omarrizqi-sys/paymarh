@@ -22,6 +22,7 @@ export interface RubriqueEnregistrable {
   readonly libelle: string;
   estModifiee(): boolean;
   envoyer(version: number): Promise<EnvoiRubriqueResultat>;
+  reinitialiser(): void;
 }
 
 export interface ResultatEnregistrementGlobal {

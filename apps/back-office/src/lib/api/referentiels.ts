@@ -3,6 +3,8 @@ import type {
   FormeJuridique,
   JourFerie,
   ListResponse,
+  Pays,
+  SituationFamiliale,
   TypeExoneration,
   TypeHeure,
 } from '@paymarh/shared-types';
@@ -26,6 +28,14 @@ export async function listerTypesHeures() {
 
 export async function listerTypesExoneration() {
   return appelerApiGet<ListResponse<TypeExoneration>>('/referentiels/types-exoneration');
+}
+
+export async function listerPays() {
+  return appelerApiGet<ListResponse<Pays>>('/referentiels/pays');
+}
+
+export async function listerSituationsFamiliales() {
+  return appelerApiGet<ListResponse<SituationFamiliale>>('/referentiels/situations-familiales');
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */

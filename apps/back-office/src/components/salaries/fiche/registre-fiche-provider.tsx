@@ -1,5 +1,6 @@
 'use client';
 
+import { flushSync } from 'react-dom';
 import {
   createContext,
   useCallback,
@@ -33,7 +34,7 @@ interface RegistreFicheContexte {
   readonly rubriquesSommaire: readonly EntreeSommaireRubrique[];
   readonly nombreModifiees: number;
   enregistrer(): Promise<void>;
-  annuler(): Promise<void>;
+  annuler(): void;
   rechargerDepuisServeur(): void;
   confirmerRechargementServeur(): Promise<void>;
   annulerRechargementServeur(): void;
@@ -141,13 +142,17 @@ export function RegistreFicheProvider({
     }
   }, [notifierSommaire, onApresEnregistrement, rubriquesOrdonnees, version]);
 
-  const annuler = useCallback(async () => {
-    await onRechargerServeur();
+  const annuler = useCallback(() => {
+    for (const rubrique of rubriquesOrdonnees()) {
+      flushSync(() => {
+        rubrique.reinitialiser();
+      });
+    }
     setConflitVersion(false);
     setResultatsRecap([]);
     setAlertesGlobales([]);
     notifierSommaire();
-  }, [notifierSommaire, onRechargerServeur]);
+  }, [notifierSommaire, rubriquesOrdonnees]);
 
   const rechargerDepuisServeur = useCallback((): void => {
     setRechargementEnAttente(true);
@@ -156,11 +161,16 @@ export function RegistreFicheProvider({
   const confirmerRechargementServeur = useCallback(async () => {
     setRechargementEnAttente(false);
     await onRechargerServeur();
+    for (const rubrique of rubriquesOrdonnees()) {
+      flushSync(() => {
+        rubrique.reinitialiser();
+      });
+    }
     setConflitVersion(false);
     setResultatsRecap([]);
     setAlertesGlobales([]);
     notifierSommaire();
-  }, [notifierSommaire, onRechargerServeur]);
+  }, [notifierSommaire, onRechargerServeur, rubriquesOrdonnees]);
 
   const annulerRechargementServeur = useCallback(() => {
     setRechargementEnAttente(false);

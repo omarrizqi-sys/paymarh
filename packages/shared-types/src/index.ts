@@ -49,7 +49,15 @@ export type {
   RessourceAvecOperations,
   ListResponseAvecOperations,
 } from './ressource-avec-operations';
-export type { FormeJuridique, Banque, JourFerie, TypeHeure, TypeExoneration } from './referentiel';
+export type {
+  FormeJuridique,
+  Banque,
+  JourFerie,
+  TypeHeure,
+  TypeExoneration,
+  Pays,
+  SituationFamiliale,
+} from './referentiel';
 export type {
   JourSemaine,
   ParametrageSociete,

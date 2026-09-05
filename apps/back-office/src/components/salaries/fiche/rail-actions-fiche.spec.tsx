@@ -31,6 +31,7 @@ function RubriqueModifiable({
       libelle,
       estModifiee: () => modifiee,
       envoyer,
+      reinitialiser: () => undefined,
     });
   }, [enregistrerRubrique, envoyer, id, libelle, modifiee]);
 
@@ -208,6 +209,91 @@ describe('RailActionsFiche', () => {
     fireEvent.click(screen.getByTestId('recharger-valeurs-serveur'));
     expect(screen.getByTestId('dialogue-rechargement')).toBeTruthy();
     expect(screen.getByText(/Recharger les valeurs du serveur ecrasera/)).toBeTruthy();
+  });
+
+  it('U2 — Annuler appelle reinitialiser sur tous les blocs declares, modifies ou non', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const reinitA = vi.fn();
+    const reinitB = vi.fn();
+    const recharger = vi.fn(async () => undefined);
+
+    function RubriqueAvecReset({
+      id,
+      libelle,
+      reinitialiser,
+      initialeModifiee,
+    }: {
+      readonly id: string;
+      readonly libelle: string;
+      readonly reinitialiser: () => void;
+      readonly initialeModifiee: boolean;
+    }) {
+      const { enregistrerRubrique, notifierSommaire } = useRegistreFiche();
+      const [modifiee, setModifiee] = useState(initialeModifiee);
+      useEffect(() => {
+        return enregistrerRubrique({
+          id,
+          libelle,
+          estModifiee: () => modifiee,
+          envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
+          reinitialiser: () => {
+            reinitialiser();
+            setModifiee(false);
+            notifierSommaire();
+          },
+        });
+      }, [enregistrerRubrique, id, libelle, modifiee, notifierSommaire, reinitialiser]);
+      return null;
+    }
+
+    render(
+      createElement(Harness, {
+        onRecharger: recharger,
+        children: createElement(
+          'div',
+          null,
+          createElement(RubriqueAvecReset, {
+            id: 'identite',
+            libelle: 'Identite',
+            reinitialiser: reinitA,
+            initialeModifiee: true,
+          }),
+          createElement(RubriqueAvecReset, {
+            id: 'coordonnees',
+            libelle: 'Coordonnees',
+            reinitialiser: reinitB,
+            initialeModifiee: false,
+          })
+        ),
+      })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+    await waitFor(() => expect(reinitA).toHaveBeenCalledTimes(1));
+    expect(reinitB).toHaveBeenCalledTimes(1);
+    confirm.mockRestore();
+  });
+
+  it('U3 — Annuler ne declenche aucun appel au serveur', async () => {
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const recharger = vi.fn(async () => undefined);
+
+    render(
+      createElement(Harness, {
+        onRecharger: recharger,
+        children: createElement(RubriqueModifiable, {
+          id: 'identite',
+          libelle: 'Identite',
+          envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
+        }),
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('marquer-identite'));
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(recharger).not.toHaveBeenCalled();
+    confirm.mockRestore();
   });
 
   it('sans droit de suppression, l action correspondante est absente du rail', () => {

@@ -56,16 +56,58 @@ export async function modifierIdentiteSalarie(
   companyId: string,
   salarieId: string,
   version: number,
-  corps: { nom?: string; prenom?: string }
+  corps: {
+    nom?: string;
+    prenom?: string;
+    sexe?: 'HOMME' | 'FEMME';
+    dateNaissance?: string;
+    villeNaissance?: string | null;
+    paysNaissanceId?: string | null;
+    nationaliteId?: string | null;
+    situationFamilialeCode?: string | null;
+  }
 ): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
   return appelerSalariePatch(companyId, `/salaries/${salarieId}/identite`, corps, version);
+}
+
+export async function modifierIdentifiantsLegauxSalarie(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  corps: {
+    matricule?: string;
+    numeroPiece?: string | null;
+    numeroCnss?: string | null;
+    numeroCimr?: string | null;
+  }
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePatch(
+    companyId,
+    `/salaries/${salarieId}/identifiants-legaux`,
+    corps,
+    version
+  );
 }
 
 export async function modifierCoordonneesSalarie(
   companyId: string,
   salarieId: string,
   version: number,
-  corps: { ville?: string; adresse?: string }
+  corps: {
+    adresse?: string | null;
+    complementAdresse?: string | null;
+    ville?: string | null;
+    codePostal?: string | null;
+    paysId?: string | null;
+    telephonePersonnel?: string | null;
+    telephoneProfessionnel?: string | null;
+    emailPersonnel?: string | null;
+    emailProfessionnel?: string | null;
+    urgencePrenom?: string | null;
+    urgenceNom?: string | null;
+    urgenceTelephone?: string | null;
+    urgenceEmail?: string | null;
+  }
 ): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
   return appelerSalariePatch(companyId, `/salaries/${salarieId}/coordonnees`, corps, version);
 }

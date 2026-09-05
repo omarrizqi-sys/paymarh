@@ -15,12 +15,14 @@ function EnregistrerRubriquesSommaire() {
       libelle: 'Identite',
       estModifiee: () => false,
       envoyer: vi.fn(),
+      reinitialiser: () => undefined,
     });
     const desB = enregistrerRubrique({
       id: 'coordonnees',
       libelle: 'Coordonnees',
       estModifiee: () => false,
       envoyer: vi.fn(),
+      reinitialiser: () => undefined,
     });
     return () => {
       desA();

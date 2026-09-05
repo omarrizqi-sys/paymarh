@@ -34,3 +34,18 @@ export interface TypeExoneration {
   readonly code: string;
   readonly libelle: string;
 }
+
+export interface Pays {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly codeIso: string;
+  readonly libelle: string;
+}
+
+/** Referentiel : les deux libelles, jamais un seul. */
+export interface SituationFamiliale {
+  readonly id: Uuid;
+  readonly code: string;
+  readonly libelleMasculin: string;
+  readonly libelleFeminin: string;
+}

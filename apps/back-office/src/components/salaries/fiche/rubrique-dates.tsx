@@ -1,17 +1,14 @@
 'use client';
 
-/**
- * RUBRIQUE JETABLE — socle 2.1.c-1 temps 2.a uniquement.
- * Sera remplacee par la vraie rubrique dates en 2.1.c-2.
- * Champs bruts (dateEntree, dateAnciennete) sans regle d affichage, obligation ni format de la spec fiche salarie.
- */
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { MessagesAlerteChamp } from '@/components/salaries/formulaire/messages-alerte-salarie';
 import { modifierDatesSalarie } from '@/lib/api/salaries';
+import { TeteRubriqueFiche } from './tete-rubrique-fiche';
 import { useRubriqueFiche } from './use-rubrique-fiche';
 
-interface ValeursDates {
+export interface ValeursDates {
   readonly dateEntree: string;
   readonly dateAnciennete: string;
 }
@@ -20,13 +17,20 @@ interface Props {
   readonly companyId: string;
   readonly salarieId: string;
   readonly valeurs: ValeursDates;
+  readonly dateSortie: string | null;
   readonly onServeurChange: (valeurs: ValeursDates, version: number) => void;
 }
 
-export function RubriqueDatesDemo({ companyId, salarieId, valeurs, onServeurChange }: Props) {
+export function RubriqueDates({
+  companyId,
+  salarieId,
+  valeurs,
+  dateSortie,
+  onServeurChange,
+}: Props) {
   const rubrique = useRubriqueFiche({
     id: 'dates',
-    libelle: 'Dates',
+    libelle: 'Dates cles',
     valeursServeur: valeurs,
     estModifiee: (courant, serveur) =>
       courant.dateEntree !== serveur.dateEntree ||
@@ -49,29 +53,43 @@ export function RubriqueDatesDemo({ companyId, salarieId, valeurs, onServeurChan
   });
 
   return (
-    <Rubrique id="dates" titre="Dates (jetable)">
+    <Rubrique id="dates" titre="Dates cles">
+      <TeteRubriqueFiche
+        erreur={rubrique.erreur}
+        alertes={rubrique.alertes}
+        testidErreur="erreur-rubrique-dates"
+        testidAlertes="alertes-tete-dates"
+      />
+
       <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="dateEntree">Date d entree</Label>
+        <div className="space-y-2">
+          <Label htmlFor="dateEntree">Date d entree *</Label>
           <Input
             id="dateEntree"
             type="date"
-            value={rubrique.courant.dateEntree}
+            value={rubrique.courant.dateEntree.slice(0, 10)}
             onChange={(e) => rubrique.modifier({ dateEntree: e.target.value })}
           />
-          {rubrique.erreur ? (
-            <p className="text-destructive text-sm" role="alert">
-              {rubrique.erreur}
-            </p>
-          ) : null}
+          <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateEntree" />
         </div>
-        <div>
-          <Label htmlFor="dateAnciennete">Date d anciennete</Label>
+        <div className="space-y-2">
+          <Label htmlFor="dateAnciennete">Date d anciennete *</Label>
           <Input
             id="dateAnciennete"
             type="date"
-            value={rubrique.courant.dateAnciennete}
+            value={rubrique.courant.dateAnciennete.slice(0, 10)}
             onChange={(e) => rubrique.modifier({ dateAnciennete: e.target.value })}
+          />
+          <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateAnciennete" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="dateSortie">Date de sortie</Label>
+          <Input
+            id="dateSortie"
+            type="date"
+            value={dateSortie?.slice(0, 10) ?? ''}
+            readOnly
+            disabled
           />
         </div>
       </div>

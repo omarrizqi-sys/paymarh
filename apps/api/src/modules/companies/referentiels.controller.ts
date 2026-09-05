@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
+import { RequiertPermission } from '../../common/permissions/requiert-permission.decorator.js';
 import { TenantGuard } from '../../common/tenancy/tenant.guard.js';
 import { ReferentielsService } from './referentiels.service.js';
 
@@ -30,5 +31,17 @@ export class ReferentielsController {
   @Get('types-exoneration')
   typesExoneration() {
     return this.referentiels.typesExoneration();
+  }
+
+  @Get('pays')
+  @RequiertPermission('referentiel.lire')
+  pays() {
+    return this.referentiels.pays();
+  }
+
+  @Get('situations-familiales')
+  @RequiertPermission('referentiel.lire')
+  situationsFamiliales() {
+    return this.referentiels.situationsFamiliales();
   }
 }

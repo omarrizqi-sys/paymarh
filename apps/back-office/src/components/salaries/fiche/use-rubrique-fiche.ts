@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { AlerteApi } from '@paymarh/shared-types';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { estConflitVersion } from '@/lib/fiche/codes-conflit';
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
+import { valeursStructurellementEgales } from '@/lib/egalite-valeurs';
 import { useRegistreFiche } from './registre-fiche-provider';
 
 export interface RubriqueFicheProps<T> {
@@ -29,23 +30,76 @@ export function useRubriqueFiche<T>({
   const [erreur, setErreur] = useState<string | undefined>();
   const [alertes, setAlertes] = useState<readonly AlerteApi[]>([]);
   const courantRef = useRef(courant);
-  courantRef.current = courant;
   const envoyerRef = useRef(envoyer);
   envoyerRef.current = envoyer;
   const estModifieeRef = useRef(estModifiee);
   estModifieeRef.current = estModifiee;
   const valeursServeurRef = useRef(valeursServeur);
-  valeursServeurRef.current = valeursServeur;
+  const saisieUtilisateurRef = useRef(false);
+  const notifierApresCommitRef = useRef(false);
+  const reinitialiserRef = useRef(() => {
+    courantRef.current = valeursServeurRef.current;
+    setCourant(valeursServeurRef.current);
+    setErreur(undefined);
+    setAlertes([]);
+    saisieUtilisateurRef.current = false;
+    notifierApresCommitRef.current = true;
+  });
+  reinitialiserRef.current = () => {
+    courantRef.current = valeursServeurRef.current;
+    setCourant(valeursServeurRef.current);
+    setErreur(undefined);
+    setAlertes([]);
+    saisieUtilisateurRef.current = false;
+    notifierApresCommitRef.current = true;
+  };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    if (valeursStructurellementEgales(valeursServeur, valeursServeurRef.current)) {
+      valeursServeurRef.current = valeursServeur;
+      return;
+    }
+
+    const ancienServeur = valeursServeurRef.current;
+    const saisieLocale = saisieUtilisateurRef.current;
+
+    valeursServeurRef.current = valeursServeur;
+
+    if (saisieLocale && !valeursStructurellementEgales(valeursServeur, courantRef.current)) {
+      return;
+    }
+
+    if (
+      saisieLocale &&
+      valeursStructurellementEgales(valeursServeur, courantRef.current) &&
+      !valeursStructurellementEgales(ancienServeur, valeursServeur)
+    ) {
+      saisieUtilisateurRef.current = false;
+    }
+
+    courantRef.current = valeursServeur;
     setCourant(valeursServeur);
+    saisieUtilisateurRef.current = false;
+    notifierApresCommitRef.current = true;
   }, [valeursServeur]);
 
+  useLayoutEffect(() => {
+    if (!notifierApresCommitRef.current) {
+      return;
+    }
+    notifierApresCommitRef.current = false;
+    notifierSommaire();
+  });
+
   useEffect(() => {
+    const lireEstModifiee = () =>
+      estModifieeRef.current(courantRef.current, valeursServeurRef.current);
+
     const desenregistrer = enregistrerRubrique({
       id,
       libelle,
-      estModifiee: () => estModifieeRef.current(courantRef.current, valeursServeurRef.current),
+      estModifiee: lireEstModifiee,
+      reinitialiser: () => reinitialiserRef.current(),
       envoyer: async (versionEnvoi) => {
         setErreur(undefined);
         try {
@@ -67,16 +121,21 @@ export function useRubriqueFiche<T>({
   }, [enregistrerRubrique, id, libelle]);
 
   const modifier = (patch: Partial<T>) => {
-    setCourant((prev) => ({ ...prev, ...patch }));
-    notifierSommaire();
+    setCourant((prev) => {
+      const suivant = { ...prev, ...patch };
+      courantRef.current = suivant;
+      return suivant;
+    });
+    saisieUtilisateurRef.current = true;
+    setAlertes([]);
+    notifierApresCommitRef.current = true;
   };
 
   const reinitialiser = () => {
-    setCourant(valeursServeur);
-    setErreur(undefined);
-    setAlertes([]);
-    notifierSommaire();
+    reinitialiserRef.current();
   };
+
+  const modifiee = estModifiee(courant, valeursServeur);
 
   return {
     courant,
@@ -85,13 +144,15 @@ export function useRubriqueFiche<T>({
     erreur,
     alertes,
     version,
-    modifiee: estModifiee(courant, valeursServeur),
+    modifiee,
     appliquerServeur: (valeurs: T, nouvelleVersion: number) => {
+      courantRef.current = valeurs;
       setCourant(valeurs);
       setErreur(undefined);
       setAlertes([]);
+      saisieUtilisateurRef.current = false;
+      valeursServeurRef.current = valeurs;
       onServeurChange(valeurs, nouvelleVersion);
-      notifierSommaire();
     },
   };
 }

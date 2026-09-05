@@ -45,4 +45,16 @@ export class ReferentielsService {
     const items = await this.prisma.typeExoneration.findMany({ orderBy: { code: 'asc' } });
     return ok({ items, total: items.length });
   }
+
+  async pays(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.pays.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
+
+  async situationsFamiliales(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.situationFamiliale.findMany({ orderBy: { code: 'asc' } });
+    return ok({ items, total: items.length });
+  }
 }
