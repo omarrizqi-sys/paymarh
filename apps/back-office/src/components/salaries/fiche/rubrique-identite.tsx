@@ -32,8 +32,6 @@ interface Props {
   readonly valeurs: ValeursIdentite;
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
-  /** Libelle accorde renvoye par la lecture — affiche tel quel, jamais recalcule. */
-  readonly libelleSituationEnregistree: string | null;
   readonly onServeurChange: (
     valeurs: ValeursIdentite,
     version: number,
@@ -48,15 +46,7 @@ function videOuNull(valeur: string): string | null {
   return valeur === '' ? null : valeur;
 }
 
-function libelleOptionSituation(
-  situation: SituationFamiliale,
-  sexe: SexePersonne,
-  codeEnregistre: string,
-  libelleEnregistre: string | null
-): string {
-  if (situation.code === codeEnregistre && libelleEnregistre !== null && libelleEnregistre !== '') {
-    return libelleEnregistre;
-  }
+function libelleOptionSituation(situation: SituationFamiliale, sexe: SexePersonne): string {
   return sexe === 'FEMME' ? situation.libelleFeminin : situation.libelleMasculin;
 }
 
@@ -66,7 +56,6 @@ export function RubriqueIdentite({
   valeurs,
   pays,
   situationsFamiliales,
-  libelleSituationEnregistree,
   onServeurChange,
 }: Props) {
   const rubrique = useRubriqueFiche({
@@ -221,12 +210,7 @@ export function RubriqueIdentite({
             <option value=""></option>
             {situationsFamiliales.map((s) => (
               <option key={s.code} value={s.code}>
-                {libelleOptionSituation(
-                  s,
-                  rubrique.courant.sexe,
-                  valeurs.situationFamilialeCode,
-                  libelleSituationEnregistree
-                )}
+                {libelleOptionSituation(s, rubrique.courant.sexe)}
               </option>
             ))}
           </Select>

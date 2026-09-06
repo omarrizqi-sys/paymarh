@@ -189,7 +189,6 @@ function ContenuFicheSalarie({
                   valeurs={valeursIdentite}
                   pays={pays}
                   situationsFamiliales={situationsFamiliales}
-                  libelleSituationEnregistree={fiche.situationFamiliale.libelle}
                   onServeurChange={(valeurs, version, extras) =>
                     appliquerSlice({
                       nom: valeurs.nom,

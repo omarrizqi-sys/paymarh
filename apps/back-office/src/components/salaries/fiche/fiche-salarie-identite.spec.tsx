@@ -130,6 +130,20 @@ function champ(id: string): HTMLInputElement {
   return element;
 }
 
+function select(id: string): HTMLSelectElement {
+  const element = document.getElementById(id);
+  if (!(element instanceof HTMLSelectElement)) {
+    throw new Error(`Liste deroulante introuvable : ${id}`);
+  }
+  return element;
+}
+
+function libellesOptionsSituation(): string[] {
+  return Array.from(select('situationFamilialeCode').options)
+    .map((option) => option.text)
+    .filter((libelle) => libelle.length > 0);
+}
+
 describe('Fiche salarie — blocs identite', () => {
   beforeEach(() => {
     modifierIdentiteSalarie.mockReset();
@@ -339,6 +353,24 @@ describe('Fiche salarie — blocs identite', () => {
     await waitFor(() => expect(modifierCoordonneesSalarie).toHaveBeenCalledTimes(1));
     expect(modifierIdentifiantsLegauxSalarie).toHaveBeenCalledTimes(1);
     expect(champ('matricule')).toHaveProperty('value', 'EMP-DUP');
+  });
+
+  it('G1 — changer le sexe sans enregistrer accorde toutes les options de la liste, y compris celle qui est selectionnee', async () => {
+    rendre(
+      ficheBase({
+        sexe: 'FEMME',
+        situationFamiliale: { code: 'MARIE', libelle: 'Mariee' },
+      })
+    );
+
+    expect(libellesOptionsSituation()).toEqual(['Celibataire', 'Mariee', 'Divorcee', 'Veuve']);
+
+    await act(async () => {
+      fireEvent.change(select('sexe'), { target: { value: 'HOMME' } });
+    });
+
+    expect(libellesOptionsSituation()).toEqual(['Celibataire', 'Marie', 'Divorce', 'Veuf']);
+    expect(select('situationFamilialeCode').selectedOptions[0]?.text).toBe('Marie');
   });
 
   it('U14 — le message affiche apres un refus est exactement celui du serveur, sans ajout', async () => {

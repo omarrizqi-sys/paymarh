@@ -514,18 +514,22 @@ export class SalariesService {
     const existant = await this.trouverSalarieSociete(id);
     const { companyId } = companyScope(this.tenantContext.getOrThrow());
 
-    if (dto.matricule !== undefined) {
-      await this.verifierUniciteMatricule(companyId, dto.matricule, id);
-    }
-    if (dto.numeroPiece !== undefined && dto.numeroPiece !== null) {
-      await this.verifierUniciteNumeroPiece(companyId, dto.numeroPiece, id);
-    }
-    if (dto.numeroCnss !== undefined && dto.numeroCnss !== null) {
-      await this.verifierUniciteNumeroCnss(companyId, dto.numeroCnss, id);
-      assertChiffresSalarie(dto.numeroCnss, 'numeroCnss');
-    }
-    if (dto.numeroCimr !== undefined && dto.numeroCimr !== null) {
-      assertChiffresSalarie(dto.numeroCimr, 'numeroCimr');
+    try {
+      if (dto.matricule !== undefined) {
+        await this.verifierUniciteMatricule(companyId, dto.matricule, id);
+      }
+      if (dto.numeroPiece !== undefined && dto.numeroPiece !== null) {
+        await this.verifierUniciteNumeroPiece(companyId, dto.numeroPiece, id);
+      }
+      if (dto.numeroCnss !== undefined && dto.numeroCnss !== null) {
+        await this.verifierUniciteNumeroCnss(companyId, dto.numeroCnss, id);
+        assertChiffresSalarie(dto.numeroCnss, 'numeroCnss');
+      }
+      if (dto.numeroCimr !== undefined && dto.numeroCimr !== null) {
+        assertChiffresSalarie(dto.numeroCimr, 'numeroCimr');
+      }
+    } catch (erreur) {
+      relancerValidation(erreur);
     }
 
     const donnees: Record<string, unknown> = {};
@@ -671,10 +675,21 @@ export class SalariesService {
       const matriculeNouveau =
         typeof donnees.matricule === 'string' ? donnees.matricule : undefined;
       if (matriculeNouveau !== undefined) {
-        await this.prisma.$transaction(async (tx) => {
-          await marquerMatriculeConsomme(tx, companyId, matriculeNouveau);
-          await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees }, tx);
-        });
+        try {
+          await this.prisma.$transaction(async (tx) => {
+            await marquerMatriculeConsomme(tx, companyId, matriculeNouveau);
+            await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees }, tx);
+          });
+        } catch (erreur) {
+          if (estConflitUnicite(erreur)) {
+            throw new BadRequestException({
+              code: CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+              message: CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+              champ: 'matricule',
+            });
+          }
+          throw erreur;
+        }
       } else {
         await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees });
       }

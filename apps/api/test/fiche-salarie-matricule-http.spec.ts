@@ -151,6 +151,44 @@ describe('API fiche salarie — non-reutilisation des matricules', () => {
     assertRefusNeutre((await refus.json()) as { message?: string; code?: string });
   });
 
+  it('modifier un salarie vers le matricule deja pris dans la societe est refuse avec un message neutre', async () => {
+    const matriculePris = `${PREFIXE}-PATCH-DOUBLON-PRIS`;
+    const matriculeCible = `${PREFIXE}-PATCH-DOUBLON-CIBLE`;
+    await fetch(urlLocale(app, '/salaries'), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societeA.companyId),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payloadSalarie({ prenom: 'Premier', matricule: matriculePris })),
+    });
+    const creationCible = await fetch(urlLocale(app, '/salaries'), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societeA.companyId),
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify(payloadSalarie({ prenom: 'Second', matricule: matriculeCible })),
+    });
+    expect(creationCible.status).toBe(201);
+    const cible = (await creationCible.json()) as { donnees: { id: string; version: number } };
+
+    const refus = await fetch(urlLocale(app, `/salaries/${cible.donnees.id}/identifiants-legaux`), {
+      method: 'PATCH',
+      headers: {
+        ...entetes(utilisateurId, societeA.companyId),
+        'content-type': 'application/json',
+        'if-match': String(cible.donnees.version),
+      },
+      body: JSON.stringify({ matricule: matriculePris }),
+    });
+
+    expect(refus.status).toBe(400);
+    const corps = (await refus.json()) as { message?: string; code?: string; champ?: string };
+    assertRefusNeutre(corps);
+    expect(corps.champ).toBe('matricule');
+  });
+
   it('le meme matricule reste attribuable dans une autre societe du meme compte', async () => {
     const matricule = `${PREFIXE}-CROSS`;
     const creation = await fetch(urlLocale(app, '/salaries'), {
