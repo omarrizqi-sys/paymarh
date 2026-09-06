@@ -1,5 +1,5 @@
 import type { ReponseEcriture } from '@paymarh/shared-types';
-import { AppelApiEchoue, entetesApi, urlApi } from './client.js';
+import { AppelApiEchoue, entetesApi, urlApi } from './client';
 import { journaliserErreurServeur } from './ecrire-trace-stderr';
 
 const HEADER_COMPANY_ID = 'x-paymarh-company-id';

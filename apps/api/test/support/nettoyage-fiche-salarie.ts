@@ -42,4 +42,11 @@ export async function nettoyerCompteTest(prisma: PrismaClient, prefixe: string):
 
     await prisma.account.delete({ where: { id: compte.id } });
   }
+
+  // Apres les comptes : CompteBancaire / CompteBancaireSalarie sont Restrict
+  // sur Banque. Le nom de fixture contient le prefixe (`Banque fixture ${p}`).
+  // Les 21 banques du referentiel n ont jamais ce prefixe.
+  await prisma.banque.deleteMany({
+    where: { nom: { contains: prefixe } },
+  });
 }

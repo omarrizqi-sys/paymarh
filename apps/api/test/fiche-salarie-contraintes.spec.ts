@@ -5,6 +5,7 @@ import {
   creerSalarieMin,
   creerSocieteTest,
 } from './support/fiche-salarie-fixtures.js';
+import { allouerCodesBanqueLibres } from './support/codes-banque-libres.js';
 import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 
@@ -388,5 +389,37 @@ describe('fiche salarie — contraintes et structure (base reelle)', () => {
           (gen_random_uuid(), ${emploi.id}::uuid, '2025-01', NOW(), NOW(), ${societeA.etablissementPrincipalId}::uuid, 'HEBDOMADAIRE', NULL)
       `
     ).rejects.toBeDefined();
+  });
+
+  it('X1 — deux banques avec le meme code ne peuvent pas coexister', async () => {
+    const [code] = await allouerCodesBanqueLibres(prisma, 1);
+    await prisma.banque.create({
+      data: { nom: `Banque X1 ${PREFIXE}`, codeBanque: code, couleur: '#111111' },
+    });
+    await expect(
+      prisma.banque.create({
+        data: { nom: `Banque X1 doublon ${PREFIXE}`, codeBanque: code, couleur: '#222222' },
+      })
+    ).rejects.toMatchObject({ code: 'P2002' });
+  });
+
+  it('X2 — plusieurs banques sans code coexistent', async () => {
+    const avant = await prisma.banque.count({
+      where: { codeBanque: null, nom: { not: { contains: PREFIXE } } },
+    });
+    expect(avant).toBe(21);
+
+    const premiere = await prisma.banque.create({
+      data: { nom: `Banque X2a ${PREFIXE}`, codeBanque: null, couleur: '#333333' },
+    });
+    const deuxieme = await prisma.banque.create({
+      data: { nom: `Banque X2b ${PREFIXE}`, codeBanque: null, couleur: '#444444' },
+    });
+    expect(deuxieme.id).not.toBe(premiere.id);
+
+    const referentiel = await prisma.banque.count({
+      where: { codeBanque: null, nom: { not: { contains: PREFIXE } } },
+    });
+    expect(referentiel).toBe(21);
   });
 });

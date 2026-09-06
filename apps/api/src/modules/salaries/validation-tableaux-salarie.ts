@@ -139,7 +139,7 @@ export async function resoudreBanqueDepuisRib(
   if (banqueId !== null && banqueId !== undefined) return banqueId;
   if (rib === null || rib === undefined || rib.length < 3) return null;
   const codeRib = rib.slice(0, 3);
-  const banque = await prisma.banque.findFirst({
+  const banque = await prisma.banque.findUnique({
     where: { codeBanque: codeRib },
     select: { id: true },
   });

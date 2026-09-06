@@ -21,18 +21,11 @@ import {
   creerSalarieMin,
   creerSocieteTest,
 } from './support/fiche-salarie-fixtures.js';
+import { allouerCodesBanqueLibres } from './support/codes-banque-libres.js';
 import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-tableaux-api-${Date.now()}`;
-
-function codesBanqueFixture(): { codeRib: string; codeAutre: string } {
-  const n = (Number(PREFIXE.replace(/\D/g, '').slice(-5)) % 800) + 100;
-  return {
-    codeRib: String(n).padStart(3, '0'),
-    codeAutre: String(n + 1).padStart(3, '0'),
-  };
-}
 
 function ribDepuisCode(codeBanque: string, suffixe: string): string {
   return `${codeBanque}7800000000000000${suffixe}`.slice(0, 24);
@@ -1060,8 +1053,10 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     ).toBe(1);
   });
 
+  // Fabrique sa propre banque avec un code. Le pre-remplissage reste inerte
+  // en production tant que les 21 codes du referentiel sont vides (spec X3).
   it('22 — pre-remplissage banque depuis code RIB quand codeBanque renseigne', async () => {
-    const { codeRib } = codesBanqueFixture();
+    const [codeRib] = await allouerCodesBanqueLibres(prisma, 1);
     const banque = await prisma.banque.create({
       data: {
         nom: `Banque fixture ${PREFIXE}`,
@@ -1091,8 +1086,33 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(corps.donnees.comptesBancaires[0]?.banqueId).toBe(banque.id);
   });
 
+  it('X3 — RIB sans banque correspondante ne pre-remplit rien et ne produit aucune erreur', async () => {
+    const [codeInconnu] = await allouerCodesBanqueLibres(prisma, 1);
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-BANQUE-ABSENTE`,
+    });
+    const rib = ribDepuisCode(codeInconnu, '00888');
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ comptes: [{ rib }] }),
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      alertes: { code: string }[];
+      donnees: { comptesBancaires: { banqueId: string | null }[] };
+    };
+    expect(corps.donnees.comptesBancaires[0]?.banqueId).toBeNull();
+    expect(corps.alertes).toEqual([]);
+  });
+
   it('23 — banque designee incoherente avec RIB produit alerte T11', async () => {
-    const { codeRib, codeAutre } = codesBanqueFixture();
+    const [codeRib, codeAutre] = await allouerCodesBanqueLibres(prisma, 2);
     const banqueRib = await prisma.banque.create({
       data: {
         nom: `Banque RIB ${PREFIXE}`,

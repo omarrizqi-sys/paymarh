@@ -251,14 +251,15 @@ model FormeJuridique {
 }
 
 /// Banque marocaine proposee a la saisie des RIB.
-/// `codeBanque` (3 premiers chiffres du RIB) est prevu mais laisse vide pour l instant.
+/// `codeBanque` : identifiant BAM, unique s il est renseigne. Encore vide au seed.
 model Banque {
   id         String  @id @default(uuid()) @db.Uuid
   nom        String
   /// Ancien sigle conserve pour la recherche (ex. SGMB, BMCE).
   ancienNom  String?
-  /// Trois premiers chiffres du RIB — a renseigner plus tard.
-  codeBanque String?
+  /// Identifiant BAM (3 premiers chiffres du RIB). Unique si renseigne ;
+  /// NULL autorise — les 21 banques du referentiel n ont pas encore de code.
+  codeBanque String? @unique
   /// Couleur d affichage (hex, ex. #E2001A).
   couleur    String
 

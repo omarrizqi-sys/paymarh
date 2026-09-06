@@ -12,7 +12,7 @@ export type {
   LigneListeSalarie,
   ListeSalariesDonnees,
   ListerSalariesParams,
-} from './salaries-types.js';
+} from './salaries-types';
 
 function construireQueryListe(params: ListerSalariesParams): string {
   const query = new URLSearchParams();

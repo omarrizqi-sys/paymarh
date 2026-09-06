@@ -25,6 +25,28 @@ export default [
   },
 
   {
+    // Next / Turbopack ne resout pas les extensions .js des imports
+    // relatifs. L API les exige (ESM Nest) ; le back-office, non.
+    // no-restricted-imports (regle native) : les paquets du type
+    // decimal.js ne matchent pas ces motifs, qui exigent ./ ou ../.
+    files: ['apps/back-office/src/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['./*.js', './**/*.js', '../*.js', '../**/*.js'],
+              message:
+                'Interdit : pas d extension .js sur un import relatif du back-office. Ecrivez ./module, pas ./module.js.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
     // --- Specificites NestJS -------------------------------------------
     files: ['apps/api/**/*.ts'],
     rules: {

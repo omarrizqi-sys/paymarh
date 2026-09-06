@@ -7,6 +7,7 @@ import {
   creerSalarieMin,
   creerSocieteTest,
 } from './support/fiche-salarie-fixtures.js';
+import { allouerCodesBanqueLibres } from './support/codes-banque-libres.js';
 import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 
@@ -104,9 +105,7 @@ describe('API fiche salarie — extensions 2.1.c-2 temps 0', () => {
   });
 
   it('T2 — PUT de trois comptes : banque incoherente sur le 3e porte indexLigne 2', async () => {
-    const n = (Number(PREFIXE.replace(/\D/g, '').slice(-5)) % 800) + 100;
-    const codeRib = String(n).padStart(3, '0');
-    const codeAutre = String(n + 1).padStart(3, '0');
+    const [codeRib, codeAutre] = await allouerCodesBanqueLibres(prisma, 2);
     const banqueRib = await prisma.banque.create({
       data: {
         nom: `Banque RIB ${PREFIXE}`,
