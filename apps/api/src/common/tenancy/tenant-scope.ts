@@ -27,7 +27,7 @@ import type { PlatformAccessReason, TenantContext, Uuid } from '@paymarh/shared-
 export function requireAccountId(context: TenantContext): Uuid {
   if (context.accountId === null) {
     throw new ForbiddenException(
-      "Cette requete exige un compte de rattachement. Un PLATFORM_ADMIN doit utiliser le chemin d'acces elargi, explicite et journalise."
+      'Cette requête exige un compte de rattachement. Un PLATFORM_ADMIN doit utiliser le chemin d’accès élargi, explicite et journalisé.'
     );
   }
 
@@ -41,7 +41,7 @@ export function requireAccountId(context: TenantContext): Uuid {
 export function requireCompanyId(context: TenantContext): Uuid {
   if (context.companyId === null) {
     throw new ForbiddenException(
-      "Cette requete exige une societe active. Precisez-la (en-tete 'x-paymarh-company-id')."
+      'Cette requête exige une société active. Précisez-la (en-tête « x-paymarh-company-id »).'
     );
   }
 
@@ -92,12 +92,12 @@ export function crossAccountScope(
   access: PlatformAccessReason
 ): { accountId: Uuid } {
   if (context.role !== 'PLATFORM_ADMIN') {
-    throw new ForbiddenException("L'acces inter-comptes est reserve au role PLATFORM_ADMIN.");
+    throw new ForbiddenException('L’accès inter-comptes est réservé au rôle PLATFORM_ADMIN.');
   }
 
   if (access.reason.trim().length === 0) {
     throw new ForbiddenException(
-      "Un acces inter-comptes doit etre motive : le motif est consigne dans le journal d'audit."
+      'Un accès inter-comptes doit être motivé : le motif est consigné dans le journal d’audit.'
     );
   }
 

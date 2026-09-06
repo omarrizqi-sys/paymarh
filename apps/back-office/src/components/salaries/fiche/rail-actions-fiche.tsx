@@ -1,6 +1,7 @@
 'use client';
 
 import type { Permission } from '@paymarh/shared-types';
+import { libelleStatutEnregistrement } from '@/lib/affichage/libelles';
 import { possedePermission } from '@/lib/permissions';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -77,7 +78,7 @@ export function RailActionsFiche({ operations, modeCompact = false }: Props) {
       {conflitVersion ? (
         <Alert variant="destructive" data-testid="bandeau-conflit-version">
           <AlertDescription>
-            La fiche a ete modifiee entre-temps. Rechargez les valeurs du serveur pour continuer.
+            La fiche a été modifiée entre-temps. Rechargez les valeurs du serveur pour continuer.
           </AlertDescription>
           <Button
             type="button"
@@ -113,7 +114,7 @@ export function RailActionsFiche({ operations, modeCompact = false }: Props) {
         <ul className="text-muted-foreground space-y-1 text-xs" data-testid="recap-enregistrement">
           {resultatsRecap.map((resultat) => (
             <li key={resultat.id}>
-              {resultat.libelle} : {resultat.statut}
+              {resultat.libelle} : {libelleStatutEnregistrement(resultat.statut)}
               {resultat.message ? ` — ${resultat.message}` : ''}
             </li>
           ))}

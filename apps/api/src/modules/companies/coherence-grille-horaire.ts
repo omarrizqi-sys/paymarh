@@ -48,14 +48,14 @@ export function controlerCoherenceGrilleHoraireDefaut(
     } catch {
       throw new ValidationBloquanteError(
         'GRILLE_HEURES_INVALIDES',
-        'Une duree horaire n est pas un nombre valide.',
+        'Une durée horaire n’est pas un nombre valide.',
         'horaireDefautLignes'
       );
     }
     if (heures.isNegative()) {
       throw new ValidationBloquanteError(
         'GRILLE_HEURES_INVALIDES',
-        'Les durees horaires ne peuvent pas etre negatives.',
+        'Les durées horaires ne peuvent pas être négatives.',
         'horaireDefautLignes'
       );
     }
@@ -72,14 +72,14 @@ export function controlerCoherenceGrilleHoraireDefaut(
     } catch {
       throw new ValidationBloquanteError(
         'GRILLE_TOTAL_INCOHERENT',
-        'La duree hebdomadaire declaree n est pas un nombre valide.',
+        'La durée hebdomadaire déclarée n’est pas un nombre valide.',
         'dureeHebdomadaire'
       );
     }
     if (!totalCalcule.equals(duree)) {
       throw new ValidationBloquanteError(
         'GRILLE_TOTAL_INCOHERENT',
-        'Le total de controle ne correspond pas a la duree hebdomadaire declaree.',
+        'Le total de contrôle ne correspond pas à la durée hebdomadaire déclarée.',
         'horaireDefautLignes'
       );
     }
@@ -92,14 +92,14 @@ export function controlerCoherenceGrilleHoraireDefaut(
     } catch {
       throw new ValidationBloquanteError(
         'GRILLE_TOTAL_INCOHERENT',
-        'Le total de controle declare n est pas un nombre valide.',
+        'Le total de contrôle déclaré n’est pas un nombre valide.',
         'totalControle'
       );
     }
     if (!totalCalcule.equals(totalDeclare)) {
       throw new ValidationBloquanteError(
         'GRILLE_TOTAL_INCOHERENT',
-        'Le total de controle ne correspond pas a la somme des heures saisies.',
+        'Le total de contrôle ne correspond pas à la somme des heures saisies.',
         'horaireDefautLignes'
       );
     }

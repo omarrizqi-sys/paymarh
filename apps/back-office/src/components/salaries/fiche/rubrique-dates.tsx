@@ -30,7 +30,7 @@ export function RubriqueDates({
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'dates',
-    libelle: 'Dates cles',
+    libelle: 'Dates clés',
     valeursServeur: valeurs,
     estModifiee: (courant, serveur) =>
       courant.dateEntree !== serveur.dateEntree ||
@@ -53,7 +53,7 @@ export function RubriqueDates({
   });
 
   return (
-    <Rubrique id="dates" titre="Dates cles">
+    <Rubrique id="dates" titre="Dates clés">
       <TeteRubriqueFiche
         erreur={rubrique.erreur}
         alertes={rubrique.alertes}
@@ -63,7 +63,7 @@ export function RubriqueDates({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="dateEntree">Date d entree *</Label>
+          <Label htmlFor="dateEntree">Date d’entrée *</Label>
           <Input
             id="dateEntree"
             type="date"
@@ -73,7 +73,7 @@ export function RubriqueDates({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateEntree" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dateAnciennete">Date d anciennete *</Label>
+          <Label htmlFor="dateAnciennete">Date d’ancienneté *</Label>
           <Input
             id="dateAnciennete"
             type="date"

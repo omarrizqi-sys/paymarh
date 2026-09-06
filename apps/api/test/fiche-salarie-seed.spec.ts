@@ -63,3 +63,46 @@ describe('seed referentiels fiche salarie', () => {
     expect(STATUTS_PARTICULIERS.some((s) => s.code === STATUT_TECHNIQUE_TAHFIZ.code)).toBe(false);
   });
 });
+
+async function societeDemoId(): Promise<string> {
+  const societe = await prisma.company.findFirstOrThrow({
+    where: { codeDossier: 'DEMO-001' },
+    select: { id: true },
+  });
+  return societe.id;
+}
+
+describe('seed salaries de demonstration', () => {
+  it('S1 — apres seed, la societe de demonstration porte exactement trois salaries', async () => {
+    const { execSync } = await import('node:child_process');
+    const racine = new URL('../../..', import.meta.url);
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    const count = await prisma.salarie.count({ where: { companyId: await societeDemoId() } });
+    expect(count).toBe(3);
+  }, 30_000);
+
+  it('S2 — apres deux executions du seed, elle en porte toujours trois', async () => {
+    const { execSync } = await import('node:child_process');
+    const racine = new URL('../../..', import.meta.url);
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    execSync('pnpm db:seed', { cwd: racine, stdio: 'pipe' });
+    const count = await prisma.salarie.count({ where: { companyId: await societeDemoId() } });
+    expect(count).toBe(3);
+  }, 60_000);
+
+  it('S3 — le salarie complet a deux personnes a charge, deux comptes et un pret', async () => {
+    const societeId = await societeDemoId();
+    const complet = await prisma.salarie.findFirstOrThrow({
+      where: { companyId: societeId, nom: 'Bennani', prenom: 'Youssef' },
+      select: { id: true },
+    });
+    const [pac, comptes, prets] = await Promise.all([
+      prisma.personneACharge.count({ where: { salarieId: complet.id } }),
+      prisma.compteBancaireSalarie.count({ where: { salarieId: complet.id } }),
+      prisma.pret.count({ where: { salarieId: complet.id } }),
+    ]);
+    expect(pac).toBe(2);
+    expect(comptes).toBe(2);
+    expect(prets).toBe(1);
+  });
+});

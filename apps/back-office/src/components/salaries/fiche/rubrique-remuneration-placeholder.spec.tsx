@@ -13,7 +13,7 @@ describe('RubriqueRemunerationPlaceholder', () => {
     );
 
     expect(container.querySelector('#remuneration')).toBeNull();
-    expect(screen.queryByText('Remuneration')).toBeNull();
+    expect(screen.queryByText('Rémunération')).toBeNull();
   });
 
   it('avec droit salarie.remuneration.lire la rubrique est presente', () => {

@@ -123,7 +123,7 @@ export function SectionComptesBancaires({
               {!enEdition ? (
                 <>
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="font-medium">{c.libelle ?? 'Compte sans libelle'}</span>
+                    <span className="font-medium">{c.libelle ?? 'Compte sans libellé'}</span>
                     <Badge variant={c.etat === 'ACTIF' ? 'success' : 'secondary'}>{c.etat}</Badge>
                   </div>
                   <dl className="text-muted-foreground grid gap-1 text-sm sm:grid-cols-2">
@@ -166,7 +166,7 @@ export function SectionComptesBancaires({
                           })
                         }
                       >
-                        Cloturer
+                        Clôturer
                       </Button>
                     ) : null}
                     {possedePermission(c.operations, 'compte-bancaire.supprimer') ? (
@@ -183,7 +183,7 @@ export function SectionComptesBancaires({
                 >
                   <h4 className="font-medium sm:col-span-2">Modifier le compte</h4>
                   <div className="space-y-2">
-                    <Label htmlFor={`libelle-${c.id}`}>Libelle</Label>
+                    <Label htmlFor={`libelle-${c.id}`}>Libellé</Label>
                     <Input id={`libelle-${c.id}`} name="libelle" defaultValue={c.libelle ?? ''} />
                   </div>
                   <div className="space-y-2">
@@ -254,7 +254,7 @@ export function SectionComptesBancaires({
                   </div>
                   {afficherUtilisePar ? (
                     <div className="space-y-2 sm:col-span-2">
-                      <Label>Utilise par</Label>
+                      <Label>Utilisé par</Label>
                       <div className="flex flex-wrap gap-3">
                         {etablissements.map((et) => (
                           <div key={et.id} className="flex items-center gap-2">
@@ -291,7 +291,7 @@ export function SectionComptesBancaires({
           <Separator className="my-6" />
           <form onSubmit={(e) => void creer(e)} className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="libelle">Libelle</Label>
+              <Label htmlFor="libelle">Libellé</Label>
               <Input id="libelle" name="libelle" />
             </div>
             <div className="space-y-2">
@@ -341,7 +341,7 @@ export function SectionComptesBancaires({
             </div>
             {afficherUtilisePar ? (
               <div className="space-y-2 sm:col-span-2">
-                <Label>Utilise par</Label>
+                <Label>Utilisé par</Label>
                 <div className="flex flex-wrap gap-3">
                   {etablissements.map((et) => (
                     <div key={et.id} className="flex items-center gap-2">

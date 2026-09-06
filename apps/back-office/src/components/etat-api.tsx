@@ -17,7 +17,7 @@ export function EtatApi() {
   const [resultat, setResultat] = useState<ResultatSante>({
     etat: 'verification',
     reponse: null,
-    message: "Verification de la liaison avec l'API...",
+    message: 'Vérification de la liaison avec l’API...',
   });
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export function EtatApi() {
         {resultat.etat === 'verification' && (
           <Badge variant="secondary">
             <Loader2 className="size-3.5 animate-spin" />
-            Verification
+            Vérification
           </Badge>
         )}
         {resultat.etat === 'en-ligne' && (
@@ -62,12 +62,12 @@ export function EtatApi() {
       <p className="text-muted-foreground text-sm">{resultat.message}</p>
 
       <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-        <dt className="text-muted-foreground">Adresse de l&apos;API</dt>
+        <dt className="text-muted-foreground">Adresse de l’API</dt>
         <dd className="font-mono text-xs">{urlApi()}</dd>
 
         {resultat.reponse && (
           <>
-            <dt className="text-muted-foreground">Version de l&apos;API</dt>
+            <dt className="text-muted-foreground">Version de l’API</dt>
             <dd className="font-mono text-xs">{resultat.reponse.version}</dd>
 
             <dt className="text-muted-foreground">Horodatage</dt>

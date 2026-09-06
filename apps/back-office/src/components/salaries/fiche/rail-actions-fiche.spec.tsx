@@ -154,7 +154,7 @@ describe('RailActionsFiche', () => {
     expect(envoyerB).toHaveBeenCalledTimes(1);
     expect(envoyerC).toHaveBeenCalledTimes(0);
     expect(screen.getAllByTestId('bandeau-conflit-version')).toHaveLength(1);
-    expect(screen.getByTestId('recap-enregistrement')?.textContent).toContain('Identite : succes');
+    expect(screen.getByTestId('recap-enregistrement')?.textContent).toContain('Identite : succès');
     expect(screen.queryByTestId('erreur-rubrique-coordonnees')).toBeNull();
   });
 
@@ -208,7 +208,7 @@ describe('RailActionsFiche', () => {
 
     fireEvent.click(screen.getByTestId('recharger-valeurs-serveur'));
     expect(screen.getByTestId('dialogue-rechargement')).toBeTruthy();
-    expect(screen.getByText(/Recharger les valeurs du serveur ecrasera/)).toBeTruthy();
+    expect(screen.getByText(/Recharger les valeurs du serveur écrasera/)).toBeTruthy();
   });
 
   it('U2 — Annuler appelle reinitialiser sur tous les blocs declares, modifies ou non', async () => {

@@ -14,7 +14,7 @@ export const FORMES_JURIDIQUES = [
   { code: 'SNC', libelle: 'Société en nom collectif' },
   { code: 'SCS', libelle: 'Société en commandite simple' },
   { code: 'SCA', libelle: 'Société en commandite par actions' },
-  { code: 'GIE', libelle: "Groupement d'intérêt économique" },
+  { code: 'GIE', libelle: 'Groupement d’intérêt économique' },
   { code: 'SEP', libelle: 'Société en participation' },
   { code: 'SUCC', libelle: 'Succursale de société étrangère' },
   { code: 'COOP', libelle: 'Coopérative' },
@@ -57,7 +57,7 @@ export const JOURS_FERIES = [
   },
   {
     code: 'JF_MANIFESTE_INDEP',
-    libelle: "Manifeste de l'Indépendance",
+    libelle: 'Manifeste de l’Indépendance',
     referenceDate: '11 janvier',
     type: 'CIVIL' as const,
   },
@@ -81,7 +81,7 @@ export const JOURS_FERIES = [
   },
   {
     code: 'JF_OUED_EDDAHAB',
-    libelle: "Allégeance de l'Oued Eddahab",
+    libelle: 'Allégeance de l’Oued Eddahab',
     referenceDate: '14 août',
     type: 'CIVIL' as const,
   },
@@ -99,7 +99,7 @@ export const JOURS_FERIES = [
   },
   {
     code: 'JF_FETE_UNITE',
-    libelle: "Fête de l'Unité",
+    libelle: 'Fête de l’Unité',
     referenceDate: '31 octobre',
     type: 'CIVIL' as const,
   },
@@ -111,7 +111,7 @@ export const JOURS_FERIES = [
   },
   {
     code: 'JF_FETE_INDEPENDANCE',
-    libelle: "Fête de l'Indépendance",
+    libelle: 'Fête de l’Indépendance',
     referenceDate: '18 novembre',
     type: 'CIVIL' as const,
   },

@@ -33,7 +33,7 @@ export function AvertissementNavigationFiche() {
 export function confirmerNavigationAvecModifications(libelles: readonly string[]): boolean {
   if (libelles.length === 0) return true;
   return window.confirm(
-    `Des modifications non enregistrees concernent : ${libelles.join(', ')}. Quitter quand meme ?`
+    `Des modifications non enregistrées concernent : ${libelles.join(', ')}. Quitter quand même ?`
   );
 }
 
@@ -44,5 +44,5 @@ export function messageConfirmationAnnuler(libelles: readonly string[]): string 
 
 export function messageConfirmationRechargement(libelles: readonly string[]): string {
   const cible = libelles.length > 0 ? libelles.join(', ') : 'toutes les rubriques';
-  return `Recharger les valeurs du serveur ecrasera la saisie en cours (${cible}). Continuer ?`;
+  return `Recharger les valeurs du serveur écrasera la saisie en cours (${cible}). Continuer ?`;
 }

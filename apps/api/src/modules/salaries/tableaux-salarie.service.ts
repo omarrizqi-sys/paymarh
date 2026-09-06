@@ -22,7 +22,10 @@ import type {
   RemplacerComptesBancairesDto,
 } from './dto/tableaux-salarie.dto.js';
 import { EmploisService } from './emplois.service.js';
-import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
+import {
+  HistorisationLigneTemporelleService,
+  type ModeSuppressionLigne,
+} from './historisation-ligne-temporelle.service.js';
 import {
   INCLUDE_COLLECTIONS_SALARIE,
   mapperCollectionsSalarie,
@@ -189,19 +192,12 @@ export class TableauxSalarieService {
   async impactSuppressionPersonneACharge(salarieId: string, ligneId: string) {
     const ligne = await this.trouverPersonneACharge(salarieId, ligneId);
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
-    const inventaire = {
-      salarieId,
-      ligneId,
-      mode,
-      message:
-        mode === 'inactiver'
-          ? 'La ligne sera close et restera visible en etat inactive pour justifier les bulletins passes.'
-          : 'La ligne sera supprimee definitivement.',
-    };
+    const faits = faitsConfirmationLigne(salarieId, ligneId, mode);
     return {
       donnees: {
-        ...inventaire,
-        jetonConfirmation: calculerJetonConfirmation(inventaire),
+        ...faits,
+        message: messageConfirmationLigne(mode),
+        jetonConfirmation: calculerJetonConfirmation(faits),
       },
     };
   }
@@ -571,19 +567,12 @@ export class TableauxSalarieService {
     ligne: { moisEffetDebut: string; moisEffetFin: string | null }
   ) {
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
-    const inventaire = {
-      salarieId,
-      ligneId,
-      mode,
-      message:
-        mode === 'inactiver'
-          ? 'La ligne sera close et restera visible en etat inactive pour justifier les bulletins passes.'
-          : 'La ligne sera supprimee definitivement.',
-    };
+    const faits = faitsConfirmationLigne(salarieId, ligneId, mode);
     return {
       donnees: {
-        ...inventaire,
-        jetonConfirmation: calculerJetonConfirmation(inventaire),
+        ...faits,
+        message: messageConfirmationLigne(mode),
+        jetonConfirmation: calculerJetonConfirmation(faits),
       },
     };
   }
@@ -602,12 +591,7 @@ export class TableauxSalarieService {
     }
 
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
-    const message =
-      mode === 'inactiver'
-        ? 'La ligne sera close et restera visible en etat inactive pour justifier les bulletins passes.'
-        : 'La ligne sera supprimee definitivement.';
-    const inventaire = { salarieId, ligneId, mode, message };
-    const attendu = calculerJetonConfirmation(inventaire);
+    const attendu = calculerJetonConfirmation(faitsConfirmationLigne(salarieId, ligneId, mode));
 
     if (!jetonsIdentiques(attendu, confirmationJeton)) {
       throw new ConflictException({
@@ -702,4 +686,18 @@ export class TableauxSalarieService {
     if (ligne === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return ligne;
   }
+}
+
+function faitsConfirmationLigne(
+  salarieId: string,
+  ligneId: string,
+  mode: ModeSuppressionLigne
+): { salarieId: string; ligneId: string; mode: ModeSuppressionLigne } {
+  return { salarieId, ligneId, mode };
+}
+
+function messageConfirmationLigne(mode: ModeSuppressionLigne): string {
+  return mode === 'inactiver'
+    ? 'La ligne sera close et restera visible en état inactive pour justifier les bulletins passés.'
+    : 'La ligne sera supprimée définitivement.';
 }

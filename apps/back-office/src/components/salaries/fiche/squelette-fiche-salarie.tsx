@@ -35,7 +35,7 @@ export function SqueletteFicheSalarie({
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Deplier le sommaire"
+              aria-label="Déplier le sommaire"
               onClick={() => setSommaireReplie(false)}
             >
               <PanelLeft className="size-4" />
@@ -74,7 +74,7 @@ export function SqueletteFicheSalarie({
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Deplier le rail d actions"
+              aria-label="Déplier le rail d’actions"
               data-testid="deplier-rail"
               onClick={() => setRailReplie(false)}
             >
@@ -90,7 +90,7 @@ export function SqueletteFicheSalarie({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label="Replier le rail d actions"
+                aria-label="Replier le rail d’actions"
                 data-testid="replier-rail"
                 onClick={() => setRailReplie(true)}
               >

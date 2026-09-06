@@ -43,7 +43,7 @@ export function relancerConflitUnicite(erreur: unknown): never {
 
   throw new ConflictException({
     code: 'VALEUR_INDISPONIBLE',
-    message: "Cette valeur n'est pas disponible.",
+    message: 'Cette valeur n’est pas disponible.',
     ...(champ ? { champ } : {}),
   });
 }

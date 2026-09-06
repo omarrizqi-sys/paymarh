@@ -16,8 +16,8 @@ export function RailActionsListe({ operations, modeCompact = false }: Props) {
   }
 
   return (
-    <Button type="button" aria-label="Creer un salarie">
-      {modeCompact ? '+' : 'Creer un salarie'}
+    <Button type="button" aria-label="Créer un salarié">
+      {modeCompact ? '+' : 'Créer un salarié'}
     </Button>
   );
 }

@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'PaymaRH — Back-office',
-  description: 'Back-office de PaymaRH, logiciel de paie marocain pour le secteur prive.',
+  description: 'Back-office de PaymaRH, logiciel de paie marocain pour le secteur privé.',
 };
 
 import Link from 'next/link';
@@ -27,7 +27,7 @@ export default function RootLayout({
                 href="/societes"
                 className="text-muted-foreground hover:text-foreground text-sm"
               >
-                Societes
+                Sociétés
               </Link>
             </nav>
             <EtatApi />

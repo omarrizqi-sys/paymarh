@@ -5,6 +5,10 @@ import { Decimal } from 'decimal.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { heuresHebdomadairesVersMensuelles } from '../src/modules/companies/heures-mensuelles.js';
 import {
+  incrementerCompteurMatricule,
+  marquerMatriculeConsomme,
+} from '../src/modules/salaries/compteurs-salarie.js';
+import {
   BANQUES,
   FORMES_JURIDIQUES,
   JOURS_FERIES,
@@ -28,7 +32,8 @@ import {
 //   exoneration, pays, types contrat, motifs sortie, statuts, situations, liens parente) ;
 // - un compte CABINET, un super-admin, un admin de compte ;
 // - une societe complete : 2 etablissements, 2 comptes bancaires, grille
-//   horaire 44 h, feries coches, 2 moisEffet d historique.
+//   horaire 44 h, feries coches, 2 moisEffet d historique ;
+// - trois salaries de demonstration (complet actif, minimal sans emploi, sortie).
 //
 // Idempotent : on peut relancer sans creer de doublon.
 // Lancement : pnpm db:seed
@@ -51,6 +56,13 @@ const CODE_DOSSIER_DEMO = 'DEMO-001';
 const RAISON_SOCIALE_DEMO = 'Société de démonstration';
 const EMAIL_SUPER_ADMIN = 'super-admin@paymarh.local';
 const EMAIL_ADMIN_COMPTE = 'admin@cabinet-demo.local';
+
+const SALARIE_COMPLET_NOM = 'Bennani';
+const SALARIE_COMPLET_PRENOM = 'Youssef';
+const SALARIE_MINIMAL_NOM = 'Tazi';
+const SALARIE_MINIMAL_PRENOM = 'Said';
+const SALARIE_SORTIE_NOM = 'El Fassi';
+const SALARIE_SORTIE_PRENOM = 'Amina';
 
 async function seedReferences(): Promise<{
   formeSarlId: string;
@@ -510,6 +522,281 @@ async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>)
   console.log(
     `Comptes bancaires : ${compteSalaires.libelle} (salaires), ${compteCharges.libelle} (cotisations + IR)`
   );
+
+  await seedSalariesDemo(societe.id, siege.id, refs.banqueAttijariId, refs.banqueBpId);
+}
+
+async function trouverOuCreerSalarieDemo(
+  companyId: string,
+  prefixe: string,
+  longueur: number,
+  criteres: { nom: string; prenom: string },
+  data: Omit<Parameters<typeof prisma.salarie.create>[0]['data'], 'companyId' | 'matricule'>
+): Promise<{ id: string; matricule: string }> {
+  const existant = await prisma.salarie.findFirst({
+    where: { companyId, nom: criteres.nom, prenom: criteres.prenom },
+    select: { id: true, matricule: true },
+  });
+  if (existant) return existant;
+
+  return prisma.$transaction(async (tx) => {
+    const { matricule } = await incrementerCompteurMatricule(tx, companyId, prefixe, longueur);
+    await marquerMatriculeConsomme(tx, companyId, matricule);
+    const cree = await tx.salarie.create({
+      data: { companyId, matricule, ...data },
+    });
+    return { id: cree.id, matricule: cree.matricule };
+  });
+}
+
+async function seedSalariesDemo(
+  companyId: string,
+  etablissementPrincipalId: string,
+  banqueAttijariId: string,
+  banqueBpId: string
+): Promise<void> {
+  const societe = await prisma.company.findUniqueOrThrow({
+    where: { id: companyId },
+    select: { matriculePrefixe: true, matriculeLongueur: true },
+  });
+  const maroc = await prisma.pays.findUniqueOrThrow({ where: { codeIso: 'MA' } });
+  const france = await prisma.pays.findUniqueOrThrow({ where: { codeIso: 'FR' } });
+
+  const complet = await trouverOuCreerSalarieDemo(
+    companyId,
+    societe.matriculePrefixe,
+    societe.matriculeLongueur,
+    { nom: SALARIE_COMPLET_NOM, prenom: SALARIE_COMPLET_PRENOM },
+    {
+      nom: SALARIE_COMPLET_NOM,
+      prenom: SALARIE_COMPLET_PRENOM,
+      sexe: 'HOMME',
+      dateNaissance: new Date('1988-04-12'),
+      villeNaissance: 'Fes',
+      paysNaissanceId: maroc.id,
+      nationaliteId: maroc.id,
+      situationFamilialeCode: 'MARIE',
+      numeroPiece: 'BE654321',
+      numeroCnss: '123456789',
+      numeroCimr: 'CIMR-78421',
+      adresse: '15 Rue Ibn Toumart',
+      complementAdresse: '3e etage',
+      ville: 'Casablanca',
+      codePostal: '20100',
+      paysId: maroc.id,
+      telephonePersonnel: '+212661234567',
+      telephoneProfessionnel: '+212522334455',
+      emailPersonnel: 'youssef.bennani@demo.paymarh.local',
+      emailProfessionnel: 'y.bennani.pro@demo.paymarh.local',
+      urgencePrenom: 'Fatima',
+      urgenceNom: 'Bennani',
+      urgenceTelephone: '+212661111222',
+      urgenceEmail: 'fatima.bennani@demo.paymarh.local',
+      dateEntree: new Date('2022-03-01'),
+      dateAnciennete: new Date('2022-03-01'),
+    }
+  );
+
+  const enfant = await prisma.personneACharge.findFirst({
+    where: {
+      salarieId: complet.id,
+      lienParenteCode: 'ENFANT',
+      prenom: 'Adam',
+      nom: SALARIE_COMPLET_NOM,
+    },
+  });
+  if (!enfant) {
+    await prisma.personneACharge.create({
+      data: {
+        salarieId: complet.id,
+        lienParenteCode: 'ENFANT',
+        prenom: 'Adam',
+        nom: SALARIE_COMPLET_NOM,
+        sexe: 'HOMME',
+        dateNaissance: new Date('2018-05-10'),
+        aCharge: true,
+        situationHandicap: false,
+        moisEffetDebut: '2022-03',
+      },
+    });
+  }
+
+  const conjoint = await prisma.personneACharge.findFirst({
+    where: {
+      salarieId: complet.id,
+      lienParenteCode: 'CONJOINT',
+      prenom: 'Leila',
+      nom: SALARIE_COMPLET_NOM,
+    },
+  });
+  if (!conjoint) {
+    await prisma.personneACharge.create({
+      data: {
+        salarieId: complet.id,
+        lienParenteCode: 'CONJOINT',
+        prenom: 'Leila',
+        nom: SALARIE_COMPLET_NOM,
+        sexe: 'FEMME',
+        dateNaissance: new Date('1990-02-14'),
+        aCharge: true,
+        moisEffetDebut: '2022-03',
+      },
+    });
+  }
+
+  const ribPrincipal = '007780000111111111111111';
+  const ribSecondaire = '011780000222222222222222';
+  if (
+    (await prisma.compteBancaireSalarie.count({
+      where: { salarieId: complet.id, rib: ribPrincipal },
+    })) === 0
+  ) {
+    await prisma.compteBancaireSalarie.create({
+      data: {
+        salarieId: complet.id,
+        banqueId: banqueAttijariId,
+        rib: ribPrincipal,
+        titulaire: `${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM}`,
+        partVirement: new Decimal('60.00'),
+      },
+    });
+  }
+  if (
+    (await prisma.compteBancaireSalarie.count({
+      where: { salarieId: complet.id, rib: ribSecondaire },
+    })) === 0
+  ) {
+    await prisma.compteBancaireSalarie.create({
+      data: {
+        salarieId: complet.id,
+        banqueId: banqueBpId,
+        rib: ribSecondaire,
+        titulaire: `${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM}`,
+        partVirement: new Decimal('40.00'),
+      },
+    });
+  }
+
+  const pretExistant = await prisma.pret.findFirst({
+    where: { salarieId: complet.id, libelleObjet: 'Pret personnel' },
+  });
+  if (!pretExistant) {
+    await prisma.pret.create({
+      data: {
+        salarieId: complet.id,
+        libelleObjet: 'Pret personnel',
+        libelleBulletin: 'Pret personnel',
+        montantTotal: new Decimal('18000.00'),
+        moisDebut: '2025-01',
+        mensualite: new Decimal('1500.00'),
+        nombreEcheances: 12,
+        moisEffetDebut: '2025-01',
+      },
+    });
+  }
+
+  const emploiComplet = await prisma.emploi.findFirst({ where: { salarieId: complet.id } });
+  if (!emploiComplet) {
+    const emploi = await prisma.emploi.create({
+      data: { salarieId: complet.id, numeroOrdre: 1 },
+    });
+    await prisma.emploiContratVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2022-03',
+        libellePoste: 'Responsable paie',
+        dateDebut: new Date('2022-03-01'),
+        typeContratCode: 'CDI',
+      },
+    });
+    await prisma.emploiRemunerationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2022-03',
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: new Decimal('18500.00'),
+      },
+    });
+    await prisma.emploiAffectationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2022-03',
+        etablissementId: etablissementPrincipalId,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+      },
+    });
+  }
+
+  const minimal = await trouverOuCreerSalarieDemo(
+    companyId,
+    societe.matriculePrefixe,
+    societe.matriculeLongueur,
+    { nom: SALARIE_MINIMAL_NOM, prenom: SALARIE_MINIMAL_PRENOM },
+    {
+      nom: SALARIE_MINIMAL_NOM,
+      prenom: SALARIE_MINIMAL_PRENOM,
+      sexe: 'HOMME',
+      dateNaissance: new Date('1995-09-20'),
+      dateEntree: new Date('2024-01-15'),
+      dateAnciennete: new Date('2024-01-15'),
+    }
+  );
+
+  const sortie = await trouverOuCreerSalarieDemo(
+    companyId,
+    societe.matriculePrefixe,
+    societe.matriculeLongueur,
+    { nom: SALARIE_SORTIE_NOM, prenom: SALARIE_SORTIE_PRENOM },
+    {
+      nom: SALARIE_SORTIE_NOM,
+      prenom: SALARIE_SORTIE_PRENOM,
+      sexe: 'FEMME',
+      dateNaissance: new Date('1991-11-03'),
+      nationaliteId: france.id,
+      situationFamilialeCode: 'MARIE',
+      numeroPiece: 'EE998877',
+      dateEntree: new Date('2020-06-01'),
+      dateAnciennete: new Date('2020-06-01'),
+    }
+  );
+
+  const emploiSortie = await prisma.emploi.findFirst({ where: { salarieId: sortie.id } });
+  if (!emploiSortie) {
+    const emploi = await prisma.emploi.create({
+      data: { salarieId: sortie.id, numeroOrdre: 1 },
+    });
+    await prisma.emploiContratVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2020-06',
+        libellePoste: 'Assistante administrative',
+        dateDebut: new Date('2020-06-01'),
+        dateSortie: new Date('2024-12-31'),
+        motifSortieCode: 'DEMISSION',
+        typeContratCode: 'CDI',
+      },
+    });
+    await prisma.emploiRemunerationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2020-06',
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: new Decimal('9500.00'),
+      },
+    });
+    await prisma.emploiAffectationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2020-06',
+        etablissementId: etablissementPrincipalId,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+      },
+    });
+  }
+
+  console.log(
+    `Salaries de demonstration : ${complet.matricule} ${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM} (complet), ${minimal.matricule} ${SALARIE_MINIMAL_PRENOM} ${SALARIE_MINIMAL_NOM} (minimal), ${sortie.matricule} ${SALARIE_SORTIE_PRENOM} ${SALARIE_SORTIE_NOM} (sortie).`
+  );
 }
 
 async function upsertParamEtablissement(
@@ -652,7 +939,7 @@ async function main(): Promise<void> {
   await seedUtilisateurs(compte.id);
 
   console.log(
-    '\nSeed termine (module 0 + fiche societe 1.1.a + referentiels fiche salarie 2.1.a).'
+    '\nSeed termine (module 0 + fiche societe 1.1.a + referentiels fiche salarie 2.1.a + salaries de demonstration).'
   );
 }
 

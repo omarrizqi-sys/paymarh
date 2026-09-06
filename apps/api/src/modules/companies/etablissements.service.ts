@@ -257,7 +257,7 @@ export class EtablissementsService {
     if ('moisEffet' in dto && (dto as { moisEffet?: unknown }).moisEffet !== undefined) {
       throw new BadRequestException({
         code: 'CHAMP_INTERDIT',
-        message: 'moisEffet ne doit pas etre fourni.',
+        message: 'moisEffet ne doit pas être fourni.',
         champ: 'moisEffet',
       });
     }
@@ -459,7 +459,7 @@ export class EtablissementsService {
     if (!confirmationJeton) {
       throw new BadRequestException({
         code: 'CONFIRMATION_REQUISE',
-        message: 'La suppression exige le jeton d impact-suppression.',
+        message: 'La suppression exige le jeton d’impact-suppression.',
       });
     }
 
@@ -467,7 +467,7 @@ export class EtablissementsService {
     if (!jetonsIdentiques(impact.jetonConfirmation, confirmationJeton)) {
       throw new ConflictException({
         code: 'CONFIRMATION_OBSOLETE',
-        message: 'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
+        message: 'L’inventaire a changé depuis l’aperçu. Relancez GET .../impact-suppression.',
         impact,
       });
     }
@@ -475,14 +475,14 @@ export class EtablissementsService {
     if (impact.estPrincipal) {
       throw new ConflictException({
         code: 'SUPPRESSION_INTERDITE',
-        message: 'L etablissement principal ne peut pas etre supprime.',
+        message: 'L’établissement principal ne peut pas être supprimé.',
       });
     }
 
     if (etablissementADesSalaries(id)) {
       throw new ConflictException({
         code: 'SUPPRESSION_INTERDITE',
-        message: 'Cet etablissement ne peut pas etre supprime.',
+        message: 'Cet établissement ne peut pas être supprimé.',
       });
     }
 
@@ -543,7 +543,7 @@ export class EtablissementsService {
       where: { id, accountId: accountScope(context).accountId },
     });
     if (!row) {
-      throw new NotFoundException(`Etablissement introuvable : ${id}`);
+      throw new NotFoundException(`Établissement introuvable : ${id}`);
     }
     return row;
   }
@@ -554,7 +554,7 @@ export class EtablissementsService {
       where: { ...accountScope(context), id: societeId },
     });
     if (!societe) {
-      throw new NotFoundException(`Societe introuvable : ${societeId}`);
+      throw new NotFoundException(`Société introuvable : ${societeId}`);
     }
     return societe;
   }

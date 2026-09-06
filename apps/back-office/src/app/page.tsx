@@ -9,20 +9,20 @@ export default function PageAccueil() {
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">PaymaRH — Back-office</h1>
         <p className="text-muted-foreground text-sm">
-          Logiciel de paie marocain pour le secteur prive.
+          Logiciel de paie marocain pour le secteur privé.
         </p>
       </header>
 
       <Card>
         <CardHeader>
-          <CardTitle>Fiches societe</CardTitle>
+          <CardTitle>Fiches société</CardTitle>
           <CardDescription>
-            Module 1 — creer et parametrer les dossiers de paie du compte.
+            Module 1 — créer et paramétrer les dossiers de paie du compte.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Link href="/societes">
-            <Button>Ouvrir la liste des societes</Button>
+            <Button>Ouvrir la liste des sociétés</Button>
           </Link>
         </CardContent>
       </Card>
@@ -36,7 +36,7 @@ export default function PageAccueil() {
             <dt className="text-muted-foreground">Version</dt>
             <dd className="font-mono text-xs">{VERSION_BACK_OFFICE}</dd>
             <dt className="text-muted-foreground">Authentification</dt>
-            <dd>Non implementee (relais x-paymarh-user-id en dev)</dd>
+            <dd>Non implémentée (relais x-paymarh-user-id en dev)</dd>
           </dl>
         </CardContent>
       </Card>

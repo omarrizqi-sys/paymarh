@@ -10,7 +10,7 @@ describe('inventaire d impact', () => {
       parametragesHistoriquesEtablissement: 4,
       jetonConfirmation: 'abc',
     });
-    expect(lignes.find((l) => l.libelle.includes('Etablissements'))?.quantite).toBe(2);
+    expect(lignes.find((l) => l.libelle.includes('Établissements'))?.quantite).toBe(2);
     expect(lignes.every((l) => typeof l.quantite === 'number')).toBe(true);
   });
 
@@ -21,6 +21,6 @@ describe('inventaire d impact', () => {
       parametragesHistoriques: 2,
       jetonConfirmation: 'xyz',
     });
-    expect(lignes.find((l) => l.libelle.includes('detaches'))?.quantite).toBe(1);
+    expect(lignes.find((l) => l.libelle.includes('détachés'))?.quantite).toBe(1);
   });
 });

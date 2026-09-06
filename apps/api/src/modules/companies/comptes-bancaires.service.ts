@@ -245,7 +245,7 @@ export class ComptesBancairesService {
     if (!confirmationJeton) {
       throw new BadRequestException({
         code: 'CONFIRMATION_REQUISE',
-        message: 'La suppression exige le jeton d impact-suppression.',
+        message: 'La suppression exige le jeton d’impact-suppression.',
       });
     }
 
@@ -253,7 +253,7 @@ export class ComptesBancairesService {
     if (!jetonsIdentiques(impact.jetonConfirmation, confirmationJeton)) {
       throw new ConflictException({
         code: 'CONFIRMATION_OBSOLETE',
-        message: 'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression.',
+        message: 'L’inventaire a changé depuis l’aperçu. Relancez GET .../impact-suppression.',
         impact,
       });
     }
@@ -261,7 +261,7 @@ export class ComptesBancairesService {
     if (impact.utiliseParBulletin) {
       throw new ConflictException({
         code: 'SUPPRESSION_INTERDITE',
-        message: 'Ce compte a ete utilise par un bulletin : cloturez-le plutot.',
+        message: 'Ce compte a été utilisé par un bulletin : clôturez-le plutôt.',
       });
     }
 
@@ -318,7 +318,7 @@ export class ComptesBancairesService {
       where: { ...accountScope(context), id: societeId },
     });
     if (!societe) {
-      throw new NotFoundException(`Societe introuvable : ${societeId}`);
+      throw new NotFoundException(`Société introuvable : ${societeId}`);
     }
     return societe;
   }

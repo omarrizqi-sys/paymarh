@@ -108,7 +108,7 @@ describe('API fiche societe — scenarios d integration', () => {
     const err = erreurValeurIndisponible('identifiantFiscal');
     expect(err.code).toBe('VALEUR_INDISPONIBLE');
     expect(err.message.toLowerCase()).not.toMatch(/raison|dossier|societe|demo/i);
-    expect(err.message).toMatch(/n'est pas disponible/i);
+    expect(err.message).toMatch(/n.est pas disponible/i);
   });
 
   it('refuse la suppression si le jeton d impact est obsolete', async () => {

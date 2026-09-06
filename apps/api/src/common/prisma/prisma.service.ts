@@ -23,7 +23,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
 
     if (!connectionString) {
       throw new Error(
-        "DATABASE_URL est absente. Copiez .env.example en .env a la racine du depot, puis relancez l'API."
+        'DATABASE_URL est absente. Copiez .env.example en .env a la racine du depot, puis relancez l’API.'
       );
     }
 

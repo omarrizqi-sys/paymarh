@@ -42,8 +42,8 @@ export function JoursFeriesTravailles({ joursFeries, coches, onToggle, lectureSe
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      {colonne('Fetes civiles', civils)}
-      {colonne('Fetes religieuses', religieux)}
+      {colonne('Fêtes civiles', civils)}
+      {colonne('Fêtes religieuses', religieux)}
     </div>
   );
 }

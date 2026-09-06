@@ -55,7 +55,7 @@ function LienRetourListe({ companyId }: { readonly companyId: string }) {
         }
       }}
     >
-      ← Retour a la liste
+      ← Retour à la liste
     </Link>
   );
 }

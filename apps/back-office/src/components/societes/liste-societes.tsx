@@ -54,7 +54,7 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
       {
         id: 'etatDossier',
         accessorFn: (r) => libelleEtatDossier(r.etatDossier),
-        header: 'Etat du dossier',
+        header: 'État du dossier',
       },
       {
         id: 'moisEnCours',
@@ -64,7 +64,7 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
       {
         id: 'nombreEtablissements',
         accessorKey: 'nombreEtablissements',
-        header: 'Etablissements',
+        header: 'Établissements',
       },
     ],
     []
@@ -91,11 +91,11 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
           value={filtre}
           onChange={(e) => setFiltre(e.target.value)}
           className="max-w-sm"
-          aria-label="Rechercher une societe"
+          aria-label="Rechercher une société"
         />
         {peutCreer ? (
           <Link href="/societes/nouveau">
-            <Button>Creer une societe</Button>
+            <Button>Créer une société</Button>
           </Link>
         ) : null}
       </div>
@@ -139,7 +139,7 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
                   colSpan={colonnes.length}
                   className="text-muted-foreground h-24 text-center"
                 >
-                  Aucune societe trouvee.
+                  Aucune société trouvée.
                 </TableCell>
               </TableRow>
             )}
@@ -154,7 +154,7 @@ export function ListeSocietes({ societes, peutCreer }: Props) {
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          Precedent
+          Précédent
         </Button>
         <span className="text-muted-foreground text-sm">
           Page {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}

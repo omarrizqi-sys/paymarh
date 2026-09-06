@@ -21,7 +21,7 @@ import {
 
 const PERMISSION_LECTURE: Permission = 'salarie.remuneration.lire';
 const PERMISSION_ECRITURE: Permission = 'salarie.remuneration.ecrire';
-const MESSAGE_INTERDIT = 'Action non autorisee.';
+const MESSAGE_INTERDIT = 'Action non autorisée.';
 
 /**
  * Masque les rubriques de remuneration en lecture et refuse les ecritures

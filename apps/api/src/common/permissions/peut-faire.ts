@@ -41,6 +41,6 @@ export function assertPeutFaire(
   contexte: ContextePermission = {}
 ): void {
   if (!peutFaire(utilisateur, permission, contexte)) {
-    throw new ForbiddenException('Action non autorisee.');
+    throw new ForbiddenException('Action non autorisée.');
   }
 }

@@ -71,7 +71,7 @@ export function RubriqueIdentite({
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'identite',
-    libelle: 'Identite',
+    libelle: 'Identité',
     valeursServeur: valeurs,
     estModifiee: (courant, serveur) =>
       courant.nom !== serveur.nom ||
@@ -116,7 +116,7 @@ export function RubriqueIdentite({
   });
 
   return (
-    <Rubrique id="identite" titre="Identite">
+    <Rubrique id="identite" titre="Identité">
       <TeteRubriqueFiche
         erreur={rubrique.erreur}
         alertes={rubrique.alertes}
@@ -136,7 +136,7 @@ export function RubriqueIdentite({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="nom" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="prenom">Prenom *</Label>
+          <Label htmlFor="prenom">Prénom *</Label>
           <Input
             id="prenom"
             value={rubrique.courant.prenom}
@@ -158,7 +158,7 @@ export function RubriqueIdentite({
         </div>
       </div>
 
-      <h3 className="text-sm font-medium">Etat civil</h3>
+      <h3 className="text-sm font-medium">État civil</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="dateNaissance">Date de naissance *</Label>
@@ -196,7 +196,7 @@ export function RubriqueIdentite({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="paysNaissanceId" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="nationaliteId">Nationalite</Label>
+          <Label htmlFor="nationaliteId">Nationalité</Label>
           <Select
             id="nationaliteId"
             value={rubrique.courant.nationaliteId}

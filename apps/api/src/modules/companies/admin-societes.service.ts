@@ -26,7 +26,7 @@ export class AdminSocietesService {
 
     const societe = await this.prisma.company.findFirst({ where: { id } });
     if (!societe) {
-      throw new NotFoundException(`Societe introuvable : ${id}`);
+      throw new NotFoundException(`Société introuvable : ${id}`);
     }
 
     const ancienne = societe.regimeDeBase;

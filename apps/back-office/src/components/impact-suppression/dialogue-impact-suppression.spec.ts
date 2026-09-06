@@ -45,7 +45,7 @@ describe('DialogueImpactSuppression', () => {
     await waitFor(() => expect(chargerImpact).toHaveBeenCalledTimes(2));
     expect(onConfirme).not.toHaveBeenCalled();
     expect(onFermer).not.toHaveBeenCalled();
-    expect(screen.getByText(/inventaire a change/i)).toBeTruthy();
+    expect(screen.getByText(/inventaire a changé/i)).toBeTruthy();
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
   });
 });

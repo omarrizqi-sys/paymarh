@@ -20,7 +20,7 @@ export class TenantGuard implements CanActivate {
 
     if (!context) {
       throw new UnauthorizedException(
-        "Requete sans contexte de tenant : acces refuse. (Module 0 : renseignez l'en-tete 'x-paymarh-user-id'.)"
+        "Requete sans contexte de tenant : acces refuse. (Module 0 : renseignez l’en-tete 'x-paymarh-user-id'.)"
       );
     }
 

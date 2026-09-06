@@ -47,7 +47,7 @@ export function RubriqueCoordonnees({
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'coordonnees',
-    libelle: 'Coordonnees',
+    libelle: 'Coordonnées',
     valeursServeur: valeurs,
     estModifiee: (courant, serveur) =>
       courant.adresse !== serveur.adresse ||
@@ -103,7 +103,7 @@ export function RubriqueCoordonnees({
   });
 
   return (
-    <Rubrique id="coordonnees" titre="Coordonnees">
+    <Rubrique id="coordonnees" titre="Coordonnées">
       <TeteRubriqueFiche
         erreur={rubrique.erreur}
         alertes={rubrique.alertes}
@@ -123,7 +123,7 @@ export function RubriqueCoordonnees({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="adresse" />
         </div>
         <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="complementAdresse">Complement d adresse</Label>
+          <Label htmlFor="complementAdresse">Complément d’adresse</Label>
           <Input
             id="complementAdresse"
             value={rubrique.courant.complementAdresse}
@@ -172,7 +172,7 @@ export function RubriqueCoordonnees({
       <h3 className="text-sm font-medium">Contact</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="telephonePersonnel">Telephone personnel</Label>
+          <Label htmlFor="telephonePersonnel">Téléphone personnel</Label>
           <Input
             id="telephonePersonnel"
             type="text"
@@ -182,7 +182,7 @@ export function RubriqueCoordonnees({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="telephonePersonnel" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="telephoneProfessionnel">Telephone professionnel</Label>
+          <Label htmlFor="telephoneProfessionnel">Téléphone professionnel</Label>
           <Input
             id="telephoneProfessionnel"
             type="text"
@@ -213,10 +213,10 @@ export function RubriqueCoordonnees({
         </div>
       </div>
 
-      <h3 className="text-sm font-medium">Contact d urgence</h3>
+      <h3 className="text-sm font-medium">Contact d’urgence</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="urgencePrenom">Prenom</Label>
+          <Label htmlFor="urgencePrenom">Prénom</Label>
           <Input
             id="urgencePrenom"
             value={rubrique.courant.urgencePrenom}
@@ -234,7 +234,7 @@ export function RubriqueCoordonnees({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="urgenceNom" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="urgenceTelephone">Telephone</Label>
+          <Label htmlFor="urgenceTelephone">Téléphone</Label>
           <Input
             id="urgenceTelephone"
             type="text"

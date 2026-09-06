@@ -124,7 +124,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             href={`/societes/${societe.id}/salaries`}
             className="text-primary text-sm hover:underline"
           >
-            Voir les salaries
+            Voir les salariés
           </Link>
         </p>
       </header>
@@ -136,7 +136,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         </Alert>
       ) : null}
 
-      <Rubrique titre="Etat du dossier" id="etat-dossier">
+      <Rubrique titre="État du dossier" id="etat-dossier">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -161,7 +161,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="etatDossier">Etat</Label>
+              <Label htmlFor="etatDossier">État</Label>
               <Select
                 id="etatDossier"
                 name="etatDossier"
@@ -176,7 +176,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             </div>
             {afficherDateInactivite(etatCourant) ? (
               <div className="space-y-2">
-                <Label htmlFor="dateInactivite">Date d inactivite *</Label>
+                <Label htmlFor="dateInactivite">Date d’inactivité *</Label>
                 <Input
                   id="dateInactivite"
                   name="dateInactivite"
@@ -195,7 +195,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           </div>
           {peutChangerEtat ? (
             <Button type="submit" disabled={envoi}>
-              Enregistrer l etat
+              Enregistrer l’état
             </Button>
           ) : null}
         </form>
@@ -290,7 +290,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             </Select>
           </div>
           <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="activiteExercee">Activite exercee</Label>
+            <Label htmlFor="activiteExercee">Activité exercée</Label>
             <Input
               id="activiteExercee"
               name="activiteExercee"
@@ -338,7 +338,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dateCreation">Date de creation</Label>
+            <Label htmlFor="dateCreation">Date de création</Label>
             <Input
               id="dateCreation"
               name="dateCreation"
@@ -353,7 +353,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="dateCessationActivite">Date de cessation d activite</Label>
+            <Label htmlFor="dateCessationActivite">Date de cessation d’activité</Label>
             <Input
               id="dateCessationActivite"
               name="dateCessationActivite"
@@ -377,14 +377,14 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="regimeDeBase">Regime de base *</Label>
+            <Label htmlFor="regimeDeBase">Régime de base *</Label>
             <Select
               id="regimeDeBase"
               name="regimeDeBase"
               defaultValue={societe.regimeDeBase}
               disabled={!peutModifier}
             >
-              <option value="NON_AGRICOLE">Regime general (non agricole)</option>
+              <option value="NON_AGRICOLE">Régime général (non agricole)</option>
             </Select>
             <MessagesChamp
               champ="regimeDeBase"
@@ -393,11 +393,11 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="periodicitePaie">Periodicite de paie</Label>
+            <Label htmlFor="periodicitePaie">Périodicité de paie</Label>
             <Input id="periodicitePaie" name="periodicitePaie" value="Mensuel" disabled readOnly />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="moisDebutMontage">Mois debut montage</Label>
+            <Label htmlFor="moisDebutMontage">Mois début montage</Label>
             <Input
               id="moisDebutMontage"
               name="moisDebutMontage"
@@ -406,7 +406,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="moisDebutProduction">Mois debut production</Label>
+            <Label htmlFor="moisDebutProduction">Mois début production</Label>
             <Input
               id="moisDebutProduction"
               name="moisDebutProduction"
@@ -445,7 +445,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           className="grid gap-4 sm:grid-cols-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="signataireCivilite">Civilite</Label>
+            <Label htmlFor="signataireCivilite">Civilité</Label>
             <Select
               id="signataireCivilite"
               name="signataireCivilite"
@@ -459,7 +459,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="signataireQualite">Qualite</Label>
+            <Label htmlFor="signataireQualite">Qualité</Label>
             <Input
               id="signataireQualite"
               name="signataireQualite"
@@ -468,7 +468,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="signatairePrenom">Prenom</Label>
+            <Label htmlFor="signatairePrenom">Prénom</Label>
             <Input
               id="signatairePrenom"
               name="signatairePrenom"
@@ -494,9 +494,9 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
       </Rubrique>
 
       <Rubrique
-        titre="Conges payes et exoneration"
+        titre="Congés payés et exonération"
         id="conges-exoneration"
-        indiceHeritage="Valeur par defaut des futurs salaries (societe)."
+        indiceHeritage="Valeur par défaut des futurs salariés (société)."
       >
         <form
           onSubmit={(e) => {
@@ -518,7 +518,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           className="grid gap-4 sm:grid-cols-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="moisClotureConges">Mois cloture conges</Label>
+            <Label htmlFor="moisClotureConges">Mois clôture congés</Label>
             <Select
               id="moisClotureConges"
               name="moisClotureConges"
@@ -533,7 +533,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="typeExonerationId">Exoneration</Label>
+            <Label htmlFor="typeExonerationId">Exonération</Label>
             <Select
               id="typeExonerationId"
               name="typeExonerationId"
@@ -552,7 +552,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           {afficherDatesExoneration(typeExoCourant) ? (
             <>
               <div className="space-y-2">
-                <Label htmlFor="exonerationDateDebut">Date debut *</Label>
+                <Label htmlFor="exonerationDateDebut">Date début *</Label>
                 <Input
                   id="exonerationDateDebut"
                   name="exonerationDateDebut"
@@ -593,9 +593,9 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
       </Rubrique>
 
       <Rubrique
-        titre="Parametrage technique"
+        titre="Paramétrage technique"
         id="parametrage-technique"
-        indiceHeritage="Matricules par defaut pour les salaries (societe)."
+        indiceHeritage="Matricules par défaut pour les salariés (société)."
       >
         <form
           onSubmit={(e) => {
@@ -618,7 +618,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
           className="grid gap-4 sm:grid-cols-2"
         >
           <div className="space-y-2">
-            <Label htmlFor="matriculePrefixe">Prefixe</Label>
+            <Label htmlFor="matriculePrefixe">Préfixe</Label>
             <Input
               id="matriculePrefixe"
               name="matriculePrefixe"
@@ -653,8 +653,8 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
               disabled={!peutModifier}
               required
             >
-              <option value="true">Active</option>
-              <option value="false">Desactive</option>
+              <option value="true">Activé</option>
+              <option value="false">Désactivé</option>
             </Select>
             <MessagesChamp
               champ="calculAutoAbsencesEntreesSorties"
@@ -669,7 +669,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
               defaultChecked={societe.matriculeGenerationAuto}
               disabled={!peutModifier}
             />
-            <Label htmlFor="matriculeGenerationAuto">Generation auto</Label>
+            <Label htmlFor="matriculeGenerationAuto">Génération auto</Label>
           </div>
           {peutModifier ? (
             <div className="sm:col-span-2">
@@ -708,7 +708,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
       {peutSupprimerSociete ? (
         <div className="flex justify-end">
           <Button variant="destructive" onClick={() => setSuppression({ type: 'societe' })}>
-            Supprimer la societe
+            Supprimer la société
           </Button>
         </div>
       ) : null}

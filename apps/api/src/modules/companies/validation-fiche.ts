@@ -26,7 +26,7 @@ export function assertAlphabetique(valeur: string | null | undefined, champ: str
   if (!MOTIF_ALPHABETIQUE.test(valeur)) {
     throw new ValidationBloquanteError(
       'CARACTERE_NON_CONFORME',
-      'Ce champ n accepte que des lettres, espaces, tirets et apostrophes.',
+      'Ce champ n’accepte que des lettres, espaces, tirets et apostrophes.',
       champ
     );
   }
@@ -37,7 +37,7 @@ export function assertChiffres(valeur: string | null | undefined, champ: string)
   if (!MOTIF_CHIFFRES.test(valeur)) {
     throw new ValidationBloquanteError(
       'CARACTERE_NON_CONFORME',
-      'Ce champ n accepte que des chiffres.',
+      'Ce champ n’accepte que des chiffres.',
       champ
     );
   }
@@ -71,7 +71,7 @@ export function assertMoisAAAA_MM(valeur: string, champ: string): void {
   if (!estMoisAAAA_MM(valeur)) {
     throw new ValidationBloquanteError(
       'MOIS_FORMAT_INVALIDE',
-      'Le mois doit etre au format AAAA-MM.',
+      'Le mois doit être au format AAAA-MM.',
       champ
     );
   }
@@ -89,28 +89,28 @@ export function controlerCoherenceDossier(saisie: {
       case 'MONTAGE_APRES_PRODUCTION':
         throw new ValidationBloquanteError(
           'MONTAGE_APRES_PRODUCTION',
-          'Le mois de debut de montage ne peut pas etre posterieur au mois de debut de production.',
+          'Le mois de début de montage ne peut pas être postérieur au mois de début de production.',
           'moisDebutMontage'
         );
       case 'INACTIVITE_OBLIGATOIRE':
         throw new ValidationBloquanteError(
           'INACTIVITE_OBLIGATOIRE',
-          'La date d inactivite est obligatoire lorsque le dossier est inactif.',
+          'La date d’inactivité est obligatoire lorsque le dossier est inactif.',
           'dateInactivite'
         );
       case 'INACTIVITE_NON_POSTERIEURE':
         throw new ValidationBloquanteError(
           'INACTIVITE_NON_POSTERIEURE',
-          'La date d inactivite doit etre strictement posterieure au mois de debut de production.',
+          'La date d’inactivité doit être strictement postérieure au mois de début de production.',
           'dateInactivite'
         );
       case 'MOIS_FORMAT_INVALIDE':
         throw new ValidationBloquanteError(
           'MOIS_FORMAT_INVALIDE',
-          'Le mois doit etre au format AAAA-MM.'
+          'Le mois doit être au format AAAA-MM.'
         );
       default:
-        throw new ValidationBloquanteError(erreur, 'Donnees incoherentes.');
+        throw new ValidationBloquanteError(erreur, 'Données incohérentes.');
     }
   }
 }
@@ -120,7 +120,7 @@ export function controlerDatesSociete(dateCreation: Date | null, dateCessation: 
   if (erreurs.includes('CESSATION_AVANT_CREATION')) {
     throw new ValidationBloquanteError(
       'CESSATION_AVANT_CREATION',
-      'La date de cessation d activite ne peut pas etre anterieure a la date de creation.',
+      'La date de cessation d’activité ne peut pas être antérieure à la date de création.',
       'dateCessationActivite'
     );
   }
@@ -136,21 +136,21 @@ export function controlerExonerationOuErreur(saisie: {
     if (erreur === 'EXONERATION_DEBUT_OBLIGATOIRE') {
       throw new ValidationBloquanteError(
         'EXONERATION_DEBUT_OBLIGATOIRE',
-        'La date de debut est obligatoire lorsqu une exoneration est choisie.',
+        'La date de début est obligatoire lorsqu’une exonération est choisie.',
         'exonerationDateDebut'
       );
     }
     if (erreur === 'EXONERATION_FIN_AVANT_DEBUT') {
       throw new ValidationBloquanteError(
         'EXONERATION_FIN_AVANT_DEBUT',
-        'La date de fin d exoneration ne peut pas etre anterieure a la date de debut.',
+        'La date de fin d’exonération ne peut pas être antérieure à la date de début.',
         'exonerationDateFin'
       );
     }
     if (erreur === 'MOIS_FORMAT_INVALIDE') {
       throw new ValidationBloquanteError(
         'MOIS_FORMAT_INVALIDE',
-        'Le mois doit etre au format AAAA-MM.'
+        'Le mois doit être au format AAAA-MM.'
       );
     }
   }
@@ -160,7 +160,7 @@ export function controlerExonerationOuErreur(saisie: {
 export function erreurValeurIndisponible(champ: string): ValidationBloquanteError {
   return new ValidationBloquanteError(
     'VALEUR_INDISPONIBLE',
-    "Cette valeur n'est pas disponible.",
+    'Cette valeur n’est pas disponible.',
     champ
   );
 }
@@ -179,7 +179,7 @@ export function avertissementsIdentifiants(saisie: {
     warnings.push({
       code: 'LONGUEUR_INATTENDUE',
       champ: 'rib',
-      message: 'La longueur attendue d un RIB marocain est de 24 caracteres.',
+      message: 'La longueur attendue d’un RIB marocain est de 24 caractères.',
     });
   }
 
@@ -188,7 +188,7 @@ export function avertissementsIdentifiants(saisie: {
       warnings.push({
         code: 'LONGUEUR_INATTENDUE',
         champ: 'iban',
-        message: 'La longueur attendue d un IBAN marocain est de 28 caracteres, prefixe MA.',
+        message: 'La longueur attendue d’un IBAN marocain est de 28 caractères, préfixe MA.',
       });
     }
   }
@@ -197,7 +197,7 @@ export function avertissementsIdentifiants(saisie: {
     warnings.push({
       code: 'LONGUEUR_INATTENDUE',
       champ: 'bic',
-      message: 'La longueur attendue d un BIC est de 8 ou 11 caracteres.',
+      message: 'La longueur attendue d’un BIC est de 8 ou 11 caractères.',
     });
   }
 
@@ -205,7 +205,7 @@ export function avertissementsIdentifiants(saisie: {
     warnings.push({
       code: 'LONGUEUR_INATTENDUE',
       champ: 'ice',
-      message: 'La longueur attendue d un ICE est de 15 caracteres.',
+      message: 'La longueur attendue d’un ICE est de 15 caractères.',
     });
   }
 
@@ -219,7 +219,7 @@ export function avertissementsIdentifiants(saisie: {
     warnings.push({
       code: 'CODE_POSTAL_INATTENDU',
       champ: 'codePostal',
-      message: 'Un code postal marocain comporte generalement 5 chiffres.',
+      message: 'Un code postal marocain comporte généralement 5 chiffres.',
     });
   }
 
@@ -230,7 +230,7 @@ export function avertissementRaisonSocialeDoublon(): ApiWarning {
   return {
     code: 'RAISON_SOCIALE_DEJA_UTILISEE',
     champ: 'raisonSociale',
-    message: 'Cette raison sociale est deja utilisee dans le compte.',
+    message: 'Cette raison sociale est déjà utilisée dans le compte.',
   };
 }
 
@@ -238,13 +238,13 @@ export function avertissementRetourMontage(): ApiWarning {
   return {
     code: 'RETOUR_EN_MONTAGE',
     message:
-      'Le dossier repasse en montage. Les bulletins deja produits restent intacts ; aucun bulletin definitif ne pourra etre emis tant que le dossier est en montage.',
+      'Le dossier repasse en montage. Les bulletins déjà produits restent intacts ; aucun bulletin définitif ne pourra être émis tant que le dossier est en montage.',
   };
 }
 
 export function avertissementAucunCompteSalaires(): ApiWarning {
   return {
     code: 'AUCUN_COMPTE_SALAIRES',
-    message: 'Aucun compte bancaire ne porte actuellement l usage salaires.',
+    message: 'Aucun compte bancaire ne porte actuellement l’usage salaires.',
   };
 }

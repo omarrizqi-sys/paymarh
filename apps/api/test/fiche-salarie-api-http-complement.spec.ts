@@ -100,7 +100,7 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
 
     expect(reponse.status).toBe(400);
     const corps = (await reponse.json()) as { message?: string };
-    expect(corps.message).toBe("Cette valeur n'est pas disponible.");
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
 
     const apres = await prisma.salarie.count({ where: { companyId: societeA.companyId } });
     expect(apres).toBe(avant);
@@ -133,7 +133,7 @@ describe('API fiche salarie — complement correctif 2.1.b-2', () => {
 
     expect(reponse.status).toBe(400);
     const corps = (await reponse.json()) as { message?: string };
-    expect(corps.message).toBe("Cette valeur n'est pas disponible.");
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
 
     const apres = await prisma.salarie.count({ where: { companyId: societeA.companyId } });
     expect(apres).toBe(avant);

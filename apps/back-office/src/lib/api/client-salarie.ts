@@ -27,7 +27,7 @@ function extraireErreur(
       };
     }
   }
-  return { code: 'ERREUR', message: `L'API a repondu avec le code ${statut}.` };
+  return { code: 'ERREUR', message: `L’API a répondu avec le code ${statut}.` };
 }
 
 /** En-tetes pour les appels fiche salarie : societe courante via l URL. */

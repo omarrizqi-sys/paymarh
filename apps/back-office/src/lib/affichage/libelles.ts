@@ -36,36 +36,47 @@ export function formaterMoisAAAA_MM(valeur: string): string {
   if (!annee || !mois) return valeur;
   const noms = [
     'janvier',
-    'fevrier',
+    'février',
     'mars',
     'avril',
     'mai',
     'juin',
     'juillet',
-    'aout',
+    'août',
     'septembre',
     'octobre',
     'novembre',
-    'decembre',
+    'décembre',
   ];
   const index = Number(mois) - 1;
   return `${noms[index] ?? mois} ${annee}`;
 }
 
+const LIBELLES_STATUT_ENREGISTREMENT: Record<string, string> = {
+  succes: 'succès',
+  echec: 'échec',
+  conflit: 'conflit',
+  non_tente: 'non tenté',
+};
+
+export function libelleStatutEnregistrement(statut: string): string {
+  return LIBELLES_STATUT_ENREGISTREMENT[statut] ?? statut;
+}
+
 export function formaterMoisClotureConges(mois: number): string {
   const noms = [
     'Janvier',
-    'Fevrier',
+    'Février',
     'Mars',
     'Avril',
     'Mai',
     'Juin',
     'Juillet',
-    'Aout',
+    'Août',
     'Septembre',
     'Octobre',
     'Novembre',
-    'Decembre',
+    'Décembre',
   ];
   return noms[mois - 1] ?? String(mois);
 }

@@ -36,7 +36,7 @@ import PageListeSocietes from './page';
 
 /** Texte affiche aujourd hui — tout ecart est une fuite ou une regression. */
 const MESSAGE_ECHEC_LISTE =
-  'Impossible de charger les societes. Verifiez que l API tourne et que NEXT_PUBLIC_PAYMARH_USER_ID est correct.';
+  'Impossible de charger les sociétés. Vérifiez que l’API tourne et que NEXT_PUBLIC_PAYMARH_USER_ID est correct.';
 
 function societeListe(
   surcharges: Partial<RessourceAvecOperations<SocieteListe>> = {}
@@ -115,7 +115,7 @@ describe('PageListeSocietes', () => {
     render(ui);
 
     expect(screen.queryByText(MESSAGE_ECHEC_LISTE)).toBeNull();
-    expect(screen.getByRole('heading', { name: 'Societes' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Sociétés' })).toBeTruthy();
     expect(screen.getByText('Societe de demonstration')).toBeTruthy();
     expect(screen.getByText('SARL')).toBeTruthy();
   });

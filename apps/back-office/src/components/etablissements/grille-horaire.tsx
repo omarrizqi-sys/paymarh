@@ -75,9 +75,9 @@ export function GrilleHoraireDefaut({
         </table>
       </div>
       <p className="text-muted-foreground text-sm">
-        Total de controle : <strong>{afficherNombreDecimal(total.toString())}</strong> h / semaine
+        Total de contrôle : <strong>{afficherNombreDecimal(total.toString())}</strong> h / semaine
         {dureeHebdomadaire ? (
-          <> (duree hebdomadaire declaree : {afficherNombreDecimal(dureeHebdomadaire)} h)</>
+          <> (durée hebdomadaire déclarée : {afficherNombreDecimal(dureeHebdomadaire)} h)</>
         ) : null}
       </p>
     </div>

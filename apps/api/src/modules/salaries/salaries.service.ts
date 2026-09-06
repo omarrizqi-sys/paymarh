@@ -565,14 +565,13 @@ export class SalariesService {
 
   async impactSuppression(id: string) {
     await this.trouverSalarieSociete(id);
-    const inventaire = {
-      message:
-        'La suppression effacera l integralite du contenu de cette fiche salarie, sans possibilite de retour.',
-    };
+    const message =
+      'La suppression effacera l’intégralité du contenu de cette fiche salarié, sans possibilité de retour.';
+    const faits = { id };
     return {
       donnees: {
-        ...inventaire,
-        jetonConfirmation: calculerJetonConfirmation(inventaire),
+        message,
+        jetonConfirmation: calculerJetonConfirmation(faits),
       },
     };
   }
@@ -595,11 +594,7 @@ export class SalariesService {
       });
     }
 
-    const inventaire = {
-      message:
-        'La suppression effacera l integralite du contenu de cette fiche salarie, sans possibilite de retour.',
-    };
-    const jetonAttendu = calculerJetonConfirmation(inventaire);
+    const jetonAttendu = calculerJetonConfirmation({ id });
     if (!jetonsIdentiques(jetonAttendu, confirmationJeton)) {
       throw new ConflictException({
         code: CODES_REPONSE.CONFIRMATION_OBSOLETE.code,

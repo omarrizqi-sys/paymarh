@@ -86,7 +86,7 @@ export function RubriqueIdentifiantsLegaux({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="matricule" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="typePieceIdentite">Type de piece d identite</Label>
+          <Label htmlFor="typePieceIdentite">Type de pièce d’identité</Label>
           <Input
             id="typePieceIdentite"
             data-testid="type-piece-identite"
@@ -96,11 +96,11 @@ export function RubriqueIdentifiantsLegaux({
             disabled
           />
           <p className="text-muted-foreground text-xs" data-testid="mention-type-piece">
-            mis a jour a l enregistrement
+            mis à jour à l’enregistrement
           </p>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="numeroPiece">Numero de piece</Label>
+          <Label htmlFor="numeroPiece">Numéro de pièce</Label>
           <Input
             id="numeroPiece"
             type="text"
@@ -111,7 +111,7 @@ export function RubriqueIdentifiantsLegaux({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="numeroPiece" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="numeroCnss">Numero CNSS</Label>
+          <Label htmlFor="numeroCnss">Numéro CNSS</Label>
           <Input
             id="numeroCnss"
             type="text"
@@ -122,7 +122,7 @@ export function RubriqueIdentifiantsLegaux({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="numeroCnss" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="numeroCimr">Numero CIMR</Label>
+          <Label htmlFor="numeroCimr">Numéro CIMR</Label>
           <Input
             id="numeroCimr"
             type="text"

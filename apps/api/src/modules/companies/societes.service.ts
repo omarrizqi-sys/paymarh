@@ -418,7 +418,7 @@ export class SocietesService {
     if ('moisEffet' in dto && (dto as { moisEffet?: unknown }).moisEffet !== undefined) {
       throw new BadRequestException({
         code: 'CHAMP_INTERDIT',
-        message: 'moisEffet ne doit pas etre fourni : il est deduit du mois en cours.',
+        message: 'moisEffet ne doit pas être fourni : il est déduit du mois en cours.',
         champ: 'moisEffet',
       });
     }
@@ -491,14 +491,14 @@ export class SocietesService {
     if (!confirmationJeton) {
       throw new BadRequestException({
         code: 'CONFIRMATION_REQUISE',
-        message: 'La suppression exige le jeton renvoye par GET /societes/:id/impact-suppression.',
+        message: 'La suppression exige le jeton renvoyé par GET /societes/:id/impact-suppression.',
       });
     }
 
     if (societeADesBulletins(id)) {
       throw new ConflictException({
         code: 'SUPPRESSION_INTERDITE',
-        message: 'Cette societe ne peut pas etre supprimee.',
+        message: 'Cette société ne peut pas être supprimée.',
       });
     }
 
@@ -507,7 +507,7 @@ export class SocietesService {
       throw new ConflictException({
         code: 'CONFIRMATION_OBSOLETE',
         message:
-          'L inventaire a change depuis l apercu. Relancez GET .../impact-suppression puis confirmez a nouveau.',
+          'L’inventaire a changé depuis l’aperçu. Relancez GET .../impact-suppression puis confirmez à nouveau.',
         impact,
       });
     }
@@ -569,7 +569,7 @@ export class SocietesService {
       where: { ...accountScope(context), id },
     });
     if (!row) {
-      throw new NotFoundException(`Societe introuvable : ${id}`);
+      throw new NotFoundException(`Société introuvable : ${id}`);
     }
     return row;
   }

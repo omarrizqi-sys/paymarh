@@ -15,8 +15,8 @@ export function RubriqueRemunerationPlaceholder({
   }
 
   return (
-    <Rubrique id="remuneration" titre="Remuneration" description="Rubrique a venir">
-      <p className="text-muted-foreground text-sm">Contenu a implementer.</p>
+    <Rubrique id="remuneration" titre="Rémunération" description="Rubrique à venir">
+      <p className="text-muted-foreground text-sm">Contenu à implémenter.</p>
     </Rubrique>
   );
 }

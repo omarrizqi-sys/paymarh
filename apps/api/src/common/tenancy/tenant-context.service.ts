@@ -40,7 +40,7 @@ export class TenantContextService {
 
     if (!context) {
       throw new UnauthorizedException(
-        "Aucun contexte de tenant pour cette requete : l'acces aux donnees est refuse."
+        'Aucun contexte de tenant pour cette requete : l’acces aux donnees est refuse.'
       );
     }
 

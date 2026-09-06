@@ -14,7 +14,7 @@ describe('avertissement navigation fiche salarie', () => {
 
     expect(autorise).toBe(false);
     expect(confirm).toHaveBeenCalledWith(
-      'Des modifications non enregistrees concernent : Identite, Dates. Quitter quand meme ?'
+      'Des modifications non enregistrées concernent : Identite, Dates. Quitter quand même ?'
     );
     confirm.mockRestore();
   });
@@ -27,7 +27,7 @@ describe('avertissement navigation fiche salarie', () => {
 
   it('messageConfirmationRechargement previent avant ecrasement', () => {
     expect(messageConfirmationRechargement(['Identite'])).toContain(
-      'Recharger les valeurs du serveur ecrasera la saisie en cours (Identite)'
+      'Recharger les valeurs du serveur écrasera la saisie en cours (Identite)'
     );
   });
 });

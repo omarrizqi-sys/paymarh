@@ -77,7 +77,7 @@ describe('ListeSalariesClient', () => {
 
     rendre(donneesInitiales({ items: [ligne('0')], prochainCurseur: null }), false);
 
-    fireEvent.change(screen.getByLabelText('Rechercher un salarie'), {
+    fireEvent.change(screen.getByLabelText('Rechercher un salarié'), {
       target: { value: 'benali' },
     });
 
@@ -133,17 +133,17 @@ describe('ListeSalariesClient', () => {
   it('14 — ecran vide societe et ecran vide recherche affichent deux messages distincts', () => {
     const { unmount } = rendre(donneesInitiales(), true);
     expect(screen.getByTestId('vide-societe').textContent).toContain(
-      'Aucun salarie dans cette societe. Commencez par en creer un.'
+      'Aucun salarié dans cette société. Commencez par en créer un.'
     );
     expect(screen.queryByTestId('vide-recherche')).toBeNull();
     unmount();
 
     rendre(donneesInitiales(), false);
-    fireEvent.change(screen.getByLabelText('Rechercher un salarie'), {
+    fireEvent.change(screen.getByLabelText('Rechercher un salarié'), {
       target: { value: 'introuvable' },
     });
     expect(screen.getByTestId('vide-recherche').textContent).toContain(
-      'Aucun salarie ne correspond a votre recherche.'
+      'Aucun salarié ne correspond à votre recherche.'
     );
     expect(screen.queryByTestId('vide-societe')).toBeNull();
   });
@@ -170,7 +170,7 @@ describe('ListeSalariesClient', () => {
 
     rendre(donneesInitiales({ items: [ligne('0')] }), false);
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etat'), { target: { value: 'ACTIF' } });
+    fireEvent.change(screen.getByLabelText('Filtrer par état'), { target: { value: 'ACTIF' } });
 
     await waitFor(() => {
       expect(listerSalaries).toHaveBeenCalledWith('soc-1', {
@@ -189,7 +189,7 @@ describe('ListeSalariesClient', () => {
 
     rendre(donneesInitiales({ items: [ligne('0')] }), false);
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etat'), { target: { value: 'INACTIF' } });
+    fireEvent.change(screen.getByLabelText('Filtrer par état'), { target: { value: 'INACTIF' } });
 
     await waitFor(() => {
       expect(listerSalaries).toHaveBeenCalledWith('soc-1', {
@@ -208,7 +208,7 @@ describe('ListeSalariesClient', () => {
 
     rendre(donneesInitiales({ items: [ligne('0')] }), false);
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etablissement'), {
+    fireEvent.change(screen.getByLabelText('Filtrer par établissement'), {
       target: { value: 'etab-1' },
     });
 
@@ -239,8 +239,8 @@ describe('ListeSalariesClient', () => {
 
     rendre(donneesInitiales({ items: [ligne('0')] }), false);
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etat'), { target: { value: 'ACTIF' } });
-    fireEvent.change(screen.getByLabelText('Rechercher un salarie'), {
+    fireEvent.change(screen.getByLabelText('Filtrer par état'), { target: { value: 'ACTIF' } });
+    fireEvent.change(screen.getByLabelText('Rechercher un salarié'), {
       target: { value: 'benali' },
     });
 
@@ -271,7 +271,7 @@ describe('ListeSalariesClient', () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etat'), { target: { value: 'ACTIF' } });
+    fireEvent.change(screen.getByLabelText('Filtrer par état'), { target: { value: 'ACTIF' } });
 
     await waitFor(() => {
       expect(listerSalaries).toHaveBeenCalledWith('soc-depuis-url', expect.any(Object));
@@ -300,11 +300,11 @@ describe('ListeSalariesClient', () => {
     for (const libelle of [
       'Matricule',
       'Nom',
-      'Prenom',
-      'Etat',
-      'Date d entree',
+      'Prénom',
+      'État',
+      'Date d’entrée',
       'Poste',
-      'Etablissement',
+      'Établissement',
     ]) {
       expect(screen.getByRole('columnheader', { name: libelle })).toBeTruthy();
     }
@@ -368,7 +368,7 @@ describe('ListeSalariesClient', () => {
       },
     });
 
-    fireEvent.change(screen.getByLabelText('Filtrer par etat'), { target: { value: 'ACTIF' } });
+    fireEvent.change(screen.getByLabelText('Filtrer par état'), { target: { value: 'ACTIF' } });
 
     await waitFor(() => {
       expect(listerSalaries).toHaveBeenLastCalledWith('soc-1', {
@@ -415,11 +415,11 @@ describe('ListeSalariesClient', () => {
 
   it('Creer un salarie est absent du DOM sans salarie.creer', () => {
     rendre(donneesInitiales({ operations: ['salarie.lire'] }), true);
-    expect(screen.queryByRole('button', { name: 'Creer un salarie' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Créer un salarié' })).toBeNull();
   });
 
   it('Creer un salarie est present avec salarie.creer', () => {
     rendre(donneesInitiales({ operations: ['salarie.lire', 'salarie.creer'] }), true);
-    expect(screen.getByRole('button', { name: 'Creer un salarie' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Créer un salarié' })).toBeTruthy();
   });
 });

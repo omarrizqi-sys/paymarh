@@ -41,7 +41,7 @@ async function bootstrap(): Promise<void> {
   const port = Number(configService.get<string>('API_PORT') ?? 3001);
   await app.listen(port);
 
-  logger.log(`API PaymaRH v${API_VERSION} a l'ecoute sur http://localhost:${port}`);
+  logger.log(`API PaymaRH v${API_VERSION} a l’ecoute sur http://localhost:${port}`);
   logger.log(`Temoin de sante : http://localhost:${port}/health`);
 }
 

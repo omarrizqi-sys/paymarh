@@ -98,15 +98,15 @@ export function ListeSalariesClient({
     items.length === 0 && !chargement ? (
       filtresActifs ? (
         <p className="text-muted-foreground py-8 text-center text-sm" data-testid="vide-recherche">
-          Aucun salarie ne correspond a votre recherche.
+          Aucun salarié ne correspond à votre recherche.
         </p>
       ) : societeSansSalaries ? (
         <p className="text-muted-foreground py-8 text-center text-sm" data-testid="vide-societe">
-          Aucun salarie dans cette societe. Commencez par en creer un.
+          Aucun salarié dans cette société. Commencez par en créer un.
         </p>
       ) : (
         <p className="text-muted-foreground py-8 text-center text-sm" data-testid="vide-recherche">
-          Aucun salarie ne correspond a votre recherche.
+          Aucun salarié ne correspond à votre recherche.
         </p>
       )
     ) : null;
@@ -116,7 +116,7 @@ export function ListeSalariesClient({
       afficherSommaire={false}
       rubriques={
         <div className="space-y-4">
-          <h1 className="text-2xl font-semibold">Salaries</h1>
+          <h1 className="text-2xl font-semibold">Salariés</h1>
 
           <div className="flex flex-wrap items-end gap-4">
             <div className="min-w-[12rem] flex-1">
@@ -125,20 +125,20 @@ export function ListeSalariesClient({
               </label>
               <Input
                 id="recherche-salaries"
-                placeholder="Nom, prenom ou matricule..."
+                placeholder="Nom, prénom ou matricule..."
                 value={recherche}
                 onChange={(event) => setRecherche(event.target.value)}
-                aria-label="Rechercher un salarie"
+                aria-label="Rechercher un salarié"
               />
             </div>
 
             <div>
               <label htmlFor="filtre-etat-salaries" className="mb-1 block text-sm font-medium">
-                Etat
+                État
               </label>
               <Select
                 id="filtre-etat-salaries"
-                aria-label="Filtrer par etat"
+                aria-label="Filtrer par état"
                 value={filtreEtat}
                 onChange={(event) => setFiltreEtat(event.target.value as 'ACTIF' | 'INACTIF' | '')}
               >
@@ -150,15 +150,15 @@ export function ListeSalariesClient({
 
             <div>
               <label htmlFor="filtre-etab-salaries" className="mb-1 block text-sm font-medium">
-                Etablissement
+                Établissement
               </label>
               <Select
                 id="filtre-etab-salaries"
-                aria-label="Filtrer par etablissement"
+                aria-label="Filtrer par établissement"
                 value={filtreEtablissement}
                 onChange={(event) => setFiltreEtablissement(event.target.value)}
               >
-                <option value="">Tous les etablissements</option>
+                <option value="">Tous les établissements</option>
                 {etablissements.map((etablissement) => (
                   <option key={etablissement.id} value={etablissement.id}>
                     {etablissement.nom}
@@ -177,11 +177,11 @@ export function ListeSalariesClient({
                   <TableRow>
                     <TableHead>Matricule</TableHead>
                     <TableHead>Nom</TableHead>
-                    <TableHead>Prenom</TableHead>
-                    <TableHead>Etat</TableHead>
-                    <TableHead>Date d entree</TableHead>
+                    <TableHead>Prénom</TableHead>
+                    <TableHead>État</TableHead>
+                    <TableHead>Date d’entrée</TableHead>
                     <TableHead>Poste</TableHead>
-                    <TableHead>Etablissement</TableHead>
+                    <TableHead>Établissement</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -236,7 +236,7 @@ export function ListeSalariesClient({
 export function LienRetourFicheSociete({ companyId }: { readonly companyId: string }) {
   return (
     <Link href={`/societes/${companyId}`} className="text-primary text-sm hover:underline">
-      ← Retour a la fiche societe
+      ← Retour à la fiche société
     </Link>
   );
 }

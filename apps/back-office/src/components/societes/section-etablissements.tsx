@@ -178,9 +178,9 @@ export function SectionEtablissements({
 
   return (
     <Rubrique
-      titre="Etablissements"
+      titre="Établissements"
       id="etablissements"
-      indiceHeritage="La duree hebdomadaire, les horaires et les jours feries serviront de valeurs par defaut aux salaries (etablissement)."
+      indiceHeritage="La durée hebdomadaire, les horaires et les jours fériés serviront de valeurs par défaut aux salariés (établissement)."
     >
       <div className="mb-4 flex flex-wrap gap-2">
         {etablissements.map((e) => (
@@ -249,7 +249,7 @@ export function SectionEtablissements({
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="complementAdresse">Complement d adresse</Label>
+              <Label htmlFor="complementAdresse">Complément d’adresse</Label>
               <Input
                 id="complementAdresse"
                 name="complementAdresse"
@@ -303,7 +303,7 @@ export function SectionEtablissements({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="telephone">Telephone</Label>
+              <Label htmlFor="telephone">Téléphone</Label>
               <Input
                 id="telephone"
                 name="telephone"
@@ -322,7 +322,7 @@ export function SectionEtablissements({
               />
             </div>
             <div className="flex flex-wrap gap-2 sm:col-span-2">
-              {peutModifier ? <Button type="submit">Enregistrer l etablissement</Button> : null}
+              {peutModifier ? <Button type="submit">Enregistrer l’établissement</Button> : null}
               {possedePermission(etab.operations, 'etablissement.designer-principal') &&
               !etab.estPrincipal ? (
                 <Button
@@ -339,7 +339,7 @@ export function SectionEtablissements({
                     })
                   }
                 >
-                  Designer principal
+                  Désigner principal
                 </Button>
               ) : null}
               {possedePermission(etab.operations, 'etablissement.supprimer') &&
@@ -360,7 +360,7 @@ export function SectionEtablissements({
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="dureeHebdomadaire">Duree hebdomadaire (h)</Label>
+                <Label htmlFor="dureeHebdomadaire">Durée hebdomadaire (h)</Label>
                 <Input
                   id="dureeHebdomadaire"
                   name="dureeHebdomadaire"
@@ -394,7 +394,7 @@ export function SectionEtablissements({
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="teletravailAutorise">Teletravail autorise</Label>
+                <Label htmlFor="teletravailAutorise">Télétravail autorisé</Label>
                 <Select
                   id="teletravailAutorise"
                   name="teletravailAutorise"
@@ -407,14 +407,14 @@ export function SectionEtablissements({
                     setTeletravailSaisi(v === '' ? null : v === 'true');
                   }}
                 >
-                  <option value="">Non renseigne</option>
+                  <option value="">Non renseigné</option>
                   <option value="true">Oui</option>
                   <option value="false">Non</option>
                 </Select>
               </div>
               {afficherIndemniteTeletravailVersee(teletravailAffiche) ? (
                 <div className="space-y-2">
-                  <Label htmlFor="indemniteTeletravailVersee">Verse une indemnite</Label>
+                  <Label htmlFor="indemniteTeletravailVersee">Verse une indemnité</Label>
                   <Select
                     id="indemniteTeletravailVersee"
                     name="indemniteTeletravailVersee"
@@ -427,7 +427,7 @@ export function SectionEtablissements({
                       setIndemniteSaisie(v === '' ? null : v === 'true');
                     }}
                   >
-                    <option value="">Non renseigne</option>
+                    <option value="">Non renseigné</option>
                     <option value="true">Oui</option>
                     <option value="false">Non</option>
                   </Select>
@@ -435,7 +435,7 @@ export function SectionEtablissements({
               ) : null}
               {afficherMontantIndemniteTeletravail(teletravailAffiche, indemniteAffiche) ? (
                 <div className="space-y-2">
-                  <Label htmlFor="montantIndemniteTeletravail">Montant indemnite</Label>
+                  <Label htmlFor="montantIndemniteTeletravail">Montant indemnité</Label>
                   <Input
                     id="montantIndemniteTeletravail"
                     name="montantIndemniteTeletravail"
@@ -473,12 +473,12 @@ export function SectionEtablissements({
                       if (form) void deduireDepuisHebdo(form);
                     }}
                   >
-                    {deductionEnCours ? 'Calcul en cours…' : 'Deduire depuis l hebdomadaire'}
+                    {deductionEnCours ? 'Calcul en cours…' : 'Déduire depuis l’hebdomadaire'}
                   </Button>
                 ) : null}
               </div>
               <p className="text-muted-foreground mb-2 text-xs">
-                Saisie directe ou valeurs deduites par l API a partir de l hebdomadaire (52/12).
+                Saisie directe ou valeurs déduites par l’API à partir de l’hebdomadaire (52/12).
               </p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {[...typesHeures]
@@ -498,7 +498,7 @@ export function SectionEtablissements({
             </div>
 
             <div>
-              <h4 className="mb-2 font-medium">Jours feries travailles</h4>
+              <h4 className="mb-2 font-medium">Jours fériés travaillés</h4>
               <JoursFeriesTravailles
                 joursFeries={joursFeries}
                 coches={jfCoches}
@@ -514,7 +514,7 @@ export function SectionEtablissements({
               />
             </div>
 
-            {peutModifier ? <Button type="submit">Enregistrer le parametrage</Button> : null}
+            {peutModifier ? <Button type="submit">Enregistrer le paramétrage</Button> : null}
           </form>
         </div>
       ) : null}
@@ -523,7 +523,7 @@ export function SectionEtablissements({
         <>
           <Separator className="my-6" />
           <form onSubmit={(e) => void creerEtab(e)} className="grid gap-4 sm:grid-cols-2">
-            <h4 className="font-medium sm:col-span-2">Nouvel etablissement</h4>
+            <h4 className="font-medium sm:col-span-2">Nouvel établissement</h4>
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="nom-new">Nom *</Label>
               <Input id="nom-new" name="nom" required />
@@ -541,7 +541,7 @@ export function SectionEtablissements({
               <Input id="pays-new" name="pays" defaultValue="MA" />
             </div>
             <div className="sm:col-span-2">
-              <Button type="submit">Creer l etablissement</Button>
+              <Button type="submit">Créer l’établissement</Button>
             </div>
           </form>
         </>

@@ -35,7 +35,7 @@ export function interpreterReponse(statut: number, corps: unknown): ResultatSant
     return {
       etat: 'hors-ligne',
       reponse: null,
-      message: `L'API a repondu avec le code ${statut}.`,
+      message: `L’API a répondu avec le code ${statut}.`,
     };
   }
 
@@ -43,7 +43,7 @@ export function interpreterReponse(statut: number, corps: unknown): ResultatSant
     return {
       etat: 'hors-ligne',
       reponse: null,
-      message: "L'API a repondu, mais dans un format inattendu.",
+      message: 'L’API a répondu, mais dans un format inattendu.',
     };
   }
 
@@ -89,7 +89,7 @@ export async function recupererSante(): Promise<ResultatSante> {
     return {
       etat: 'hors-ligne',
       reponse: null,
-      message: `Impossible de joindre l'API sur ${urlApi()}. Est-elle demarree (pnpm dev:api) ?`,
+      message: `Impossible de joindre l’API sur ${urlApi()}. Est-elle démarrée (pnpm dev:api) ?`,
     };
   }
 }

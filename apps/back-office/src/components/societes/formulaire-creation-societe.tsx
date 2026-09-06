@@ -61,7 +61,7 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           setErreurGlobale(err.erreur.message);
         }
       } else {
-        setErreurGlobale('La creation a echoue.');
+        setErreurGlobale('La création a échoué.');
       }
     } finally {
       setEnvoi(false);
@@ -110,10 +110,10 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
         </div>
       </Rubrique>
 
-      <Rubrique titre="Etat du dossier" id="etat">
+      <Rubrique titre="État du dossier" id="etat">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="etatDossier">Etat *</Label>
+            <Label htmlFor="etatDossier">État *</Label>
             <Select id="etatDossier" name="etatDossier" defaultValue="EN_PRODUCTION">
               <option value="EN_MONTAGE">En montage</option>
               <option value="EN_PRODUCTION">En production</option>
@@ -121,12 +121,12 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="moisDebutMontage">Mois de debut de montage *</Label>
+            <Label htmlFor="moisDebutMontage">Mois de début de montage *</Label>
             <Input id="moisDebutMontage" name="moisDebutMontage" placeholder="AAAA-MM" required />
             <MessagesChamp champ="moisDebutMontage" erreur={erreurs.moisDebutMontage} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="moisDebutProduction">Mois de debut de production *</Label>
+            <Label htmlFor="moisDebutProduction">Mois de début de production *</Label>
             <Input
               id="moisDebutProduction"
               name="moisDebutProduction"
@@ -139,8 +139,8 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
       </Rubrique>
 
       <Rubrique
-        titre="Etablissement principal"
-        description="Cree automatiquement avec la societe. Adresse et ville obligatoires."
+        titre="Établissement principal"
+        description="Créé automatiquement avec la société. Adresse et ville obligatoires."
         id="etablissement-principal"
       >
         <div className="grid gap-4 sm:grid-cols-2">
@@ -169,13 +169,13 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
             <Input id="codePostal" name="codePostal" inputMode="numeric" />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="nomEtablissement">Nom de l etablissement</Label>
+            <Label htmlFor="nomEtablissement">Nom de l’établissement</Label>
             <Input id="nomEtablissement" name="nomEtablissement" />
           </div>
         </div>
       </Rubrique>
 
-      <Rubrique titre="Parametrage technique" id="parametrage-technique">
+      <Rubrique titre="Paramétrage technique" id="parametrage-technique">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="matriculeLongueur">Longueur du matricule *</Label>
@@ -198,8 +198,8 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
               defaultValue="true"
               required
             >
-              <option value="true">Active</option>
-              <option value="false">Desactive</option>
+              <option value="true">Activé</option>
+              <option value="false">Désactivé</option>
             </Select>
             <MessagesChamp
               champ="calculAutoAbsencesEntreesSorties"
@@ -214,7 +214,7 @@ export function FormulaireCreationSociete({ formesJuridiques }: Props) {
           Annuler
         </Button>
         <Button type="submit" disabled={envoi}>
-          {envoi ? 'Creation...' : 'Creer la societe'}
+          {envoi ? 'Création...' : 'Créer la société'}
         </Button>
       </div>
     </form>

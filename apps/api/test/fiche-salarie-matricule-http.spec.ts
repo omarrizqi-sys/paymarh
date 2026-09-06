@@ -6,7 +6,7 @@ import { nettoyerCompteTest } from './support/nettoyage-fiche-salarie.js';
 import { prisma } from './support/prisma-test.js';
 
 const PREFIXE = `test-matricule-nr-${Date.now()}`;
-const MESSAGE_NEUTRE = "Cette valeur n'est pas disponible.";
+const MESSAGE_NEUTRE = 'Cette valeur n’est pas disponible.';
 
 function entetes(
   utilisateurId: string,

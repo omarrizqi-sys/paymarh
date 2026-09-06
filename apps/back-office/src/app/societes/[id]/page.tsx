@@ -43,7 +43,7 @@ export default async function PageFicheSociete({ params }: Props) {
     return (
       <div className="space-y-4">
         <Link href="/societes" className="text-primary text-sm hover:underline">
-          ← Retour a la liste
+          ← Retour à la liste
         </Link>
         <FicheSocieteClient
           initial={{

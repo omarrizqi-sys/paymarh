@@ -23,7 +23,7 @@ import { EXEMPTIONS_ROUTES_MODULE_1 } from '../conformite-routes/exemptions-modu
 import { cleRouteHttp } from '../conformite-routes/route-cle.js';
 
 const MESSAGE_NEUTRE = 'Ressource introuvable.';
-const MESSAGE_INTERDIT = 'Action non autorisee.';
+const MESSAGE_INTERDIT = 'Action non autorisée.';
 
 /**
  * POINT DE PASSAGE UNIQUE des droits pour la fiche salarie (etape 2.1.b).
@@ -50,7 +50,7 @@ export class PermissionGuard implements CanActivate {
         return true;
       }
       throw new InternalServerErrorException(
-        'Route sans @RequiertPermission : acces refuse (devrait etre detecte au demarrage).'
+        'Route sans @RequiertPermission : accès refusé (devrait être détecté au démarrage).'
       );
     }
 

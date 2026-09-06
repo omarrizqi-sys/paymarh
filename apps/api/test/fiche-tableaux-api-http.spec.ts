@@ -1294,4 +1294,123 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       await appBulletin.close();
     }
   });
+
+  it('J1 — un jeton obtenu en mode supprimer est refuse si le mode devient inactiver', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-J1-PRET`,
+    });
+    const pret = await prisma.pret.create({
+      data: {
+        salarieId: salarie.id,
+        libelleObjet: 'Pret J1',
+        libelleBulletin: 'PRET',
+        montantTotal: new Decimal('600'),
+        moisDebut: '2025-01',
+        mensualite: new Decimal('100'),
+        nombreEcheances: 6,
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const apercu = await fetch(
+      urlLocale(app, `/salaries/${salarie.id}/prets/${pret.id}/impact-suppression`),
+      { headers: entetes(utilisateurId, societe.companyId) }
+    );
+    const { donnees: apercuDonnees } = (await apercu.json()) as {
+      donnees: { jetonConfirmation: string; mode: string };
+    };
+    expect(apercuDonnees.mode).toBe('supprimer');
+
+    const appBulletin = await creerAppAvecPorts({
+      bulletins: {
+        listerBulletinsParSalarie: async () =>
+          [{ mois: '2025-03', etat: EtatBulletin.CALCULE }] as const,
+      },
+    });
+
+    try {
+      const suppression = await fetch(
+        urlLocale(
+          appBulletin,
+          `/salaries/${salarie.id}/prets/${pret.id}?confirmationJeton=${apercuDonnees.jetonConfirmation}`
+        ),
+        {
+          method: 'DELETE',
+          headers: {
+            ...entetes(utilisateurId, societe.companyId),
+            'if-match': '0',
+          },
+        }
+      );
+      expect(suppression.status).toBe(409);
+      const corps = (await suppression.json()) as { code: string };
+      expect(corps.code).toBe('CONFIRMATION_OBSOLETE');
+
+      const encore = await prisma.pret.findUnique({ where: { id: pret.id } });
+      expect(encore).not.toBeNull();
+      expect(encore?.moisEffetFin).toBeNull();
+    } finally {
+      await appBulletin.close();
+    }
+  });
+
+  it('J2 — deux apercus successifs sur une situation inchangee rendent le meme jeton', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-J2-PRET`,
+    });
+    const pret = await prisma.pret.create({
+      data: {
+        salarieId: salarie.id,
+        libelleObjet: 'Pret J2',
+        libelleBulletin: 'PRET',
+        montantTotal: new Decimal('600'),
+        moisDebut: '2025-01',
+        mensualite: new Decimal('100'),
+        nombreEcheances: 6,
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const chemin = `/salaries/${salarie.id}/prets/${pret.id}/impact-suppression`;
+    const premier = await fetch(urlLocale(app, chemin), {
+      headers: entetes(utilisateurId, societe.companyId),
+    });
+    const second = await fetch(urlLocale(app, chemin), {
+      headers: entetes(utilisateurId, societe.companyId),
+    });
+    const { donnees: a } = (await premier.json()) as { donnees: { jetonConfirmation: string } };
+    const { donnees: b } = (await second.json()) as { donnees: { jetonConfirmation: string } };
+    expect(a.jetonConfirmation).toBe(b.jetonConfirmation);
+  });
+
+  it('J3 — le message reste present dans la reponse de l apercu', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-J3-PRET`,
+    });
+    const pret = await prisma.pret.create({
+      data: {
+        salarieId: salarie.id,
+        libelleObjet: 'Pret J3',
+        libelleBulletin: 'PRET',
+        montantTotal: new Decimal('600'),
+        moisDebut: '2025-01',
+        mensualite: new Decimal('100'),
+        nombreEcheances: 6,
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const apercu = await fetch(
+      urlLocale(app, `/salaries/${salarie.id}/prets/${pret.id}/impact-suppression`),
+      { headers: entetes(utilisateurId, societe.companyId) }
+    );
+    const { donnees } = (await apercu.json()) as {
+      donnees: { message?: string; mode: string };
+    };
+    expect(donnees.mode).toBe('supprimer');
+    expect(donnees.message).toBe('La ligne sera supprimée définitivement.');
+  });
 });

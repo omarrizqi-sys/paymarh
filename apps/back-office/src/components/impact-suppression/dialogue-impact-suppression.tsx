@@ -48,7 +48,7 @@ export function DialogueImpactSuppression({
       setInventaire(lignes);
       setJeton(nouveauJeton);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : 'Impossible de charger l apercu.');
+      setErreur(e instanceof Error ? e.message : 'Impossible de charger l’aperçu.');
     } finally {
       setChargement(false);
     }
@@ -71,10 +71,10 @@ export function DialogueImpactSuppression({
     } catch (e) {
       if (e instanceof AppelApiEchoue && e.erreur.code === 'CONFIRMATION_OBSOLETE') {
         await recharger();
-        setErreur('L inventaire a change : veuillez relire et confirmer a nouveau.');
+        setErreur('L’inventaire a changé : veuillez relire et confirmer à nouveau.');
         return;
       }
-      setErreur(e instanceof AppelApiEchoue ? e.erreur.message : 'La suppression a echoue.');
+      setErreur(e instanceof AppelApiEchoue ? e.erreur.message : 'La suppression a échoué.');
     } finally {
       setChargement(false);
     }
@@ -95,7 +95,7 @@ export function DialogueImpactSuppression({
         </h2>
 
         {chargement && inventaire.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Chargement de l apercu...</p>
+          <p className="text-muted-foreground text-sm">Chargement de l’aperçu...</p>
         ) : (
           <ul className="mb-4 space-y-2 text-sm">
             {inventaire.map((ligne) => (
@@ -120,7 +120,7 @@ export function DialogueImpactSuppression({
             onChange={(e) => setAccepte(e.target.checked)}
           />
           <Label htmlFor="accepte-suppression" className="cursor-pointer leading-snug">
-            J ai lu l inventaire ci-dessus et j accepte la suppression irreversible de ces elements.
+            J’ai lu l’inventaire ci-dessus et j’accepte la suppression irréversible de ces éléments.
           </Label>
         </div>
 

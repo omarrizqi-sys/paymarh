@@ -168,12 +168,12 @@ describe('Fiche salarie — blocs identite', () => {
 
     rendre(fiche);
 
-    expect(screen.getByTestId('sommaire-identite').textContent).toContain('Identite');
+    expect(screen.getByTestId('sommaire-identite').textContent).toContain('Identité');
     expect(screen.getByTestId('sommaire-identifiants-legaux').textContent).toContain(
       'Identifiants et immatriculations'
     );
-    expect(screen.getByTestId('sommaire-coordonnees').textContent).toContain('Coordonnees');
-    expect(screen.getByTestId('sommaire-dates').textContent).toContain('Dates cles');
+    expect(screen.getByTestId('sommaire-coordonnees').textContent).toContain('Coordonnées');
+    expect(screen.getByTestId('sommaire-dates').textContent).toContain('Dates clés');
 
     fireEvent.change(champ('nom'), { target: { value: 'Alaoui' } });
     fireEvent.change(champ('matricule'), { target: { value: 'EMP002' } });
@@ -297,7 +297,7 @@ describe('Fiche salarie — blocs identite', () => {
     fireEvent.change(document.getElementById('nationaliteId')!, { target: { value: 'pays-fr' } });
     expect(screen.getByTestId('type-piece-identite')).toHaveProperty('value', 'CIN');
     expect(screen.getByTestId('mention-type-piece').textContent).toContain(
-      'mis a jour a l enregistrement'
+      'mis à jour à l’enregistrement'
     );
   });
 

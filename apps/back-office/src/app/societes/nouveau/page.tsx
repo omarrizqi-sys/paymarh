@@ -7,9 +7,9 @@ export default async function PageCreationSociete() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Creer une societe</h1>
+        <h1 className="text-2xl font-semibold">Créer une société</h1>
         <p className="text-muted-foreground text-sm">
-          L etablissement principal sera cree automatiquement avec l adresse du siege.
+          L’établissement principal sera créé automatiquement avec l’adresse du siège.
         </p>
       </div>
       <FormulaireCreationSociete formesJuridiques={refs.formesJuridiques} />

@@ -60,7 +60,7 @@ function extraireErreur(corps: unknown, statut: number): ErreurApi {
       };
     }
   }
-  return { code: 'ERREUR', message: `L'API a repondu avec le code ${statut}.` };
+  return { code: 'ERREUR', message: `L’API a répondu avec le code ${statut}.` };
 }
 
 /** Appel GET JSON vers l API avec enveloppe { data, warnings }. */

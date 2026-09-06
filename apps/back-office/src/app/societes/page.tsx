@@ -15,7 +15,7 @@ export default async function PageListeSocietes() {
     return (
       <Alert variant="warning">
         <AlertDescription>
-          Definissez NEXT_PUBLIC_PAYMARH_USER_ID dans .env (id de l administrateur de compte du
+          Définissez NEXT_PUBLIC_PAYMARH_USER_ID dans .env (id de l’administrateur de compte du
           seed).
         </AlertDescription>
       </Alert>
@@ -36,7 +36,7 @@ export default async function PageListeSocietes() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-semibold">Societes</h1>
+          <h1 className="text-2xl font-semibold">Sociétés</h1>
           <p className="text-muted-foreground text-sm">Dossiers de paie du compte</p>
         </div>
         <ListeSocietes societes={lignes} peutCreer={peutCreerSociete(liste.operations)} />
@@ -47,7 +47,7 @@ export default async function PageListeSocietes() {
     return (
       <Alert variant="destructive">
         <AlertDescription>
-          Impossible de charger les societes. Verifiez que l API tourne et que
+          Impossible de charger les sociétés. Vérifiez que l’API tourne et que
           NEXT_PUBLIC_PAYMARH_USER_ID est correct.
         </AlertDescription>
       </Alert>

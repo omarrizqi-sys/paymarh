@@ -6,7 +6,7 @@ export class EcritureInterditeRouteSansEcritureError extends InternalServerError
   readonly operation: string;
 
   constructor(route: string, operation: string) {
-    const message = `Ecriture interdite sur la route ${route} : l operation « ${operation} » est refusee en contexte sans ecriture.`;
+    const message = `Écriture interdite sur la route ${route} : l’opération « ${operation} » est refusée en contexte sans écriture.`;
     super(message);
     this.name = 'EcritureInterditeRouteSansEcritureError';
     this.route = route;
