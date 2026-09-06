@@ -12,3 +12,6 @@ apps/api/prisma/migrations
 
 # Regenere par Next.js a chaque build, avec son propre formatage.
 apps/back-office/next-env.d.ts
+
+# Documents de contexte rédigés à la main — ne pas reformater.
+docs/PaymaRH-Contexte-Reprise-*.md
