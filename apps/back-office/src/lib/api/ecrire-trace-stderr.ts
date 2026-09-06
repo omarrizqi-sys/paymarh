@@ -10,9 +10,18 @@ export interface ContexteAppel {
   readonly url: string;
 }
 
+/** Signal Next.js lors du pre-rendu : bascule la route en dynamique, pas une panne API. */
+export function estSignalisationUsageServeurDynamiqueNext(erreur: unknown): boolean {
+  return erreur instanceof Error && erreur.message.startsWith('Dynamic server usage:');
+}
+
 /** Journalise une erreur d appel sans jamais jeter ni toucher au navigateur. */
 export function journaliserErreurServeur(erreur: unknown, appel: ContexteAppel): void {
   if (typeof process === 'undefined' || typeof process.stderr?.write !== 'function') {
+    return;
+  }
+
+  if (estSignalisationUsageServeurDynamiqueNext(erreur)) {
     return;
   }
 
