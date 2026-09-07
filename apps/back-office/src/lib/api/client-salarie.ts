@@ -89,3 +89,82 @@ export async function appelerSalariePatch<T>(
     throw erreur;
   }
 }
+
+/** POST JSON vers l API salarie ({ donnees, alertes }). */
+export async function appelerSalariePost<T>(
+  companyId: string,
+  chemin: string,
+  corps: unknown,
+  ifMatch: number
+): Promise<ReponseEcriture<T>> {
+  const methode = 'POST' as const;
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      method: methode,
+      cache: 'no-store',
+      headers: entetesSalarie(companyId, ifMatch),
+      body: JSON.stringify(corps),
+    });
+    const reponseCorps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+    }
+    return reponseCorps as ReponseEcriture<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
+  }
+}
+
+/** PUT JSON vers l API salarie ({ donnees, alertes }). */
+export async function appelerSalariePut<T>(
+  companyId: string,
+  chemin: string,
+  corps: unknown,
+  ifMatch: number
+): Promise<ReponseEcriture<T>> {
+  const methode = 'PUT' as const;
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      method: methode,
+      cache: 'no-store',
+      headers: entetesSalarie(companyId, ifMatch),
+      body: JSON.stringify(corps),
+    });
+    const reponseCorps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+    }
+    return reponseCorps as ReponseEcriture<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
+  }
+}
+
+/** DELETE vers l API salarie ({ donnees, alertes }). */
+export async function appelerSalarieDelete<T>(
+  companyId: string,
+  chemin: string,
+  ifMatch: number
+): Promise<ReponseEcriture<T>> {
+  const methode = 'DELETE' as const;
+  const url = `${urlApi()}${chemin}`;
+  try {
+    const reponse = await fetch(url, {
+      method: methode,
+      cache: 'no-store',
+      headers: entetesSalarie(companyId, ifMatch),
+    });
+    const reponseCorps = await lireCorps(reponse);
+    if (!reponse.ok) {
+      throw new AppelApiEchoue(reponse.status, extraireErreur(reponseCorps, reponse.status));
+    }
+    return reponseCorps as ReponseEcriture<T>;
+  } catch (erreur) {
+    journaliserErreurServeur(erreur, { methode, url });
+    throw erreur;
+  }
+}

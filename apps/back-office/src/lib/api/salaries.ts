@@ -1,5 +1,11 @@
 import type { ReponseEcriture } from '@paymarh/shared-types';
-import { appelerSalarieGet, appelerSalariePatch } from './client-salarie';
+import {
+  appelerSalarieDelete,
+  appelerSalarieGet,
+  appelerSalariePatch,
+  appelerSalariePost,
+  appelerSalariePut,
+} from './client-salarie';
 import type {
   FicheSalarieAvecOperations,
   ListeSalariesDonnees,
@@ -119,4 +125,88 @@ export async function modifierDatesSalarie(
   corps: { dateEntree?: string; dateAnciennete?: string }
 ): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
   return appelerSalariePatch(companyId, `/salaries/${salarieId}/dates`, corps, version);
+}
+
+export interface CorpsPersonneACharge {
+  lienParenteCode: string;
+  prenom: string;
+  nom: string;
+  sexe: 'HOMME' | 'FEMME';
+  dateNaissance: string;
+  aCharge: boolean;
+  situationHandicap?: boolean;
+}
+
+export interface CorpsModifierPersonneACharge {
+  lienParenteCode?: string;
+  prenom?: string;
+  nom?: string;
+  sexe?: 'HOMME' | 'FEMME';
+  dateNaissance?: string;
+  aCharge?: boolean;
+  situationHandicap?: boolean;
+}
+
+export interface ImpactSuppressionLigneTableau {
+  readonly message: string;
+  readonly jetonConfirmation: string;
+}
+
+export async function creerPersonneACharge(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  corps: CorpsPersonneACharge
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePost(companyId, `/salaries/${salarieId}/personnes-a-charge`, corps, version);
+}
+
+export async function modifierPersonneACharge(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  corps: CorpsModifierPersonneACharge
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePatch(
+    companyId,
+    `/salaries/${salarieId}/personnes-a-charge/${ligneId}`,
+    corps,
+    version
+  );
+}
+
+export async function impactSuppressionPersonneACharge(
+  companyId: string,
+  salarieId: string,
+  ligneId: string
+): Promise<{ donnees: ImpactSuppressionLigneTableau }> {
+  return appelerSalarieGet<ImpactSuppressionLigneTableau>(
+    companyId,
+    `/salaries/${salarieId}/personnes-a-charge/${ligneId}/impact-suppression`
+  );
+}
+
+export async function supprimerPersonneACharge(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  confirmationJeton: string
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  const query = new URLSearchParams({ confirmationJeton });
+  return appelerSalarieDelete(
+    companyId,
+    `/salaries/${salarieId}/personnes-a-charge/${ligneId}?${query.toString()}`,
+    version
+  );
+}
+
+export async function remplacerComptesBancaires(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  corps: { comptes: unknown[] }
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePut(companyId, `/salaries/${salarieId}/comptes-bancaires`, corps, version);
 }
