@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { FicheSalarieClient } from '@/components/salaries/fiche/fiche-salarie-client';
 import { lireSalarie } from '@/lib/api/salaries';
-import { listerPays, listerSituationsFamiliales } from '@/lib/api/referentiels';
+import { listerLiensParente, listerPays, listerSituationsFamiliales } from '@/lib/api/referentiels';
 import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
 
 interface Props {
@@ -12,10 +12,11 @@ export default async function PageFicheSalarie({ params }: Props) {
   const { id: companyId, salarieId } = await params;
 
   try {
-    const [reponse, pays, situations] = await Promise.all([
+    const [reponse, pays, situations, liensParente] = await Promise.all([
       lireSalarie(companyId, salarieId),
       listerPays(),
       listerSituationsFamiliales(),
+      listerLiensParente(),
     ]);
 
     return (
@@ -26,6 +27,7 @@ export default async function PageFicheSalarie({ params }: Props) {
           initial={reponse.donnees}
           pays={pays.data.items}
           situationsFamiliales={situations.data.items}
+          liensParente={liensParente.data.items}
         />
       </div>
     );

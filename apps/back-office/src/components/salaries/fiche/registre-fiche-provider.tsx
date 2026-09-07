@@ -41,6 +41,8 @@ interface RegistreFicheContexte {
   rechargementEnAttente: boolean;
   enregistrerRubrique(rubrique: RubriqueEnregistrable): () => void;
   mettreAJourVersion(version: number): void;
+  signalerVersionApresEcritureHorsSequence(nouvelleVersion: number): void;
+  enregistrerAvantEnvoi(callback: () => void): () => void;
   notifierSommaire(): void;
   onRechargerServeur: () => Promise<void>;
 }
@@ -70,6 +72,7 @@ export function RegistreFicheProvider({
 }: PropsProvider) {
   const rubriquesRef = useRef<Map<string, RubriqueEnregistrable>>(new Map());
   const ordreRef = useRef<string[]>([]);
+  const avantEnvoiRef = useRef<Set<() => void>>(new Set());
   const [version, setVersion] = useState(versionInitiale);
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
   const [conflitVersion, setConflitVersion] = useState(false);
@@ -124,7 +127,25 @@ export function RegistreFicheProvider({
     setVersion(nouvelleVersion);
   }, []);
 
+  const signalerVersionApresEcritureHorsSequence = useCallback(
+    (nouvelleVersion: number) => {
+      setVersion(nouvelleVersion);
+      onApresEnregistrement?.(nouvelleVersion);
+    },
+    [onApresEnregistrement]
+  );
+
+  const enregistrerAvantEnvoi = useCallback((callback: () => void) => {
+    avantEnvoiRef.current.add(callback);
+    return () => {
+      avantEnvoiRef.current.delete(callback);
+    };
+  }, []);
+
   const enregistrer = useCallback(async () => {
+    for (const callback of avantEnvoiRef.current) {
+      callback();
+    }
     setEnregistrementEnCours(true);
     setConflitVersion(false);
     setResultatsRecap([]);
@@ -193,6 +214,8 @@ export function RegistreFicheProvider({
       rechargementEnAttente,
       enregistrerRubrique,
       mettreAJourVersion,
+      signalerVersionApresEcritureHorsSequence,
+      enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,
     }),
@@ -212,6 +235,8 @@ export function RegistreFicheProvider({
       rechargementEnAttente,
       enregistrerRubrique,
       mettreAJourVersion,
+      signalerVersionApresEcritureHorsSequence,
+      enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,
     ]

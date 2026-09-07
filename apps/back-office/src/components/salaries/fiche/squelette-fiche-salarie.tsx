@@ -26,7 +26,9 @@ export function SqueletteFicheSalarie({
       {afficherSommaire && sommaire !== undefined ? (
         <aside
           className={
-            sommaireReplie ? 'hidden w-10 shrink-0 lg:block' : 'hidden w-56 shrink-0 lg:block'
+            sommaireReplie
+              ? 'sticky top-4 hidden h-fit w-10 shrink-0 self-start lg:block'
+              : 'sticky top-4 hidden h-fit w-56 shrink-0 self-start lg:block'
           }
           data-testid="colonne-sommaire"
         >
@@ -65,7 +67,11 @@ export function SqueletteFicheSalarie({
       </main>
 
       <aside
-        className={railReplie ? 'w-12 shrink-0' : 'hidden w-52 shrink-0 md:block'}
+        className={
+          railReplie
+            ? 'sticky top-4 h-fit w-12 shrink-0 self-start'
+            : 'sticky top-4 hidden h-fit w-52 shrink-0 self-start md:block'
+        }
         data-testid="colonne-rail"
       >
         {railReplie ? (

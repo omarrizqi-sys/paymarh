@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useRegistreFiche } from './registre-fiche-provider';
 
 interface Props {
@@ -21,9 +22,6 @@ export function SommaireRubriques({ rubriqueVisibleId, onRubriqueVisibleChange }
             rubriqueVisibleId === rubrique.id ? 'bg-muted font-medium' : ''
           }`}
           onClick={() => {
-            document
-              .getElementById(rubrique.id)
-              ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             onRubriqueVisibleChange?.(rubrique.id);
           }}
         >
@@ -33,4 +31,27 @@ export function SommaireRubriques({ rubriqueVisibleId, onRubriqueVisibleChange }
       ))}
     </nav>
   );
+}
+
+/** Defile vers la rubrique apres stabilisation de la mise en page (surbrillance sommaire). */
+export function useDefilementRubriqueSommaire(rubriqueVisibleId: string | undefined): void {
+  useEffect(() => {
+    if (rubriqueVisibleId === undefined) return;
+
+    const cible = rubriqueVisibleId;
+    let annule = false;
+    let secondFrame = 0;
+    const premierFrame = requestAnimationFrame(() => {
+      secondFrame = requestAnimationFrame(() => {
+        if (annule) return;
+        document.getElementById(cible)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    return () => {
+      annule = true;
+      cancelAnimationFrame(premierFrame);
+      if (secondFrame !== 0) cancelAnimationFrame(secondFrame);
+    };
+  }, [rubriqueVisibleId]);
 }

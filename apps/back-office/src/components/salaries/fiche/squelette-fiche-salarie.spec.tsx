@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { createElement, useEffect } from 'react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createElement, useEffect, useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
-import { SommaireRubriques } from './sommaire-rubriques';
+import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rubriques';
 import { SqueletteFicheSalarie } from './squelette-fiche-salarie';
 import { RailActionsFiche } from './rail-actions-fiche';
 
@@ -32,10 +32,19 @@ function EnregistrerRubriquesSommaire() {
   return null;
 }
 
+function SommaireAvecDefilement() {
+  const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
+  useDefilementRubriqueSommaire(rubriqueVisibleId);
+  return createElement(SommaireRubriques, {
+    rubriqueVisibleId,
+    onRubriqueVisibleChange: setRubriqueVisibleId,
+  });
+}
+
 describe('SqueletteFicheSalarie et sommaire', () => {
   afterEach(() => cleanup());
 
-  it('un clic dans le sommaire fait defiler jusqu a la rubrique sans masquer les autres', () => {
+  it('un clic dans le sommaire fait defiler jusqu a la rubrique sans masquer les autres', async () => {
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
@@ -48,7 +57,7 @@ describe('SqueletteFicheSalarie et sommaire', () => {
         { versionInitiale: 1, onRechargerServeur: vi.fn() },
         createElement(EnregistrerRubriquesSommaire),
         createElement(SqueletteFicheSalarie, {
-          sommaire: createElement(SommaireRubriques),
+          sommaire: createElement(SommaireAvecDefilement),
           rubriques: createElement(
             'div',
             null,
@@ -62,7 +71,7 @@ describe('SqueletteFicheSalarie et sommaire', () => {
 
     fireEvent.click(screen.getByTestId('sommaire-coordonnees'));
 
-    expect(scrollIntoView).toHaveBeenCalled();
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
     expect(screen.getByText('Identite visible')).toBeTruthy();
     expect(screen.getByText('Coordonnees visible')).toBeTruthy();
   });

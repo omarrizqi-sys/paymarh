@@ -11,7 +11,7 @@ interface Props {
 
 export function Rubrique({ titre, description, indiceHeritage, children, id }: Props) {
   return (
-    <Card id={id}>
+    <Card id={id} className={id !== undefined ? 'scroll-mt-4' : undefined}>
       <CardHeader>
         <CardTitle>{titre}</CardTitle>
         {description ? <CardDescription>{description}</CardDescription> : null}

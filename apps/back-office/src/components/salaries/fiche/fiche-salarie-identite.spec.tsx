@@ -56,6 +56,11 @@ const SITUATIONS: readonly SituationFamiliale[] = [
   { id: 'sf-4', code: 'VEUF', libelleMasculin: 'Veuf', libelleFeminin: 'Veuve' },
 ];
 
+const LIENS_PARENTE = [
+  { id: 'lp-1', ordre: 1, code: 'ENFANT', libelle: 'Enfant' },
+  { id: 'lp-2', ordre: 2, code: 'CONJOINT', libelle: 'Conjoint' },
+] as const;
+
 function ficheBase(
   surcharges: Partial<FicheSalarieAvecOperations> = {}
 ): FicheSalarieAvecOperations {
@@ -118,6 +123,7 @@ function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
       initial={fiche}
       pays={PAYS}
       situationsFamiliales={SITUATIONS}
+      liensParente={LIENS_PARENTE}
     />
   );
 }

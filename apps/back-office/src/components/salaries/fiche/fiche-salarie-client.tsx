@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { Pays, SituationFamiliale } from '@paymarh/shared-types';
+import type { LienParente, Pays, SituationFamiliale } from '@paymarh/shared-types';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
@@ -20,9 +20,11 @@ import {
 } from './rubrique-identifiants-legaux';
 import { RubriqueCoordonnees, type ValeursCoordonnees } from './rubrique-coordonnees';
 import { RubriqueDates, type ValeursDates } from './rubrique-dates';
+import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
 import { RubriqueRemunerationPlaceholder } from './rubrique-remuneration-placeholder';
+import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
-import { SommaireRubriques } from './sommaire-rubriques';
+import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rubriques';
 import { SqueletteFicheSalarie } from './squelette-fiche-salarie';
 
 interface Props {
@@ -31,6 +33,7 @@ interface Props {
   readonly initial: FicheSalarieAvecOperations;
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
+  readonly liensParente: readonly LienParente[];
 }
 
 function SyncVersion({ version }: { readonly version: number }) {
@@ -66,6 +69,7 @@ function ContenuFicheSalarie({
   fiche,
   pays,
   situationsFamiliales,
+  liensParente,
   onFicheChange,
 }: {
   readonly companyId: string;
@@ -73,9 +77,12 @@ function ContenuFicheSalarie({
   readonly fiche: FicheSalarieAvecOperations;
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
+  readonly liensParente: readonly LienParente[];
   readonly onFicheChange: (fiche: FicheSalarieAvecOperations) => void;
 }) {
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
+
+  useDefilementRubriqueSommaire(rubriqueVisibleId);
 
   const appliquerSlice = useCallback(
     (patch: Partial<FicheSalarieAvecOperations>) => {
@@ -219,6 +226,13 @@ function ContenuFicheSalarie({
                   pays={pays}
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
+                <RubriquePersonnesACharge
+                  companyId={companyId}
+                  salarieId={salarieId}
+                  lignesServeur={fiche.personnesACharge}
+                  liensParente={liensParente}
+                  onVersionChange={(version) => appliquerSlice({ version })}
+                />
                 <RubriqueDates
                   companyId={companyId}
                   salarieId={salarieId}
@@ -245,6 +259,7 @@ export function FicheSalarieClient({
   initial,
   pays,
   situationsFamiliales,
+  liensParente,
 }: Props) {
   const router = useRouter();
   const [fiche, setFiche] = useState(initial);
@@ -264,14 +279,17 @@ export function FicheSalarieClient({
       onApresEnregistrement={(version) => setFiche((prev) => ({ ...prev, version }))}
     >
       <LienRetourListe companyId={companyId} />
-      <ContenuFicheSalarie
-        companyId={companyId}
-        salarieId={salarieId}
-        fiche={fiche}
-        pays={pays}
-        situationsFamiliales={situationsFamiliales}
-        onFicheChange={setFiche}
-      />
+      <FormulaireTableauProvider>
+        <ContenuFicheSalarie
+          companyId={companyId}
+          salarieId={salarieId}
+          fiche={fiche}
+          pays={pays}
+          situationsFamiliales={situationsFamiliales}
+          liensParente={liensParente}
+          onFicheChange={setFiche}
+        />
+      </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );
 }
