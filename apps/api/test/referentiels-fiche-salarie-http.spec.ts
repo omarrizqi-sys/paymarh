@@ -66,11 +66,27 @@ describe('GET /referentiels/pays et /situations-familiales', () => {
     }
   });
 
+  it('T32 — GET /referentiels/liens-parente rend les deux liens avec leurs libelles', async () => {
+    const reponse = await fetch(urlLocale(app, '/referentiels/liens-parente'), {
+      headers: { 'x-paymarh-user-id': utilisateurId },
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      data: { items: { code: string; libelle: string }[]; total: number };
+    };
+    expect(corps.data.total).toBe(2);
+    expect(corps.data.items).toEqual([
+      { code: 'ENFANT', libelle: 'Enfant', ordre: 1, id: expect.any(String) },
+      { code: 'CONJOINT', libelle: 'Conjoint', ordre: 2, id: expect.any(String) },
+    ]);
+  });
+
   it('R3 — les deux routes refusent sans tenant et acceptent un utilisateur authentifie, comme les cinq referentiels existants', async () => {
     const routes = [
       '/referentiels/banques',
       '/referentiels/pays',
       '/referentiels/situations-familiales',
+      '/referentiels/liens-parente',
     ];
 
     for (const chemin of routes) {

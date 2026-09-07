@@ -44,4 +44,10 @@ export class ReferentielsController {
   situationsFamiliales() {
     return this.referentiels.situationsFamiliales();
   }
+
+  @Get('liens-parente')
+  @RequiertPermission('referentiel.lire')
+  liensParente() {
+    return this.referentiels.liensParente();
+  }
 }

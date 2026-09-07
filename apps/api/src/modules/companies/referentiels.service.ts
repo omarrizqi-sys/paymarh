@@ -57,4 +57,10 @@ export class ReferentielsService {
     const items = await this.prisma.situationFamiliale.findMany({ orderBy: { code: 'asc' } });
     return ok({ items, total: items.length });
   }
+
+  async liensParente(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.lienParente.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
 }

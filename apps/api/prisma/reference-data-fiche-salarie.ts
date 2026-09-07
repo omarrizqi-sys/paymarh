@@ -243,6 +243,6 @@ export const SITUATIONS_FAMILIALES = [
 ] as const;
 
 export const LIENS_PARENTE = [
-  { code: 'ENFANT', libelle: 'Enfant' },
-  { code: 'CONJOINT', libelle: 'Conjoint' },
+  { code: 'ENFANT', libelle: 'Enfant', ordre: 1 },
+  { code: 'CONJOINT', libelle: 'Conjoint', ordre: 2 },
 ] as const;

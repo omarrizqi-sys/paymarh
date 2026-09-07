@@ -2,6 +2,7 @@ import type {
   Banque,
   FormeJuridique,
   JourFerie,
+  LienParente,
   ListResponse,
   Pays,
   SituationFamiliale,
@@ -36,6 +37,10 @@ export async function listerPays() {
 
 export async function listerSituationsFamiliales() {
   return appelerApiGet<ListResponse<SituationFamiliale>>('/referentiels/situations-familiales');
+}
+
+export async function listerLiensParente() {
+  return appelerApiGet<ListResponse<LienParente>>('/referentiels/liens-parente');
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */

@@ -57,6 +57,7 @@ export type {
   TypeExoneration,
   Pays,
   SituationFamiliale,
+  LienParente,
 } from './referentiel';
 export type {
   JourSemaine,

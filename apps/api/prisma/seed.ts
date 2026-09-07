@@ -195,8 +195,8 @@ async function seedReferences(): Promise<{
   for (const lien of LIENS_PARENTE) {
     await prisma.lienParente.upsert({
       where: { code: lien.code },
-      update: { libelle: lien.libelle },
-      create: { code: lien.code, libelle: lien.libelle },
+      update: { libelle: lien.libelle, ordre: lien.ordre },
+      create: { code: lien.code, libelle: lien.libelle, ordre: lien.ordre },
     });
   }
 

@@ -49,3 +49,10 @@ export interface SituationFamiliale {
   readonly libelleMasculin: string;
   readonly libelleFeminin: string;
 }
+
+export interface LienParente {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}

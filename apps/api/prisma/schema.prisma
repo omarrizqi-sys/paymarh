@@ -584,6 +584,7 @@ model SituationFamiliale {
 /// Lien de parente pour les personnes a charge.
 model LienParente {
   id      String @id @default(uuid()) @db.Uuid
+  ordre   Int    @unique
   code    String @unique
   libelle String
 
