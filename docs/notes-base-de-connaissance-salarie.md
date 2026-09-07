@@ -31,6 +31,13 @@
 
 Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figurent pas dans l'article règles de gestion.
 
+### Personnes à charge — suppression immédiate vs modification différée
+
+- **Modifier ou ajouter** une personne à charge ne part qu'au clic **Enregistrer** (comme les rubriques d'identité). La saisie reste locale jusqu'à validation globale.
+- **Supprimer** une ligne déjà enregistrée part **immédiatement** après confirmation : elle n'attend pas Enregistrer. Le numéro de version de la fiche est mis à jour tout de suite.
+- Si la ligne a déjà servi à un bulletin, elle ne disparaît pas : elle devient **inactive** avec un mois de fin, grisée à l'écran, pour que les bulletins passés restent explicables.
+- Les autres modifications non enregistrées de la même rubrique restent à enregistrer après une suppression immédiate.
+
 ### Navigation et interaction
 
 - **Modification simultanée d'une fiche** — rechargement obligatoire si la fiche a changé entre-temps (If-Match).

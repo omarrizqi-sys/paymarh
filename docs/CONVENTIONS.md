@@ -206,3 +206,35 @@ On compose directement les composants shadcn `Table` (`TableHeader`, `TableBody`
 **Premier cas d'application :** la liste des salariés (2.1.c-1). **Prochains cas :** les sept tableaux répétables de la fiche salarié (2.1.c-2).
 
 **Hors périmètre :** la liste des sociétés (module 1), qui trie et pagine entièrement côté client et conserve TanStack Table.
+
+---
+
+## 13. Enveloppe générique des tableaux répétables (module 2)
+
+L'enveloppe (`EnveloppeTableauRepetable`) porte **l'enveloppe seulement** :
+
+- tableau en lecture seule (shadcn `Table`, pas TanStack Table) ;
+- bouton **Ajouter** ;
+- dépliage du formulaire sous la ligne cliquée, sur toute la largeur ;
+- un seul formulaire ouvert par page (mécanisme au niveau page via `FormulaireTableauProvider`) ;
+- boutons **Valider la ligne** / **Annuler la ligne** (replient sans appel serveur) ;
+- lignes non enregistrées en dernier avec mention « non enregistrée » ;
+- lignes inactives grisées, formulaire en lecture seule, bouton Supprimer absent du DOM ;
+- suppression locale immédiate pour les lignes jamais enregistrées ;
+- confirmation serveur pour les lignes déjà enregistrées.
+
+L'enveloppe **ne porte pas** de générateur de formulaire : chaque tableau écrit son formulaire à la main. Cette décision est figée.
+
+Elle reçoit du tableau consommateur : colonnes, rendu du formulaire, callbacks d'envoi et de suppression.
+
+---
+
+## 14. Chaînes d'affichage et exceptions API
+
+**Règle générale :** aucune chaîne destinée à l'affichage ne sort de l'API ; l'écran compose les phrases à partir des données. **Deux exceptions nommées** : situations familiales (libellés accordés en genre) et message d'aperçu avant suppression de ligne de tableau — détail ci-dessous.
+
+**Exceptions nommées :**
+
+1. **Situations familiales** — la liste déroulante accorde ses libellés en genre à partir du sexe saisi localement, parce qu'elle affiche des valeurs non encore choisies. Le libellé de la valeur enregistrée (`fiche.situationFamiliale.libelle`) vient du serveur.
+
+2. **Message d'aperçu avant suppression de ligne de tableau** — le champ `message` renvoyé par `GET …/impact-suppression` est affiché tel quel. Seul le serveur sait si la ligne sera supprimée définitivement ou rendue inactive, et pourquoi.
