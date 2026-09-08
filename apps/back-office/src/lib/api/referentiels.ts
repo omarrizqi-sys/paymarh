@@ -8,6 +8,7 @@ import type {
   SituationFamiliale,
   TypeExoneration,
   TypeHeure,
+  TypeSaisieSurSalaire,
 } from '@paymarh/shared-types';
 import { appelerApiGet } from './client';
 
@@ -41,6 +42,12 @@ export async function listerSituationsFamiliales() {
 
 export async function listerLiensParente() {
   return appelerApiGet<ListResponse<LienParente>>('/referentiels/liens-parente');
+}
+
+export async function listerTypesSaisieSurSalaire() {
+  return appelerApiGet<ListResponse<TypeSaisieSurSalaire>>(
+    '/referentiels/types-saisie-sur-salaire'
+  );
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */

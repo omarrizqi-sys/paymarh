@@ -591,6 +591,16 @@ model LienParente {
   personnes PersonneACharge[]
 }
 
+/// Type de saisie sur salaire (pension alimentaire, saisie a tiers detenteur, …).
+model TypeSaisieSurSalaire {
+  id      String @id @default(uuid()) @db.Uuid
+  ordre   Int    @unique
+  code    String @unique
+  libelle String
+
+  saisies SaisieSurSalaire[]
+}
+
 /// Compteur de matricules auto-generes par societe et par prefixe. Jamais decremente.
 model CompteurMatricule {
   companyId     String @db.Uuid
@@ -882,18 +892,23 @@ model SaisieSurSalaire {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  typeSaisieCode    String
   referenceDecision String
   creancier         String
   libelleBulletin   String
-  montantTotal      Decimal @db.Decimal(14, 2)
-  montantMensuel    Decimal @db.Decimal(14, 2)
+  montantTotal      Decimal? @db.Decimal(14, 2)
+  montantMensuel    Decimal? @db.Decimal(14, 2)
   moisDebut         String
+  /// Mois de fin de la pension alimentaire (donnee metier) — distinct de moisEffetFin.
+  moisFin           String?
   moisEffetDebut    String
   moisEffetFin      String?
 
-  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+  salarie    Salarie              @relation(fields: [salarieId], references: [id], onDelete: Cascade)
+  typeSaisie TypeSaisieSurSalaire @relation(fields: [typeSaisieCode], references: [code], onDelete: Restrict)
 
   @@index([salarieId])
+  @@index([typeSaisieCode])
 }
 
 /// Prime contractuelle — non historisee (transit par elements variables).

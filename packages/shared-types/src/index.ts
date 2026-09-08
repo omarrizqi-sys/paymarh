@@ -58,6 +58,7 @@ export type {
   Pays,
   SituationFamiliale,
   LienParente,
+  TypeSaisieSurSalaire,
 } from './referentiel';
 export type {
   JourSemaine,

@@ -156,6 +156,10 @@ export class ModifierPretDto {
 }
 
 export class CreerSaisieSurSalaireDto {
+  @IsOptional()
+  @IsString()
+  typeSaisieCode?: string;
+
   @IsString()
   referenceDecision!: string;
 
@@ -165,17 +169,40 @@ export class CreerSaisieSurSalaireDto {
   @IsString()
   libelleBulletin!: string;
 
+  @IsOptional()
   @IsString()
-  montantTotal!: string;
+  montantTotal?: string | null;
 
+  @IsOptional()
   @IsString()
-  montantMensuel!: string;
+  montantMensuel?: string | null;
 
   @IsString()
   moisDebut!: string;
+
+  @IsOptional()
+  @IsString()
+  moisFin?: string | null;
+
+  /** Refuse par refuserChampMoisEffet si envoye. */
+  @IsOptional()
+  @IsString()
+  moisEffet?: string;
+
+  @IsOptional()
+  @IsString()
+  moisEffetDebut?: string;
+
+  @IsOptional()
+  @IsString()
+  moisEffetFin?: string;
 }
 
 export class ModifierSaisieSurSalaireDto {
+  @IsOptional()
+  @IsString()
+  typeSaisieCode?: string;
+
   @IsOptional()
   @IsString()
   referenceDecision?: string;
@@ -190,13 +217,30 @@ export class ModifierSaisieSurSalaireDto {
 
   @IsOptional()
   @IsString()
-  montantTotal?: string;
+  montantTotal?: string | null;
 
   @IsOptional()
   @IsString()
-  montantMensuel?: string;
+  montantMensuel?: string | null;
 
   @IsOptional()
   @IsString()
   moisDebut?: string;
+
+  @IsOptional()
+  @IsString()
+  moisFin?: string | null;
+
+  /** Refuse par refuserChampMoisEffet si envoye. */
+  @IsOptional()
+  @IsString()
+  moisEffet?: string;
+
+  @IsOptional()
+  @IsString()
+  moisEffetDebut?: string;
+
+  @IsOptional()
+  @IsString()
+  moisEffetFin?: string;
 }

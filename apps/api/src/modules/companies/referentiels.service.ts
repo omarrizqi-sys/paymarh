@@ -63,4 +63,10 @@ export class ReferentielsService {
     const items = await this.prisma.lienParente.findMany({ orderBy: { ordre: 'asc' } });
     return ok({ items, total: items.length });
   }
+
+  async typesSaisieSurSalaire(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.typeSaisieSurSalaire.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
 }

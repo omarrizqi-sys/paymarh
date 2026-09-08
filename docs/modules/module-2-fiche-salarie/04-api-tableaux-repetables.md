@@ -28,6 +28,27 @@ Permission d'écriture : `salarie.modifier`. Lecture via `GET /salaries/:id` (`s
 | GET     | `/salaries/:id/saisies-sur-salaire/:ligneId/impact-suppression` | —                          |                                                              |
 | DELETE  | `/salaries/:id/saisies-sur-salaire/:ligneId?confirmationJeton=` | Historisé                  |                                                              |
 
+### Saisies sur salaire (2.c-0)
+
+Chaque ligne porte un **`typeSaisieCode`** obligatoire, référence au référentiel `GET /referentiels/types-saisie-sur-salaire` (`PENSION_ALIMENTAIRE`, `TIERS_DETENTEUR`). Les obligations varient selon le type ; un champ interdit envoyé est refusé (`CHAMP_INTERDIT`), un champ obligatoire absent sur l'état résultant aussi (`CHAMP_OBLIGATOIRE`). En modification, les règles s'apprécient sur l'état fusionné (corps + ligne existante), y compris lors d'un changement de type.
+
+| Champ             | Pension alimentaire | Saisie à tiers détenteur |
+| ----------------- | ------------------- | ------------------------ |
+| typeSaisieCode    | obligatoire         | obligatoire              |
+| referenceDecision | obligatoire         | obligatoire              |
+| creancier         | obligatoire         | obligatoire              |
+| libelleBulletin   | obligatoire         | obligatoire              |
+| moisDebut         | obligatoire         | obligatoire              |
+| montantMensuel    | obligatoire         | interdit                 |
+| montantTotal      | interdit            | obligatoire              |
+| moisFin           | facultatif          | interdit                 |
+
+- **`moisFin`** (AAAA-MM) — mois où une pension alimentaire cesse d'être due ; donnée métier saisie par l'utilisateur. Vide = pension sans terme.
+- **`moisEffetDebut` / `moisEffetFin`** — historisation, écrits par le serveur seul ; refusés au client (`CHAMP_INTERDIT`) s'ils sont envoyés.
+- Le montant mensuel d'une saisie à tiers détenteur se **calcule au bulletin** (quotité saisissable) ; il n'est pas saisi sur la fiche.
+
+Lors d'un changement de type, l'API remet à `null` les montants et `moisFin` incompatibles avec le nouveau type sans refuser la requête ; l'écran préviendra l'utilisateur (prompt 2.c-2).
+
 ### Valeurs déduites en lecture (salarié)
 
 - `nombrePersonnesACharge` — compté depuis les lignes actives cochées « à charge »
@@ -36,16 +57,17 @@ Permission d'écriture : `salarie.modifier`. Lecture via `GET /salaries/:id` (`s
 
 ### Contrôles salarié
 
-| Code                               | Type    | Objet                                |
-| ---------------------------------- | ------- | ------------------------------------ |
-| `PART_VIREMENT_INVALIDE`           | Blocage | Somme des parts ≠ 100 % (C23)        |
-| `MONTANT_MENSUEL_SUPERIEUR_TOTAL`  | Blocage | Saisie sur salaire (C17)             |
-| `PERSONNE_A_CHARGE_DOUBLON`        | Alerte  | Homonymie enfant (B7)                |
-| `ENFANT_AGE_DEPASSE`               | Alerte  | Si référentiel fournit le seuil (C8) |
-| `MENSUALITE_ECHEANCES_INCOHERENTE` | Alerte  | Prêt (C16)                           |
-| `RIB_DEJA_UTILISE`                 | Alerte  | C12                                  |
-| `FORMAT_IDENTIFIANT_BANCAIRE`      | Alerte  | RIB / IBAN / BIC (C13)               |
-| `BANQUE_INCOHERENTE`               | Alerte  | Incohérence banque / RIB (T11)       |
+| Code                               | Type    | Objet                                                                |
+| ---------------------------------- | ------- | -------------------------------------------------------------------- |
+| `PART_VIREMENT_INVALIDE`           | Blocage | Somme des parts ≠ 100 % (C23)                                        |
+| `CHAMP_OBLIGATOIRE`                | Blocage | Saisie sur salaire — champ requis selon le type                      |
+| `CHAMP_INTERDIT`                   | Blocage | Saisie sur salaire — champ interdit pour le type (dont `moisEffet*`) |
+| `PERSONNE_A_CHARGE_DOUBLON`        | Alerte  | Homonymie enfant (B7)                                                |
+| `ENFANT_AGE_DEPASSE`               | Alerte  | Si référentiel fournit le seuil (C8)                                 |
+| `MENSUALITE_ECHEANCES_INCOHERENTE` | Alerte  | Prêt (C16)                                                           |
+| `RIB_DEJA_UTILISE`                 | Alerte  | C12                                                                  |
+| `FORMAT_IDENTIFIANT_BANCAIRE`      | Alerte  | RIB / IBAN / BIC (C13)                                               |
+| `BANQUE_INCOHERENTE`               | Alerte  | Incohérence banque / RIB (T11)                                       |
 
 > **Pré-remplissage banque et alerte d'incohérence (T11)** — le serveur résout la banque depuis les trois premiers chiffres du RIB (`resoudreBanqueDepuisRib`) et signale une incohérence si la banque désignée ne correspond pas au RIB. Ces deux mécanismes restent **inertes en production** tant que le référentiel national des banques n'a pas de `codeBanque` renseigné (au seed, les 21 banques ont `codeBanque: null` volontairement).
 

@@ -23,6 +23,7 @@ import {
   STATUTS_PARTICULIERS,
   STATUT_TECHNIQUE_TAHFIZ,
   TYPES_CONTRAT,
+  TYPES_SAISIE_SUR_SALAIRE,
 } from './reference-data-fiche-salarie.js';
 
 // ---------------------------------------------------------------------------
@@ -200,6 +201,14 @@ async function seedReferences(): Promise<{
     });
   }
 
+  for (const type of TYPES_SAISIE_SUR_SALAIRE) {
+    await prisma.typeSaisieSurSalaire.upsert({
+      where: { code: type.code },
+      update: { libelle: type.libelle, ordre: type.ordre },
+      create: { code: type.code, libelle: type.libelle, ordre: type.ordre },
+    });
+  }
+
   const formeSarl = await prisma.formeJuridique.findUniqueOrThrow({ where: { code: 'SARL' } });
   const banqueAttijari = await prisma.banque.findFirstOrThrow({
     where: { nom: 'Attijariwafa Bank' },
@@ -220,7 +229,7 @@ async function seedReferences(): Promise<{
   });
 
   console.log(
-    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s), ${PAYS.length} pays, ${TYPES_CONTRAT.length} types contrat, ${MOTIFS_SORTIE.length} motifs sortie, ${STATUTS_PARTICULIERS.length} statut(s) particulier(s), ${SITUATIONS_FAMILIALES.length} situations familiales, ${LIENS_PARENTE.length} liens parente.`
+    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s), ${PAYS.length} pays, ${TYPES_CONTRAT.length} types contrat, ${MOTIFS_SORTIE.length} motifs sortie, ${STATUTS_PARTICULIERS.length} statut(s) particulier(s), ${SITUATIONS_FAMILIALES.length} situations familiales, ${LIENS_PARENTE.length} liens parente, ${TYPES_SAISIE_SUR_SALAIRE.length} types saisie sur salaire.`
   );
 
   return {
@@ -691,6 +700,54 @@ async function seedSalariesDemo(
         mensualite: new Decimal('1500.00'),
         nombreEcheances: 12,
         moisEffetDebut: '2025-01',
+      },
+    });
+  }
+
+  const pensionExistante = await prisma.saisieSurSalaire.findFirst({
+    where: {
+      salarieId: complet.id,
+      typeSaisieCode: 'PENSION_ALIMENTAIRE',
+      referenceDecision: 'JUG-2024-001',
+    },
+  });
+  if (!pensionExistante) {
+    await prisma.saisieSurSalaire.create({
+      data: {
+        salarieId: complet.id,
+        typeSaisieCode: 'PENSION_ALIMENTAIRE',
+        referenceDecision: 'JUG-2024-001',
+        creancier: 'Tribunal de Casablanca',
+        libelleBulletin: 'Pension alimentaire',
+        montantMensuel: new Decimal('2500.00'),
+        montantTotal: null,
+        moisDebut: '2024-06',
+        moisFin: null,
+        moisEffetDebut: '2024-06',
+      },
+    });
+  }
+
+  const tiersExistant = await prisma.saisieSurSalaire.findFirst({
+    where: {
+      salarieId: complet.id,
+      typeSaisieCode: 'TIERS_DETENTEUR',
+      referenceDecision: 'DEC-2023-042',
+    },
+  });
+  if (!tiersExistant) {
+    await prisma.saisieSurSalaire.create({
+      data: {
+        salarieId: complet.id,
+        typeSaisieCode: 'TIERS_DETENTEUR',
+        referenceDecision: 'DEC-2023-042',
+        creancier: 'Banque Populaire',
+        libelleBulletin: 'Saisie tiers detenteur',
+        montantTotal: new Decimal('12000.00'),
+        montantMensuel: null,
+        moisDebut: '2023-09',
+        moisFin: null,
+        moisEffetDebut: '2023-09',
       },
     });
   }

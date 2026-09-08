@@ -56,3 +56,10 @@ export interface LienParente {
   readonly code: string;
   readonly libelle: string;
 }
+
+export interface TypeSaisieSurSalaire {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}

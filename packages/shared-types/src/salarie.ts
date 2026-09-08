@@ -79,12 +79,14 @@ export interface PretSalarie {
 
 export interface SaisieSurSalaire {
   readonly id: Uuid;
+  readonly typeSaisieCode: string;
   readonly referenceDecision: string;
   readonly creancier: string;
   readonly libelleBulletin: string;
-  readonly montantTotal: string;
-  readonly montantMensuel: string;
+  readonly montantTotal: string | null;
+  readonly montantMensuel: string | null;
   readonly moisDebut: string;
+  readonly moisFin: string | null;
   readonly moisEffetDebut: string;
   readonly moisEffetFin: string | null;
   readonly etat: EtatLigneFiche;

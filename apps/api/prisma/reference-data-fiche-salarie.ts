@@ -246,3 +246,8 @@ export const LIENS_PARENTE = [
   { code: 'ENFANT', libelle: 'Enfant', ordre: 1 },
   { code: 'CONJOINT', libelle: 'Conjoint', ordre: 2 },
 ] as const;
+
+export const TYPES_SAISIE_SUR_SALAIRE = [
+  { code: 'PENSION_ALIMENTAIRE', libelle: 'Pension alimentaire', ordre: 1 },
+  { code: 'TIERS_DETENTEUR', libelle: 'Saisie à tiers détenteur', ordre: 2 },
+] as const;

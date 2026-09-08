@@ -90,19 +90,21 @@ describe('seed salaries de demonstration', () => {
     expect(count).toBe(3);
   }, 60_000);
 
-  it('S3 — le salarie complet a deux personnes a charge, deux comptes et un pret', async () => {
+  it('S3 — le salarie complet a deux personnes a charge, deux comptes, un pret et deux saisies', async () => {
     const societeId = await societeDemoId();
     const complet = await prisma.salarie.findFirstOrThrow({
       where: { companyId: societeId, nom: 'Bennani', prenom: 'Youssef' },
       select: { id: true },
     });
-    const [pac, comptes, prets] = await Promise.all([
+    const [pac, comptes, prets, saisies] = await Promise.all([
       prisma.personneACharge.count({ where: { salarieId: complet.id } }),
       prisma.compteBancaireSalarie.count({ where: { salarieId: complet.id } }),
       prisma.pret.count({ where: { salarieId: complet.id } }),
+      prisma.saisieSurSalaire.count({ where: { salarieId: complet.id } }),
     ]);
     expect(pac).toBe(2);
     expect(comptes).toBe(2);
     expect(prets).toBe(1);
+    expect(saisies).toBe(2);
   });
 });

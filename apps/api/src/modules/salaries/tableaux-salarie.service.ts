@@ -44,7 +44,6 @@ import {
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
 import {
-  assertMontantMensuelSaisie,
   assertPartVirement,
   collecterAlerteBanqueIncoherente,
   collecterAlerteEnfantAge,
@@ -56,6 +55,7 @@ import {
   refuserChampMoisEffet,
   refuserSituationHandicapConjoint,
   resoudreBanqueDepuisRib,
+  validerSaisieSurSalaire,
   ValidationBloquanteTableauError,
   validerAlphabetiquePersonne,
   validerRibCompte,
@@ -85,6 +85,14 @@ function relancerValidation(erreur: unknown): never {
     });
   }
   throw erreur;
+}
+
+function refuserChampMoisEffetClient(dto: object): void {
+  try {
+    refuserChampMoisEffet(dto);
+  } catch (erreur) {
+    relancerValidation(erreur);
+  }
 }
 
 @Injectable()
@@ -466,13 +474,12 @@ export class TableauxSalarieService {
     dto: CreerSaisieSurSalaireDto,
     versionAttendue: number
   ) {
-    refuserChampMoisEffet(dto);
+    refuserChampMoisEffetClient(dto);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
-    const montantTotal = new Decimal(dto.montantTotal);
-    const montantMensuel = new Decimal(dto.montantMensuel);
 
+    let etat;
     try {
-      assertMontantMensuelSaisie(montantMensuel, montantTotal);
+      etat = await validerSaisieSurSalaire(this.prisma, dto, 'creation', null);
     } catch (erreur) {
       relancerValidation(erreur);
     }
@@ -480,12 +487,14 @@ export class TableauxSalarieService {
     await this.prisma.saisieSurSalaire.create({
       data: {
         salarieId,
-        referenceDecision: dto.referenceDecision,
-        creancier: dto.creancier,
-        libelleBulletin: dto.libelleBulletin,
-        montantTotal,
-        montantMensuel,
-        moisDebut: dto.moisDebut,
+        typeSaisieCode: etat.typeSaisieCode,
+        referenceDecision: etat.referenceDecision,
+        creancier: etat.creancier,
+        libelleBulletin: etat.libelleBulletin,
+        montantTotal: etat.montantTotal !== null ? new Decimal(etat.montantTotal) : null,
+        montantMensuel: etat.montantMensuel !== null ? new Decimal(etat.montantMensuel) : null,
+        moisDebut: etat.moisDebut,
+        moisFin: etat.moisFin,
         moisEffetDebut: moisEnCours,
         moisEffetFin: null,
       },
@@ -501,26 +510,25 @@ export class TableauxSalarieService {
     dto: ModifierSaisieSurSalaireDto,
     versionAttendue: number
   ) {
-    refuserChampMoisEffet(dto);
+    refuserChampMoisEffetClient(dto);
     const existant = await this.trouverSaisie(salarieId, ligneId);
-    const montantTotal =
-      dto.montantTotal !== undefined ? new Decimal(dto.montantTotal) : existant.montantTotal;
-    const montantMensuel =
-      dto.montantMensuel !== undefined ? new Decimal(dto.montantMensuel) : existant.montantMensuel;
 
+    let etat;
     try {
-      assertMontantMensuelSaisie(montantMensuel, montantTotal);
+      etat = await validerSaisieSurSalaire(this.prisma, dto, 'modification', existant);
     } catch (erreur) {
       relancerValidation(erreur);
     }
 
     const fusion = {
-      referenceDecision: dto.referenceDecision ?? existant.referenceDecision,
-      creancier: dto.creancier ?? existant.creancier,
-      libelleBulletin: dto.libelleBulletin ?? existant.libelleBulletin,
-      montantTotal,
-      montantMensuel,
-      moisDebut: dto.moisDebut ?? existant.moisDebut,
+      typeSaisieCode: etat.typeSaisieCode,
+      referenceDecision: etat.referenceDecision,
+      creancier: etat.creancier,
+      libelleBulletin: etat.libelleBulletin,
+      montantTotal: etat.montantTotal !== null ? new Decimal(etat.montantTotal) : null,
+      montantMensuel: etat.montantMensuel !== null ? new Decimal(etat.montantMensuel) : null,
+      moisDebut: etat.moisDebut,
+      moisFin: etat.moisFin,
     };
 
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);

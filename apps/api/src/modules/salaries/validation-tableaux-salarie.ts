@@ -1,11 +1,15 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import type { PrismaService } from '../../common/prisma/prisma.service.js';
+import { estMoisAAAA_MM } from '../companies/coherence-fiche-societe.js';
 import { avertissementsIdentifiants, assertChiffres } from '../companies/validation-fiche.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { sommePartsVirement } from './deductions-tableaux.js';
 import type { ReferentielNationalPort } from './referentiel-national/referentiel-national.port.js';
 import { assertAlphabetiqueSalarie } from './validation-salarie.js';
+
+export const CODE_TYPE_PENSION_ALIMENTAIRE = 'PENSION_ALIMENTAIRE' as const;
+export const CODE_TYPE_TIERS_DETENTEUR = 'TIERS_DETENTEUR' as const;
 
 export class ValidationBloquanteTableauError extends Error {
   readonly code: string;
@@ -60,14 +64,164 @@ export function assertPartVirement(comptes: readonly { partVirement?: string | n
   }
 }
 
-export function assertMontantMensuelSaisie(montantMensuel: Decimal, montantTotal: Decimal): void {
-  if (montantMensuel.gt(montantTotal)) {
+function champEnvoye(dto: object, cle: string): boolean {
+  return cle in dto && (dto as Record<string, unknown>)[cle] !== undefined;
+}
+
+function assertChampObligatoire(valeur: unknown, champ: string): void {
+  if (valeur === null || valeur === undefined || valeur === '') {
     throw new ValidationBloquanteTableauError(
-      CODES_REPONSE.MONTANT_MENSUEL_SUPERIEUR_TOTAL.code,
-      CODES_REPONSE.MONTANT_MENSUEL_SUPERIEUR_TOTAL.message,
-      'montantMensuel'
+      CODES_REPONSE.CHAMP_OBLIGATOIRE.code,
+      CODES_REPONSE.CHAMP_OBLIGATOIRE.message,
+      champ
     );
   }
+}
+
+function assertChampInterdit(champ: string): never {
+  throw new ValidationBloquanteTableauError(
+    CODES_REPONSE.CHAMP_INTERDIT.code,
+    CODES_REPONSE.CHAMP_INTERDIT.message,
+    champ
+  );
+}
+
+function assertMoisAAAA_MM(valeur: string, champ: string): void {
+  if (!estMoisAAAA_MM(valeur)) {
+    throw new ValidationBloquanteTableauError(
+      CODES_REPONSE.MOIS_FORMAT_INVALIDE.code,
+      CODES_REPONSE.MOIS_FORMAT_INVALIDE.message,
+      champ
+    );
+  }
+}
+
+export interface EtatSaisieSurSalaire {
+  readonly typeSaisieCode: string;
+  readonly referenceDecision: string;
+  readonly creancier: string;
+  readonly libelleBulletin: string;
+  readonly moisDebut: string;
+  readonly montantTotal: string | null;
+  readonly montantMensuel: string | null;
+  readonly moisFin: string | null;
+}
+
+export function fusionnerEtatSaisieSurSalaire(
+  dto: {
+    typeSaisieCode?: string;
+    referenceDecision?: string;
+    creancier?: string;
+    libelleBulletin?: string;
+    moisDebut?: string;
+    montantTotal?: string | null;
+    montantMensuel?: string | null;
+    moisFin?: string | null;
+  },
+  existant: {
+    typeSaisieCode: string;
+    referenceDecision: string;
+    creancier: string;
+    libelleBulletin: string;
+    moisDebut: string;
+    montantTotal: Decimal | null;
+    montantMensuel: Decimal | null;
+    moisFin: string | null;
+  } | null
+): EtatSaisieSurSalaire {
+  const montantTotal =
+    existant === null || champEnvoye(dto, 'montantTotal')
+      ? (dto.montantTotal ?? null)
+      : existant.montantTotal !== null
+        ? existant.montantTotal.toString()
+        : null;
+  const montantMensuel =
+    existant === null || champEnvoye(dto, 'montantMensuel')
+      ? (dto.montantMensuel ?? null)
+      : existant.montantMensuel !== null
+        ? existant.montantMensuel.toString()
+        : null;
+  const moisFin =
+    existant === null || champEnvoye(dto, 'moisFin') ? (dto.moisFin ?? null) : existant.moisFin;
+
+  return {
+    typeSaisieCode: dto.typeSaisieCode ?? existant?.typeSaisieCode ?? '',
+    referenceDecision: dto.referenceDecision ?? existant?.referenceDecision ?? '',
+    creancier: dto.creancier ?? existant?.creancier ?? '',
+    libelleBulletin: dto.libelleBulletin ?? existant?.libelleBulletin ?? '',
+    moisDebut: dto.moisDebut ?? existant?.moisDebut ?? '',
+    montantTotal,
+    montantMensuel,
+    moisFin,
+  };
+}
+
+export async function validerSaisieSurSalaire(
+  prisma: PrismaService,
+  dto: {
+    typeSaisieCode?: string;
+    referenceDecision?: string;
+    creancier?: string;
+    libelleBulletin?: string;
+    moisDebut?: string;
+    montantTotal?: string | null;
+    montantMensuel?: string | null;
+    moisFin?: string | null;
+  },
+  mode: 'creation' | 'modification',
+  existant: Parameters<typeof fusionnerEtatSaisieSurSalaire>[1]
+): Promise<EtatSaisieSurSalaire> {
+  if (mode === 'creation') {
+    assertChampObligatoire(dto.typeSaisieCode, 'typeSaisieCode');
+    assertChampObligatoire(dto.referenceDecision, 'referenceDecision');
+    assertChampObligatoire(dto.creancier, 'creancier');
+    assertChampObligatoire(dto.libelleBulletin, 'libelleBulletin');
+    assertChampObligatoire(dto.moisDebut, 'moisDebut');
+  }
+
+  const etat = fusionnerEtatSaisieSurSalaire(dto, existant);
+
+  if (mode === 'modification' && dto.typeSaisieCode === undefined && existant === null) {
+    assertChampObligatoire(undefined, 'typeSaisieCode');
+  }
+
+  assertChampObligatoire(etat.typeSaisieCode, 'typeSaisieCode');
+  assertChampObligatoire(etat.referenceDecision, 'referenceDecision');
+  assertChampObligatoire(etat.creancier, 'creancier');
+  assertChampObligatoire(etat.libelleBulletin, 'libelleBulletin');
+  assertChampObligatoire(etat.moisDebut, 'moisDebut');
+  assertMoisAAAA_MM(etat.moisDebut, 'moisDebut');
+
+  const typeConnu = await prisma.typeSaisieSurSalaire.findUnique({
+    where: { code: etat.typeSaisieCode },
+    select: { code: true },
+  });
+  if (typeConnu === null) {
+    throw new ValidationBloquanteTableauError(
+      CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+      CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+      'typeSaisieCode'
+    );
+  }
+
+  if (etat.typeSaisieCode === CODE_TYPE_PENSION_ALIMENTAIRE) {
+    if (champEnvoye(dto, 'montantTotal')) assertChampInterdit('montantTotal');
+    if (champEnvoye(dto, 'moisFin') && etat.moisFin !== null && etat.moisFin !== '') {
+      assertMoisAAAA_MM(etat.moisFin, 'moisFin');
+    }
+    assertChampObligatoire(etat.montantMensuel, 'montantMensuel');
+  } else if (etat.typeSaisieCode === CODE_TYPE_TIERS_DETENTEUR) {
+    if (champEnvoye(dto, 'montantMensuel')) assertChampInterdit('montantMensuel');
+    if (champEnvoye(dto, 'moisFin')) assertChampInterdit('moisFin');
+    assertChampObligatoire(etat.montantTotal, 'montantTotal');
+  }
+
+  return {
+    ...etat,
+    montantTotal: etat.typeSaisieCode === CODE_TYPE_PENSION_ALIMENTAIRE ? null : etat.montantTotal,
+    montantMensuel: etat.typeSaisieCode === CODE_TYPE_TIERS_DETENTEUR ? null : etat.montantMensuel,
+    moisFin: etat.typeSaisieCode === CODE_TYPE_TIERS_DETENTEUR ? null : etat.moisFin,
+  };
 }
 
 export function collecterAlertesIdentifiantsBancaires(saisie: {
@@ -243,6 +397,7 @@ export function collecterAlertePretIncoherent(
     return {
       code: CODES_REPONSE.MENSUALITE_ECHEANCES_INCOHERENTE.code,
       message: CODES_REPONSE.MENSUALITE_ECHEANCES_INCOHERENTE.message,
+      champ: 'mensualite',
     };
   }
   return null;

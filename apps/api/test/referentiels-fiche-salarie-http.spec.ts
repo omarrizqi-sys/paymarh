@@ -81,12 +81,26 @@ describe('GET /referentiels/pays et /situations-familiales', () => {
     ]);
   });
 
+  it('T33 — GET /referentiels/types-saisie-sur-salaire rend les deux types avec leurs libelles', async () => {
+    const reponse = await fetch(urlLocale(app, '/referentiels/types-saisie-sur-salaire'), {
+      headers: { 'x-paymarh-user-id': utilisateurId },
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      data: { items: { code: string; libelle: string; ordre: number }[]; total: number };
+    };
+    expect(corps.data.total).toBe(2);
+    expect(corps.data.items[0]?.code).toBe('PENSION_ALIMENTAIRE');
+    expect(corps.data.items[1]?.code).toBe('TIERS_DETENTEUR');
+  });
+
   it('R3 — les deux routes refusent sans tenant et acceptent un utilisateur authentifie, comme les cinq referentiels existants', async () => {
     const routes = [
       '/referentiels/banques',
       '/referentiels/pays',
       '/referentiels/situations-familiales',
       '/referentiels/liens-parente',
+      '/referentiels/types-saisie-sur-salaire',
     ];
 
     for (const chemin of routes) {

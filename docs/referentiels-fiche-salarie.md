@@ -287,7 +287,16 @@ Le **code** est stocké. Le libellé s'accorde en genre à l'affichage, à parti
 
 ---
 
-## 7. Référentiels déjà existants — ne pas recréer
+## 7. Types de saisie sur salaire (`TypeSaisieSurSalaire`)
+
+| code                | libellé                  |
+| ------------------- | ------------------------ |
+| PENSION_ALIMENTAIRE | Pension alimentaire      |
+| TIERS_DETENTEUR     | Saisie à tiers détenteur |
+
+---
+
+## 8. Référentiels déjà existants — ne pas recréer
 
 Ces tables ont été créées au module 1 et sont réutilisées telles quelles :
 
@@ -298,7 +307,7 @@ Ces tables ont été créées au module 1 et sont réutilisées telles quelles :
 
 ---
 
-## 8. Référentiels hors périmètre
+## 9. Référentiels hors périmètre
 
 À ne créer sous aucune forme dans ce prompt :
 

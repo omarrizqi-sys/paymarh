@@ -16,6 +16,14 @@ export const CODES_REPONSE = {
     code: 'CHAMP_INTERDIT',
     message: 'Ce champ ne peut pas être fourni par le client.',
   },
+  CHAMP_OBLIGATOIRE: {
+    code: 'CHAMP_OBLIGATOIRE',
+    message: 'Ce champ est obligatoire.',
+  },
+  MOIS_FORMAT_INVALIDE: {
+    code: 'MOIS_FORMAT_INVALIDE',
+    message: 'Le mois doit être au format AAAA-MM.',
+  },
   CONFIRMATION_REQUISE: {
     code: 'CONFIRMATION_REQUISE',
     message: 'Cette opération exige une confirmation explicite.',
@@ -79,10 +87,6 @@ export const CODES_REPONSE = {
   PART_VIREMENT_INVALIDE: {
     code: 'PART_VIREMENT_INVALIDE',
     message: 'La somme des parts de virement doit être exactement 100 %.',
-  },
-  MONTANT_MENSUEL_SUPERIEUR_TOTAL: {
-    code: 'MONTANT_MENSUEL_SUPERIEUR_TOTAL',
-    message: 'Le montant mensuel ne peut pas dépasser le montant total.',
   },
   CHEVAUCHEMENT_STATUTS: {
     code: 'CHEVAUCHEMENT_STATUTS',

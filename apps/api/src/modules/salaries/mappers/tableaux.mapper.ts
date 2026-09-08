@@ -137,12 +137,14 @@ export function versPret(
 export function versSaisieSurSalaire(
   saisie: {
     id: string;
+    typeSaisieCode: string;
     referenceDecision: string;
     creancier: string;
     libelleBulletin: string;
-    montantTotal: Decimal;
-    montantMensuel: Decimal;
+    montantTotal: Decimal | null;
+    montantMensuel: Decimal | null;
     moisDebut: string;
+    moisFin: string | null;
     moisEffetDebut: string;
     moisEffetFin: string | null;
   },
@@ -150,12 +152,14 @@ export function versSaisieSurSalaire(
 ) {
   return {
     id: saisie.id,
+    typeSaisieCode: saisie.typeSaisieCode,
     referenceDecision: saisie.referenceDecision,
     creancier: saisie.creancier,
     libelleBulletin: saisie.libelleBulletin,
-    montantTotal: saisie.montantTotal.toString(),
-    montantMensuel: saisie.montantMensuel.toString(),
+    montantTotal: saisie.montantTotal !== null ? saisie.montantTotal.toFixed(2) : null,
+    montantMensuel: saisie.montantMensuel !== null ? saisie.montantMensuel.toFixed(2) : null,
     moisDebut: saisie.moisDebut,
+    moisFin: saisie.moisFin,
     moisEffetDebut: saisie.moisEffetDebut,
     moisEffetFin: saisie.moisEffetFin,
     etat: deduireEtatLigne(saisie, moisEnCours),

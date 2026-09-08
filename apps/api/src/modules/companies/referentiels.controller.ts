@@ -50,4 +50,10 @@ export class ReferentielsController {
   liensParente() {
     return this.referentiels.liensParente();
   }
+
+  @Get('types-saisie-sur-salaire')
+  @RequiertPermission('referentiel.lire')
+  typesSaisieSurSalaire() {
+    return this.referentiels.typesSaisieSurSalaire();
+  }
 }

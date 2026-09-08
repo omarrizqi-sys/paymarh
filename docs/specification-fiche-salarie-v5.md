@@ -159,16 +159,44 @@ Fonction pure `calculerProchainMatricule` : retient le plus grand matricule comm
 
 ## Référentiels seedés
 
-| Table              | Entrées                                                                |
-| ------------------ | ---------------------------------------------------------------------- |
-| Pays               | 195 (Maroc en tête, Palestine libellé exact, pas de Sahara occidental) |
-| TypeContrat        | 7                                                                      |
-| MotifSortie        | 13                                                                     |
-| StatutParticulier  | 1 (IDMAJ)                                                              |
-| SituationFamiliale | 4                                                                      |
-| LienParente        | 2                                                                      |
+| Table                | Entrées                                                                |
+| -------------------- | ---------------------------------------------------------------------- |
+| Pays                 | 195 (Maroc en tête, Palestine libellé exact, pas de Sahara occidental) |
+| TypeContrat          | 7                                                                      |
+| MotifSortie          | 13                                                                     |
+| StatutParticulier    | 1 (IDMAJ)                                                              |
+| SituationFamiliale   | 4                                                                      |
+| LienParente          | 2                                                                      |
+| TypeSaisieSurSalaire | 2                                                                      |
 
 Réutilisés sans recréation : `Banque`, `JourFerie`.
+
+---
+
+## Saisies sur salaire (bloc RETENUES)
+
+Chaque ligne porte un **type de saisie** (`typeSaisieCode`, référence `TypeSaisieSurSalaire`). Les obligations de saisie dépendent du type ; voir ADR 0025.
+
+| Champ               | Pension alimentaire | Saisie à tiers détenteur                                              |
+| ------------------- | ------------------- | --------------------------------------------------------------------- |
+| `typeSaisieCode`    | obligatoire         | obligatoire                                                           |
+| `referenceDecision` | obligatoire         | obligatoire                                                           |
+| `creancier`         | obligatoire         | obligatoire                                                           |
+| `libelleBulletin`   | obligatoire         | obligatoire                                                           |
+| `moisDebut`         | obligatoire         | obligatoire                                                           |
+| `montantMensuel`    | obligatoire         | interdit (calculé au bulletin selon l’article 387 du code du travail) |
+| `montantTotal`      | interdit            | obligatoire                                                           |
+| `moisFin`           | facultatif          | interdit                                                              |
+
+**Distinction impérative :** `moisFin` est une donnée métier saisie (fin de la pension). `moisEffetDebut` / `moisEffetFin` restent des champs d’historisation écrits par le serveur seul (ADR 0011) ; le client ne les envoie jamais.
+
+Une pension sans `moisFin` court sans terme. Une saisie à tiers détenteur s’arrête lorsque les bulletins ont consommé le montant total.
+
+**C17** (`MONTANT_MENSUEL_SUPERIEUR_TOTAL`) — **SANS OBJET** : les deux montants ne coexistent plus sur une même ligne ; le contrôle est retiré (voir ADR 0025).
+
+Lors d’un changement de type, l’API remet à `null` les montants et `moisFin` incompatibles sans refuser la requête ; l’avertissement à l’utilisateur relève de l’écran (prompt 2.c-2, ADR 0025).
+
+L’alerte d’incohérence prêt `MENSUALITE_ECHEANCES_INCOHERENTE` porte le champ `mensualite` pour permettre le ciblage par ligne.
 
 ---
 

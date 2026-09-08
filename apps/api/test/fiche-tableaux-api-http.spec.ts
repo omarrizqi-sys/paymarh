@@ -653,31 +653,6 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(suppression.status).toBe(409);
   });
 
-  it('11 — saisie dont montant mensuel depasse total est refusee', async () => {
-    const salarie = await creerSalarieMin(prisma, societe.companyId, {
-      matricule: `${PREFIXE}-SAISIE-BLOC`,
-    });
-
-    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/saisies-sur-salaire`), {
-      method: 'POST',
-      headers: {
-        ...entetes(utilisateurId, societe.companyId),
-        'content-type': 'application/json',
-        'if-match': '0',
-      },
-      body: JSON.stringify({
-        referenceDecision: 'DEC-001',
-        creancier: 'Banque',
-        libelleBulletin: 'SAISIE',
-        montantTotal: '1000.00',
-        montantMensuel: '1500.00',
-        moisDebut: '2024-01',
-      }),
-    });
-    expect(reponse.status).toBe(400);
-    expect(await prisma.saisieSurSalaire.count({ where: { salarieId: salarie.id } })).toBe(0);
-  });
-
   it('12 — pret incoherent mensualite x echeances est enregistre avec alerte', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-PRET-ALERTE`,
@@ -721,6 +696,10 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     });
     const corps2 = (await reponse2.json()) as { alertes: { code: string }[] };
     expect(corps2.alertes.some((a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE')).toBe(true);
+    const alerteIncoherente = corps2.alertes.find(
+      (a) => a.code === 'MENSUALITE_ECHEANCES_INCOHERENTE'
+    );
+    expect(alerteIncoherente?.champ).toBe('mensualite');
   });
 
   it('13 — mois de debut de prelevement dans le passe accepte sans alerte', async () => {
