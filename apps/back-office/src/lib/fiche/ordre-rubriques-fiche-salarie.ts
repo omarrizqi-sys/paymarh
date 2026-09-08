@@ -9,6 +9,8 @@ export const ORDRE_RUBRIQUES_FICHE_SALARIE = [
   'personnes-a-charge',
   'comptes-bancaires',
   'dates',
+  'prets',
+  'saisies-sur-salaire',
 ] as const;
 
 export type IdRubriqueFicheSalarie = (typeof ORDRE_RUBRIQUES_FICHE_SALARIE)[number];

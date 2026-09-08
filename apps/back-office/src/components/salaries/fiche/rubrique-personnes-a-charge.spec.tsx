@@ -10,6 +10,7 @@ import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { reinitialiserCompteurIdLocal } from '@/lib/fiche/personnes-a-charge-lignes';
 
 const PAYS: readonly Pays[] = [
   { id: 'pays-ma', ordre: 1, codeIso: 'MA', libelle: 'Maroc' },
@@ -30,6 +31,11 @@ const LIENS: readonly LienParente[] = [
   { id: 'lp-1', ordre: 1, code: 'ENFANT', libelle: 'Enfant' },
   { id: 'lp-2', ordre: 2, code: 'CONJOINT', libelle: 'Conjoint' },
 ];
+
+const TYPES_SAISIE = [
+  { id: 'ts-1', ordre: 1, code: 'PENSION_ALIMENTAIRE', libelle: 'Pension alimentaire' },
+  { id: 'ts-2', ordre: 2, code: 'TIERS_DETENTEUR', libelle: 'Saisie à tiers détenteur' },
+] as const;
 
 const {
   creerPersonneACharge,
@@ -151,6 +157,7 @@ function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBas
       situationsFamiliales={SITUATIONS}
       liensParente={LIENS}
       banques={[]}
+      typesSaisie={TYPES_SAISIE}
     />
   );
 }
@@ -650,5 +657,50 @@ describe('RubriquePersonnesACharge — formulaire', () => {
     fireEvent.click(screen.getByTestId('ligne-pac-1'));
     fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Y' } });
     expect(screen.queryByText('Alerte generale')).toBeNull();
+  });
+});
+
+function annulerFiche(): void {
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+}
+
+describe('RubriquePersonnesACharge — reinitialiser apres enregistrement', () => {
+  beforeEach(() => {
+    reinitialiserCompteurIdLocal();
+    creerPersonneACharge.mockReset();
+  });
+
+  afterEach(() => cleanup());
+
+  it('T65 — apres enregistrement puis Annuler fiche la ligne enregistree reste affichee', async () => {
+    creerPersonneACharge.mockResolvedValueOnce(
+      ficheReponse([personne({ id: 'pac-enregistree', prenom: 'Premier' })], 4)
+    );
+
+    render(<Harness lignes={[]} />);
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Premier' } });
+    fireEvent.change(screen.getByLabelText('Nom'), { target: { value: 'Alaoui' } });
+    fireEvent.change(screen.getByLabelText('Date de naissance'), {
+      target: { value: '2015-03-10' },
+    });
+    fireEvent.click(screen.getByTestId('valider-ligne'));
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
+    await waitFor(() => expect(creerPersonneACharge).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByTestId('ligne-pac-enregistree')).toBeTruthy());
+
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    fireEvent.change(screen.getAllByLabelText('Prénom').at(-1)!, { target: { value: 'Deuxieme' } });
+    fireEvent.change(screen.getAllByLabelText('Nom').at(-1)!, { target: { value: 'Alaoui' } });
+    fireEvent.change(screen.getAllByLabelText('Date de naissance').at(-1)!, {
+      target: { value: '2018-01-01' },
+    });
+    fireEvent.click(screen.getAllByTestId('valider-ligne').at(-1)!);
+
+    annulerFiche();
+
+    expect(screen.getByTestId('ligne-pac-enregistree')).toBeTruthy();
+    expect(screen.queryByText('Deuxieme')).toBeNull();
   });
 });

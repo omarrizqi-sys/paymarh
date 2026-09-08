@@ -64,6 +64,11 @@ const LIENS_PARENTE = [
   { id: 'lp-2', ordre: 2, code: 'CONJOINT', libelle: 'Conjoint' },
 ] as const;
 
+const TYPES_SAISIE = [
+  { id: 'ts-1', ordre: 1, code: 'PENSION_ALIMENTAIRE', libelle: 'Pension alimentaire' },
+  { id: 'ts-2', ordre: 2, code: 'TIERS_DETENTEUR', libelle: 'Saisie à tiers détenteur' },
+] as const;
+
 function ficheBase(
   surcharges: Partial<FicheSalarieAvecOperations> = {}
 ): FicheSalarieAvecOperations {
@@ -128,6 +133,7 @@ function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
       situationsFamiliales={SITUATIONS}
       liensParente={LIENS_PARENTE}
       banques={[]}
+      typesSaisie={TYPES_SAISIE}
     />
   );
 }
@@ -515,6 +521,8 @@ describe('Fiche salarie — blocs identite', () => {
       'personnes-a-charge',
       'comptes-bancaires',
       'dates',
+      'prets',
+      'saisies-sur-salaire',
     ]);
 
     fireEvent.click(screen.getByTestId('sommaire-coordonnees'));

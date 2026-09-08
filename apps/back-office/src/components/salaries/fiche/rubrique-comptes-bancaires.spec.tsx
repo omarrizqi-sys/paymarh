@@ -2,6 +2,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
 import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   Banque,
@@ -37,6 +38,11 @@ const SITUATIONS: readonly SituationFamiliale[] = [
 ];
 
 const LIENS: readonly LienParente[] = [{ id: 'lp-1', ordre: 1, code: 'ENFANT', libelle: 'Enfant' }];
+
+const TYPES_SAISIE = [
+  { id: 'ts-1', ordre: 1, code: 'PENSION_ALIMENTAIRE', libelle: 'Pension alimentaire' },
+  { id: 'ts-2', ordre: 2, code: 'TIERS_DETENTEUR', libelle: 'Saisie à tiers détenteur' },
+] as const;
 
 const OPERATIONS_ECRITURE = [
   'salarie.lire',
@@ -232,6 +238,7 @@ function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBas
       situationsFamiliales={SITUATIONS}
       liensParente={LIENS}
       banques={BANQUES}
+      typesSaisie={TYPES_SAISIE}
     />
   );
 }
@@ -873,5 +880,63 @@ describe('RubriqueComptesBancaires — erreurs serveur', () => {
     expect(screen.queryByTestId('erreur-rubrique-comptes-bancaires')).toBeNull();
     fireEvent.change(champ('rib-cpt-1'), { target: { value: '222' } });
     expect(screen.queryByText('Ce champ n’accepte que des chiffres.')).toBeNull();
+  });
+});
+
+function HarnessComptesParentSynchronise({
+  operations = ['salarie.lire', 'salarie.modifier', 'salarie.remuneration.ecrire'],
+}: {
+  readonly operations?: readonly Permission[];
+}) {
+  const [comptes, setComptes] = useState<readonly CompteBancaireSalarie[]>([]);
+  return (
+    <RegistreFicheProvider versionInitiale={3} onRechargerServeur={vi.fn()}>
+      <FormulaireTableauProvider>
+        <RubriqueComptesBancaires
+          companyId="soc-1"
+          salarieId="sal-1"
+          comptesServeur={comptes}
+          banques={BANQUES}
+          operations={operations}
+          onComptesChange={(suivant, _version) => setComptes(suivant)}
+        />
+        <RailActionsFiche operations={operations} />
+      </FormulaireTableauProvider>
+    </RegistreFicheProvider>
+  );
+}
+
+describe('RubriqueComptesBancaires — reinitialiser apres enregistrement', () => {
+  beforeEach(() => {
+    reinitialiserCompteurIdLocalCompte();
+    remplacerComptesBancaires.mockReset();
+  });
+
+  afterEach(() => cleanup());
+
+  it('TB24 — apres enregistrement puis Annuler fiche la ligne enregistree reste affichee (parent synchronise)', async () => {
+    remplacerComptesBancaires.mockResolvedValueOnce(
+      reponseComptes([compte({ id: 'cpt-enregistre', titulaire: 'Premier compte' })], 4)
+    );
+
+    render(<HarnessComptesParentSynchronise />);
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    const idLocal = idLigneLocale();
+    fireEvent.change(champ(`titulaire-${idLocal}`), { target: { value: 'Premier compte' } });
+    validerLigne();
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
+    await waitFor(() => expect(remplacerComptesBancaires).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.getByTestId('ligne-cpt-enregistre')).toBeTruthy());
+
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    const idLocal2 = idLigneLocale();
+    fireEvent.change(champ(`titulaire-${idLocal2}`), { target: { value: 'Deuxieme compte' } });
+    validerLigne();
+
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByTestId('ligne-cpt-enregistre')).toBeTruthy();
+    expect(screen.queryByText('Deuxieme compte')).toBeNull();
   });
 });

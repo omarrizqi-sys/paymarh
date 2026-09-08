@@ -1,7 +1,16 @@
-import type { EtatLigneFiche, PersonneACharge, SexePersonne } from '@paymarh/shared-types';
+import type { PersonneACharge, SexePersonne } from '@paymarh/shared-types';
+import {
+  estModifieeContreReferenceTableau,
+  extraireLigneReponseParId,
+  genererIdLocal,
+  libelleEtatLigneHistorise,
+  trierAffichageTableauHistorise,
+  type LigneTableauHistoriseBase,
+} from './lignes-tableau-historise-commun';
 
-export interface LignePersonneAChargeLocale {
-  readonly id: string;
+export { genererIdLocal, reinitialiserCompteurIdLocal } from './lignes-tableau-historise-commun';
+
+export interface LignePersonneAChargeLocale extends LigneTableauHistoriseBase {
   readonly lienParenteCode: string;
   readonly prenom: string;
   readonly nom: string;
@@ -9,15 +18,6 @@ export interface LignePersonneAChargeLocale {
   readonly dateNaissance: string;
   readonly situationHandicap: boolean;
   readonly aCharge: boolean;
-  readonly etat: EtatLigneFiche | 'NON_ENREGISTREE';
-  readonly moisEffetFin: string | null;
-}
-
-let compteurIdLocal = 0;
-
-export function genererIdLocal(): string {
-  compteurIdLocal += 1;
-  return `local-${compteurIdLocal}`;
 }
 
 export function creerLigneVide(): LignePersonneAChargeLocale {
@@ -53,10 +53,9 @@ export function depuisServeur(ligne: PersonneACharge): LignePersonneAChargeLocal
 export function trierAffichage(
   lignes: readonly LignePersonneAChargeLocale[]
 ): LignePersonneAChargeLocale[] {
-  const enregistrees = lignes.filter((l) => l.etat !== 'NON_ENREGISTREE');
-  const nonEnregistrees = lignes.filter((l) => l.etat === 'NON_ENREGISTREE');
-  const triees = [...enregistrees].sort((a, b) => a.dateNaissance.localeCompare(b.dateNaissance));
-  return [...triees, ...nonEnregistrees];
+  return trierAffichageTableauHistorise(lignes, (a, b) =>
+    a.dateNaissance.localeCompare(b.dateNaissance)
+  );
 }
 
 export function lignesEgales(
@@ -78,35 +77,11 @@ export function estModifieeContreReference(
   courant: readonly LignePersonneAChargeLocale[],
   reference: readonly LignePersonneAChargeLocale[]
 ): boolean {
-  const idsReference = new Set(reference.map((l) => l.id));
-  const idsCourant = new Set(courant.map((l) => l.id));
-
-  if (courant.some((l) => l.etat === 'NON_ENREGISTREE')) return true;
-  if (reference.some((l) => !idsCourant.has(l.id) && l.etat === 'ACTIVE')) return true;
-
-  for (const ligne of courant) {
-    if (ligne.etat === 'NON_ENREGISTREE') continue;
-    const ref = reference.find((r) => r.id === ligne.id);
-    if (ref === undefined) continue;
-    if (!lignesEgales(ligne, ref)) return true;
-  }
-
-  void idsReference;
-  return false;
-}
-
-export function formaterMoisFin(moisEffetFin: string | null): string {
-  if (moisEffetFin === null) return '';
-  const [annee, mois] = moisEffetFin.split('-');
-  return `${mois}/${annee}`;
+  return estModifieeContreReferenceTableau(courant, reference, lignesEgales);
 }
 
 export function libelleEtatLigne(ligne: LignePersonneAChargeLocale): string | null {
-  if (ligne.etat === 'NON_ENREGISTREE') return 'non enregistrée';
-  if (ligne.etat === 'INACTIVE' && ligne.moisEffetFin !== null) {
-    return `inactive depuis ${formaterMoisFin(ligne.moisEffetFin)}`;
-  }
-  return null;
+  return libelleEtatLigneHistorise(ligne);
 }
 
 export function extraireLigneReponse(
@@ -114,9 +89,7 @@ export function extraireLigneReponse(
   ligneId: string,
   idsConnus: ReadonlySet<string>
 ): PersonneACharge | undefined {
-  const directe = personnesACharge.find((l) => l.id === ligneId);
-  if (directe !== undefined) return directe;
-  return personnesACharge.find((l) => !idsConnus.has(l.id));
+  return extraireLigneReponseParId(personnesACharge, ligneId, idsConnus);
 }
 
 export function versCorpsCreation(ligne: LignePersonneAChargeLocale) {
@@ -154,9 +127,4 @@ export function versCorpsModification(
     corps.situationHandicap = ligne.situationHandicap;
   }
   return corps;
-}
-
-/** Pour les tests : remet le compteur d ids locaux a zero. */
-export function reinitialiserCompteurIdLocal(): void {
-  compteurIdLocal = 0;
 }

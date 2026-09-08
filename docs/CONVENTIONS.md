@@ -232,17 +232,20 @@ L'enveloppe (`EnveloppeTableauRepetable`) porte **l'enveloppe seulement** :
 - lignes non enregistrées en dernier avec mention « non enregistrée » ;
 - lignes inactives grisées, formulaire en lecture seule, bouton Supprimer absent du DOM ;
 - **pas de colonne « État »** : le mot « état » désigne un état métier (active / inactive / supprimée). Les mentions « non enregistrée », « inactive depuis MM/AAAA » et « en erreur » sont portées **dans une colonne métier** choisie par le tableau consommateur (`idColonneMarque`), sous la valeur de la ligne ; le fond `bg-destructive/5` signale aussi une ligne en erreur ;
+
+**`etat` INACTIVE : deux significations, un seul champ insuffisant.** L'API renvoie `etat: 'INACTIVE'` dans deux situations sans rapport : une ligne **clôturée par historisation** (bulletin calculé ou suppression qui pose un `moisEffetFin` en base), et une ligne **pas encore effective au mois en cours du salarié** (`moisEffetDebut` postérieur à ce mois — aucun bulletin ne l'a clôturée, `moisEffetFin` reste `null`). Seul le couple `etat` + `moisEffetFin` les distingue : clôturée si `INACTIVE` **et** `moisEffetFin !== null` ; pas encore effective si `INACTIVE` **et** `moisEffetFin === null`. L'écran ne grise ni ne verrouille une ligne que dans le premier cas (`estLigneTableauCloturee` dans `lignes-tableau-historise-commun.ts`, passée à `estInactive` de l'enveloppe). Tester `etat === 'INACTIVE'` seul reproduit l'erreur vue sur les lignes seed de démonstration : des lignes modifiables affichées comme clôturées.
+
 - suppression locale immédiate pour les lignes jamais enregistrées ;
-- **confirmation de suppression fournie par le tableau appelant** via `strategieSuppression` : objet `{ titre, corps, libelleConfirmer, libelleAnnuler, onConfirmer(ligne) }`. L'enveloppe affiche la fenêtre et appelle le callback ; **elle ne sait pas ce que fait `onConfirmer`, ni s'il émet un appel serveur**. L'enveloppe **ne connaît aucun mode de suppression** ;
+- **confirmation de suppression injectée** via `suppression: { preparer, confirmer }` : le tableau appelant prépare les textes (titre propre + message serveur via `textesSuppressionHistorisee` ou variante différée), l'enveloppe affiche la fenêtre, gère l'attente (grisage des boutons Supprimer, signal `onAttenteSuppressionChange`) et la reprise si `confirmer` renvoie `{ type: 'recommencer' }`. L'enveloppe **ne connaît aucun client d'appel ni code de refus** ;
 - prop `verrouille` : grise champs et boutons pendant l'enregistrement global (une rubrique à la fois, voir points ouverts).
+
+Les textes partagés des tableaux historisés vivent dans `textes-suppression-tableau-historise.ts` (variante `historise` avec message serveur, variante `differee` pour comptes bancaires). Seul le **titre** est propre à chaque tableau.
 
 L'enveloppe **ne connaît aucun nom de tableau particulier** : pas de condition « si tel tableau ».
 
-**Point ouvert :** migrer la suppression avec aperçu de Personnes à charge vers l'enveloppe, par injection d'un dialogue et non par un mode (temps 2.c ou 3). Aujourd'hui, Personnes à charge garde son `DialogueSuppressionLigneTableau` en dehors de l'enveloppe.
-
 L'enveloppe **ne porte pas** de générateur de formulaire : chaque tableau écrit son formulaire à la main. Cette décision est figée.
 
-Elle reçoit du tableau consommateur : colonnes, `idColonneMarque`, rendu du formulaire, callbacks d'envoi, stratégie de suppression.
+Elle reçoit du tableau consommateur : colonnes, `idColonneMarque`, rendu du formulaire, callbacks d'envoi, objet `suppression` injecté.
 
 ---
 

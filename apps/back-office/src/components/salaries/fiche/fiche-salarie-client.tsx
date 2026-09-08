@@ -11,7 +11,13 @@ import {
   type Dispatch,
   type SetStateAction,
 } from 'react';
-import type { Banque, LienParente, Pays, SituationFamiliale } from '@paymarh/shared-types';
+import type {
+  Banque,
+  LienParente,
+  Pays,
+  SituationFamiliale,
+  TypeSaisieSurSalaire,
+} from '@paymarh/shared-types';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
@@ -29,6 +35,8 @@ import { RubriqueCoordonnees, type ValeursCoordonnees } from './rubrique-coordon
 import { RubriqueDates, type ValeursDates } from './rubrique-dates';
 import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
 import { RubriqueComptesBancaires } from './rubrique-comptes-bancaires';
+import { RubriquePrets } from './rubrique-prets';
+import { RubriqueSaisiesSurSalaire } from './rubrique-saisies-sur-salaire';
 import { RubriqueRemunerationPlaceholder } from './rubrique-remuneration-placeholder';
 import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
@@ -43,6 +51,7 @@ interface Props {
   readonly situationsFamiliales: readonly SituationFamiliale[];
   readonly liensParente: readonly LienParente[];
   readonly banques: readonly Banque[];
+  readonly typesSaisie: readonly TypeSaisieSurSalaire[];
 }
 
 function SyncVersion({ version }: { readonly version: number }) {
@@ -80,6 +89,7 @@ function ContenuFicheSalarie({
   situationsFamiliales,
   liensParente,
   banques,
+  typesSaisie,
   onFicheChange,
 }: {
   readonly companyId: string;
@@ -89,6 +99,7 @@ function ContenuFicheSalarie({
   readonly situationsFamiliales: readonly SituationFamiliale[];
   readonly liensParente: readonly LienParente[];
   readonly banques: readonly Banque[];
+  readonly typesSaisie: readonly TypeSaisieSurSalaire[];
   readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
@@ -263,6 +274,19 @@ function ContenuFicheSalarie({
                   dateSortie={fiche.dateSortie}
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
+                <RubriquePrets
+                  companyId={companyId}
+                  salarieId={salarieId}
+                  lignesServeur={fiche.prets}
+                  onVersionChange={(version) => appliquerSlice({ version })}
+                />
+                <RubriqueSaisiesSurSalaire
+                  companyId={companyId}
+                  salarieId={salarieId}
+                  lignesServeur={fiche.saisiesSurSalaire}
+                  typesSaisie={typesSaisie}
+                  onVersionChange={(version) => appliquerSlice({ version })}
+                />
               </>
             ) : null}
             <RubriqueRemunerationPlaceholder operations={fiche.operations} />
@@ -284,6 +308,7 @@ export function FicheSalarieClient({
   situationsFamiliales,
   liensParente,
   banques,
+  typesSaisie,
 }: Props) {
   const router = useRouter();
   const [fiche, setFiche] = useState(initial);
@@ -312,6 +337,7 @@ export function FicheSalarieClient({
           situationsFamiliales={situationsFamiliales}
           liensParente={liensParente}
           banques={banques}
+          typesSaisie={typesSaisie}
           onFicheChange={setFiche}
         />
       </FormulaireTableauProvider>

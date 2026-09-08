@@ -210,3 +210,143 @@ export async function remplacerComptesBancaires(
 ): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
   return appelerSalariePut(companyId, `/salaries/${salarieId}/comptes-bancaires`, corps, version);
 }
+
+export interface CorpsPret {
+  libelleObjet: string;
+  libelleBulletin: string;
+  montantTotal: string;
+  moisDebut: string;
+  mensualite: string;
+  nombreEcheances: number;
+}
+
+export interface CorpsModifierPret {
+  libelleObjet?: string;
+  libelleBulletin?: string;
+  montantTotal?: string;
+  moisDebut?: string;
+  mensualite?: string;
+  nombreEcheances?: number;
+}
+
+export async function creerPret(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  corps: CorpsPret
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePost(companyId, `/salaries/${salarieId}/prets`, corps, version);
+}
+
+export async function modifierPret(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  corps: CorpsModifierPret
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePatch(companyId, `/salaries/${salarieId}/prets/${ligneId}`, corps, version);
+}
+
+export async function impactSuppressionPret(
+  companyId: string,
+  salarieId: string,
+  ligneId: string
+): Promise<{ donnees: ImpactSuppressionLigneTableau }> {
+  return appelerSalarieGet<ImpactSuppressionLigneTableau>(
+    companyId,
+    `/salaries/${salarieId}/prets/${ligneId}/impact-suppression`
+  );
+}
+
+export async function supprimerPret(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  confirmationJeton: string
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  const query = new URLSearchParams({ confirmationJeton });
+  return appelerSalarieDelete(
+    companyId,
+    `/salaries/${salarieId}/prets/${ligneId}?${query.toString()}`,
+    version
+  );
+}
+
+export interface CorpsSaisieSurSalaire {
+  typeSaisieCode: string;
+  referenceDecision: string;
+  creancier: string;
+  libelleBulletin: string;
+  moisDebut: string;
+  montantTotal?: string;
+  montantMensuel?: string;
+  moisFin?: string | null;
+}
+
+export interface CorpsModifierSaisieSurSalaire {
+  typeSaisieCode?: string;
+  referenceDecision?: string;
+  creancier?: string;
+  libelleBulletin?: string;
+  moisDebut?: string;
+  montantTotal?: string | null;
+  montantMensuel?: string | null;
+  moisFin?: string | null;
+}
+
+export async function creerSaisieSurSalaire(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  corps: CorpsSaisieSurSalaire
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePost(
+    companyId,
+    `/salaries/${salarieId}/saisies-sur-salaire`,
+    corps,
+    version
+  );
+}
+
+export async function modifierSaisieSurSalaire(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  corps: CorpsModifierSaisieSurSalaire
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  return appelerSalariePatch(
+    companyId,
+    `/salaries/${salarieId}/saisies-sur-salaire/${ligneId}`,
+    corps,
+    version
+  );
+}
+
+export async function impactSuppressionSaisieSurSalaire(
+  companyId: string,
+  salarieId: string,
+  ligneId: string
+): Promise<{ donnees: ImpactSuppressionLigneTableau }> {
+  return appelerSalarieGet<ImpactSuppressionLigneTableau>(
+    companyId,
+    `/salaries/${salarieId}/saisies-sur-salaire/${ligneId}/impact-suppression`
+  );
+}
+
+export async function supprimerSaisieSurSalaire(
+  companyId: string,
+  salarieId: string,
+  ligneId: string,
+  version: number,
+  confirmationJeton: string
+): Promise<ReponseEcriture<FicheSalarieAvecOperations>> {
+  const query = new URLSearchParams({ confirmationJeton });
+  return appelerSalarieDelete(
+    companyId,
+    `/salaries/${salarieId}/saisies-sur-salaire/${ligneId}?${query.toString()}`,
+    version
+  );
+}

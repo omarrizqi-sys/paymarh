@@ -6,6 +6,7 @@ import {
   listerLiensParente,
   listerPays,
   listerSituationsFamiliales,
+  listerTypesSaisieSurSalaire,
 } from '@/lib/api/referentiels';
 import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
 
@@ -17,12 +18,13 @@ export default async function PageFicheSalarie({ params }: Props) {
   const { id: companyId, salarieId } = await params;
 
   try {
-    const [reponse, pays, situations, liensParente, banques] = await Promise.all([
+    const [reponse, pays, situations, liensParente, banques, typesSaisie] = await Promise.all([
       lireSalarie(companyId, salarieId),
       listerPays(),
       listerSituationsFamiliales(),
       listerLiensParente(),
       listerBanques(),
+      listerTypesSaisieSurSalaire(),
     ]);
 
     return (
@@ -35,6 +37,7 @@ export default async function PageFicheSalarie({ params }: Props) {
           situationsFamiliales={situations.data.items}
           liensParente={liensParente.data.items}
           banques={banques.data.items}
+          typesSaisie={typesSaisie.data.items}
         />
       </div>
     );

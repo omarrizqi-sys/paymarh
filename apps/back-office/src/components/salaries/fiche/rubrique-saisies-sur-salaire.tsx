@@ -1,38 +1,41 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { AlerteApi, LienParente, PersonneACharge } from '@paymarh/shared-types';
+import type { AlerteApi, SaisieSurSalaire, TypeSaisieSurSalaire } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   MessagesAlerteChamp,
   RegistreAlertesSalarie,
 } from '@/components/salaries/formulaire/messages-alerte-salarie';
 import { AppelApiEchoue } from '@/lib/api/client';
 import {
-  creerPersonneACharge,
-  impactSuppressionPersonneACharge,
-  modifierPersonneACharge,
-  supprimerPersonneACharge,
+  creerSaisieSurSalaire,
+  impactSuppressionSaisieSurSalaire,
+  modifierSaisieSurSalaire,
+  supprimerSaisieSurSalaire,
 } from '@/lib/api/salaries';
 import { envoyerLignesTableau } from '@/lib/fiche/envoi-lignes-tableau';
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
 import {
+  avertissementChangementType,
   creerLigneVide,
   depuisServeur,
   estModifieeContreReference,
+  estPensionAlimentaire,
+  estSaisieTiersDetenteur,
   extraireLigneReponse,
   libelleEtatLigne,
   lignesEgales,
   trierAffichage,
   versCorpsCreation,
   versCorpsModification,
-  type LignePersonneAChargeLocale,
-} from '@/lib/fiche/personnes-a-charge-lignes';
+  type LigneSaisieSurSalaireLocale,
+} from '@/lib/fiche/saisies-sur-salaire-lignes';
 import { estLigneTableauCloturee } from '@/lib/fiche/lignes-tableau-historise-commun';
 import { useFormulaireTableau } from './contexte-formulaire-tableau';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
@@ -46,22 +49,23 @@ import {
 interface Props {
   readonly companyId: string;
   readonly salarieId: string;
-  readonly lignesServeur: readonly PersonneACharge[];
-  readonly liensParente: readonly LienParente[];
+  readonly lignesServeur: readonly SaisieSurSalaire[];
+  readonly typesSaisie: readonly TypeSaisieSurSalaire[];
   readonly onVersionChange: (version: number) => void;
 }
 
-function libelleLien(code: string, liens: readonly LienParente[]): string {
-  return liens.find((l) => l.code === code)?.libelle ?? code;
+function libelleType(code: string, types: readonly TypeSaisieSurSalaire[]): string {
+  return types.find((t) => t.code === code)?.libelle ?? code;
 }
 
-export function RubriquePersonnesACharge({
+export function RubriqueSaisiesSurSalaire({
   companyId,
   salarieId,
   lignesServeur,
-  liensParente,
+  typesSaisie,
   onVersionChange,
 }: Props) {
+  const typeParDefaut = typesSaisie[0]?.code ?? '';
   const {
     enregistrerRubrique,
     notifierSommaire,
@@ -78,11 +82,10 @@ export function RubriquePersonnesACharge({
   const [courant, setCourant] = useState(() => lignesServeur.map(depuisServeur));
   const [alertes, setAlertes] = useState<readonly AlerteApi[]>([]);
   const [alertesParLigne, setAlertesParLigne] = useState<Record<string, readonly AlerteApi[]>>({});
-  const [erreurRubrique, setErreurRubrique] = useState<string | undefined>();
+  const [avertissementsType, setAvertissementsType] = useState<Record<string, string>>({});
 
   const jetonSuppressionRef = useRef('');
-
-  const snapshotsRef = useRef<Map<string, LignePersonneAChargeLocale>>(new Map());
+  const snapshotsRef = useRef<Map<string, LigneSaisieSurSalaireLocale>>(new Map());
   const courantRef = useRef(courant);
   const referenceRef = useRef(reference);
   const lignesServeurRef = useRef(lignesServeur);
@@ -96,7 +99,7 @@ export function RubriquePersonnesACharge({
     courantRef.current = suivant;
     setAlertes([]);
     setAlertesParLigne({});
-    setErreurRubrique(undefined);
+    setAvertissementsType({});
     snapshotsRef.current.clear();
     fermerFormulaire();
     notifierSommaire();
@@ -105,7 +108,7 @@ export function RubriquePersonnesACharge({
   const lignesAffichees = useMemo(() => trierAffichage(courant), [courant]);
 
   const modifierLigne = useCallback(
-    (id: string, patch: Partial<LignePersonneAChargeLocale>) => {
+    (id: string, patch: Partial<LigneSaisieSurSalaireLocale>) => {
       setCourant((prev) => {
         const suivant = prev.map((l) => (l.id === id ? { ...l, ...patch } : l));
         courantRef.current = suivant;
@@ -119,6 +122,23 @@ export function RubriquePersonnesACharge({
       notifierSommaire();
     },
     [notifierSommaire]
+  );
+
+  const changerTypeSaisie = useCallback(
+    (id: string, nouveauType: string) => {
+      const ligne = courantRef.current.find((l) => l.id === id);
+      if (ligne === undefined) return;
+      const avertissement = avertissementChangementType(ligne, nouveauType);
+      setAvertissementsType((prev) => {
+        if (avertissement === null) {
+          const { [id]: _ignore, ...reste } = prev;
+          return reste;
+        }
+        return { ...prev, [id]: avertissement };
+      });
+      modifierLigne(id, { typeSaisieCode: nouveauType });
+    },
+    [modifierLigne]
   );
 
   const ouvrirFormulaireLigne = useCallback(
@@ -153,6 +173,10 @@ export function RubriquePersonnesACharge({
         setCourant((prev) => prev.map((l) => (l.id === id ? snapshot : l)));
         snapshotsRef.current.delete(id);
       }
+      setAvertissementsType((prev) => {
+        const { [id]: _ignore, ...reste } = prev;
+        return reste;
+      });
       fermerFormulaire();
     },
     [fermerFormulaire]
@@ -167,7 +191,7 @@ export function RubriquePersonnesACharge({
   }, [enregistrerAvantEnvoi, fermerFormulaire, formulaireOuvertId]);
 
   const appliquerLigneServeur = useCallback(
-    (ligneServeur: PersonneACharge, nouvelleVersion: number) => {
+    (ligneServeur: SaisieSurSalaire, nouvelleVersion: number) => {
       const locale = depuisServeur(ligneServeur);
       setCourant((prev) => {
         const ids = prev.map((l) => l.id);
@@ -175,7 +199,10 @@ export function RubriquePersonnesACharge({
           return prev.map((l) => (l.id === ligneServeur.id ? locale : l));
         }
         const remplace = prev.findIndex(
-          (l) => l.etat === 'NON_ENREGISTREE' && l.prenom === locale.prenom && l.nom === locale.nom
+          (l) =>
+            l.etat === 'NON_ENREGISTREE' &&
+            l.referenceDecision === locale.referenceDecision &&
+            l.moisDebut === locale.moisDebut
         );
         if (remplace >= 0) {
           const copie = [...prev];
@@ -210,7 +237,7 @@ export function RubriquePersonnesACharge({
         versCorpsCreation,
         versCorpsModification,
         creer: async (version, corps) => {
-          const reponse = await creerPersonneACharge(
+          const reponse = await creerSaisieSurSalaire(
             companyId,
             salarieId,
             version,
@@ -219,15 +246,15 @@ export function RubriquePersonnesACharge({
           return {
             version: reponse.donnees.version,
             alertes: reponse.alertes,
-            lignesTableau: reponse.donnees.personnesACharge,
+            lignesTableau: reponse.donnees.saisiesSurSalaire,
           };
         },
         modifier: async (id, version, corps) => {
-          const reponse = await modifierPersonneACharge(companyId, salarieId, id, version, corps);
+          const reponse = await modifierSaisieSurSalaire(companyId, salarieId, id, version, corps);
           return {
             version: reponse.donnees.version,
             alertes: reponse.alertes,
-            lignesTableau: reponse.donnees.personnesACharge,
+            lignesTableau: reponse.donnees.saisiesSurSalaire,
           };
         },
         extraireLigneReponse,
@@ -251,6 +278,7 @@ export function RubriquePersonnesACharge({
       });
 
       setAlertes(resultat.alertes);
+      setAvertissementsType({});
       onVersionChange(resultat.version);
       return resultat;
     },
@@ -259,8 +287,8 @@ export function RubriquePersonnesACharge({
 
   useEffect(() => {
     const desenregistrer = enregistrerRubrique({
-      id: 'personnes-a-charge',
-      libelle: 'Personnes à charge',
+      id: 'saisies-sur-salaire',
+      libelle: 'Saisies sur salaire',
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
       reinitialiser: reinitialiserRubrique,
@@ -271,40 +299,43 @@ export function RubriquePersonnesACharge({
   const colonnes = useMemo(
     () => [
       {
-        id: 'lien',
-        libelle: 'Lien de parenté',
-        render: (l: LignePersonneAChargeLocale) => libelleLien(l.lienParenteCode, liensParente),
-      },
-      { id: 'prenom', libelle: 'Prénom', render: (l: LignePersonneAChargeLocale) => l.prenom },
-      { id: 'nom', libelle: 'Nom', render: (l: LignePersonneAChargeLocale) => l.nom },
-      {
-        id: 'naissance',
-        libelle: 'Date de naissance',
-        render: (l: LignePersonneAChargeLocale) => l.dateNaissance,
+        id: 'referenceDecision',
+        libelle: 'Référence de la décision',
+        render: (l: LigneSaisieSurSalaireLocale) => l.referenceDecision,
       },
       {
-        id: 'aCharge',
-        libelle: 'À charge',
-        render: (l: LignePersonneAChargeLocale) => (l.aCharge ? 'Oui' : 'Non'),
+        id: 'creancier',
+        libelle: 'Créancier demandeur',
+        render: (l: LigneSaisieSurSalaireLocale) => l.creancier,
+      },
+      {
+        id: 'typeSaisie',
+        libelle: 'Type de saisie',
+        render: (l: LigneSaisieSurSalaireLocale) => libelleType(l.typeSaisieCode, typesSaisie),
+      },
+      {
+        id: 'moisDebut',
+        libelle: 'Mois de début',
+        render: (l: LigneSaisieSurSalaireLocale) => l.moisDebut,
       },
     ],
-    [liensParente]
+    [typesSaisie]
   );
 
   const suppression = useMemo(
     () => ({
-      preparer: async (ligne: LignePersonneAChargeLocale) => {
-        const reponse = await impactSuppressionPersonneACharge(companyId, salarieId, ligne.id);
+      preparer: async (ligne: LigneSaisieSurSalaireLocale) => {
+        const reponse = await impactSuppressionSaisieSurSalaire(companyId, salarieId, ligne.id);
         jetonSuppressionRef.current = reponse.donnees.jetonConfirmation;
         return textesSuppressionHistorisee({
-          titre: 'Supprimer cette personne à charge ?',
+          titre: 'Supprimer cette saisie ?',
           messageServeur: reponse.donnees.message,
           rubriqueModifiee: estModifieeContreReference(courantRef.current, referenceRef.current),
         });
       },
-      confirmer: async (ligne: LignePersonneAChargeLocale) => {
+      confirmer: async (ligne: LigneSaisieSurSalaireLocale) => {
         try {
-          const reponse = await supprimerPersonneACharge(
+          const reponse = await supprimerSaisieSurSalaire(
             companyId,
             salarieId,
             ligne.id,
@@ -313,7 +344,7 @@ export function RubriquePersonnesACharge({
           );
           const idsConnus = new Set(courantRef.current.map((l) => l.id));
           const ligneServeur = extraireLigneReponse(
-            reponse.donnees.personnesACharge,
+            reponse.donnees.saisiesSurSalaire,
             ligne.id,
             idsConnus
           );
@@ -374,13 +405,8 @@ export function RubriquePersonnesACharge({
   );
 
   return (
-    <Rubrique id="personnes-a-charge" titre="Personnes à charge">
-      <TeteRubriqueFiche
-        erreur={erreurRubrique}
-        alertes={alertes}
-        testidErreur="erreur-rubrique-personnes-a-charge"
-        testidAlertes="alertes-tete-personnes-a-charge"
-      />
+    <Rubrique id="saisies-sur-salaire" titre="Saisies sur salaire">
+      <TeteRubriqueFiche alertes={alertes} testidAlertes="alertes-tete-saisies-sur-salaire" />
 
       <EnveloppeTableauRepetable
         colonnes={colonnes}
@@ -389,7 +415,7 @@ export function RubriquePersonnesACharge({
         estInactive={estLigneTableauCloturee}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={libelleEtatLigne}
-        idColonneMarque="prenom"
+        idColonneMarque="referenceDecision"
         ligneEnErreur={(ligne) => (alertesParLigne[ligne.id]?.length ?? 0) > 0}
         formulaireOuvertId={formulaireOuvertId}
         onOuvrirFormulaire={ouvrirFormulaireLigne}
@@ -399,9 +425,10 @@ export function RubriquePersonnesACharge({
         suppression={suppression}
         onAttenteSuppressionChange={gererAttenteSuppression}
         peutModifier
+        testId="enveloppe-saisies-sur-salaire"
         onAjouter={() => {
           if (enregistrementEnCours) return;
-          const nouvelle = creerLigneVide();
+          const nouvelle = creerLigneVide(typeParDefaut);
           setCourant((prev) => {
             const suivant = [...prev, nouvelle];
             courantRef.current = suivant;
@@ -421,12 +448,14 @@ export function RubriquePersonnesACharge({
           }
         }}
         renderFormulaire={(ligne, actions) => (
-          <FormulairePersonneACharge
+          <FormulaireSaisieSurSalaire
             ligne={ligne}
-            liensParente={liensParente}
+            typesSaisie={typesSaisie}
             alertes={alertesParLigne[ligne.id] ?? []}
+            avertissementType={avertissementsType[ligne.id]}
             lectureSeule={actions.lectureSeule}
             onChange={(patch) => modifierLigne(ligne.id, patch)}
+            onChangerType={(type) => changerTypeSaisie(ligne.id, type)}
             onValider={actions.onValider}
             onAnnuler={actions.onAnnuler}
           />
@@ -436,35 +465,45 @@ export function RubriquePersonnesACharge({
   );
 }
 
-function FormulairePersonneACharge({
+function FormulaireSaisieSurSalaire({
   ligne,
-  liensParente,
+  typesSaisie,
   alertes,
+  avertissementType,
   lectureSeule,
   onChange,
+  onChangerType,
   onValider,
   onAnnuler,
 }: {
-  readonly ligne: LignePersonneAChargeLocale;
-  readonly liensParente: readonly LienParente[];
+  readonly ligne: LigneSaisieSurSalaireLocale;
+  readonly typesSaisie: readonly TypeSaisieSurSalaire[];
   readonly alertes: readonly AlerteApi[];
+  readonly avertissementType?: string;
   readonly lectureSeule: boolean;
-  readonly onChange: (patch: Partial<LignePersonneAChargeLocale>) => void;
+  readonly onChange: (patch: Partial<LigneSaisieSurSalaireLocale>) => void;
+  readonly onChangerType: (type: string) => void;
   readonly onValider: () => void;
   readonly onAnnuler: () => void;
 }) {
+  const pension = estPensionAlimentaire(ligne.typeSaisieCode);
+  const tiers = estSaisieTiersDetenteur(ligne.typeSaisieCode);
+
   if (lectureSeule) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2" data-testid="formulaire-lecture-seule">
-        <p>Lien de parenté : {libelleLien(ligne.lienParenteCode, liensParente)}</p>
-        <p>Prénom : {ligne.prenom}</p>
-        <p>Nom : {ligne.nom}</p>
-        <p>Sexe : {ligne.sexe === 'HOMME' ? 'Homme' : 'Femme'}</p>
-        <p>Date de naissance : {ligne.dateNaissance}</p>
-        {ligne.lienParenteCode === 'ENFANT' ? (
-          <p>Situation de handicap : {ligne.situationHandicap ? 'Oui' : 'Non'}</p>
+      <div className="space-y-2" data-testid="formulaire-lecture-seule">
+        <p>Type de saisie : {libelleType(ligne.typeSaisieCode, typesSaisie)}</p>
+        <p>Référence de la décision : {ligne.referenceDecision}</p>
+        <p>Créancier demandeur : {ligne.creancier}</p>
+        <p>Libellé bulletin : {ligne.libelleBulletin}</p>
+        <p>Mois de début : {ligne.moisDebut}</p>
+        {pension ? (
+          <>
+            <p>Montant mensuel : {ligne.montantMensuel}</p>
+            <p>Mois de fin : {ligne.moisFin}</p>
+          </>
         ) : null}
-        <p>À charge : {ligne.aCharge ? 'Oui' : 'Non'}</p>
+        {tiers ? <p>Montant total : {ligne.montantTotal}</p> : null}
       </div>
     );
   }
@@ -472,84 +511,101 @@ function FormulairePersonneACharge({
   return (
     <div className="space-y-4">
       <RegistreAlertesSalarie alertes={alertes} />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor={`lien-${ligne.id}`}>Lien de parenté</Label>
+          <Label htmlFor={`typeSaisie-${ligne.id}`}>Type de saisie</Label>
           <Select
-            id={`lien-${ligne.id}`}
-            value={ligne.lienParenteCode}
-            onChange={(e) => onChange({ lienParenteCode: e.target.value })}
+            id={`typeSaisie-${ligne.id}`}
+            value={ligne.typeSaisieCode}
+            onChange={(e) => onChangerType(e.target.value)}
           >
-            {liensParente.map((lien) => (
-              <option key={lien.code} value={lien.code}>
-                {lien.libelle}
+            {typesSaisie.map((type) => (
+              <option key={type.code} value={type.code}>
+                {type.libelle}
               </option>
             ))}
           </Select>
-          <MessagesAlerteChamp alertes={alertes} champ="lienParenteCode" />
+          {avertissementType !== undefined ? (
+            <Alert variant="warning" data-testid="avertissement-changement-type">
+              <AlertDescription>{avertissementType}</AlertDescription>
+            </Alert>
+          ) : null}
+          <MessagesAlerteChamp alertes={alertes} champ="typeSaisieCode" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`prenom-${ligne.id}`}>Prénom</Label>
+          <Label htmlFor={`referenceDecision-${ligne.id}`}>Référence de la décision</Label>
           <Input
-            id={`prenom-${ligne.id}`}
-            value={ligne.prenom}
-            onChange={(e) => onChange({ prenom: e.target.value })}
+            id={`referenceDecision-${ligne.id}`}
+            value={ligne.referenceDecision}
+            onChange={(e) => onChange({ referenceDecision: e.target.value })}
           />
-          <MessagesAlerteChamp alertes={alertes} champ="prenom" />
+          <MessagesAlerteChamp alertes={alertes} champ="referenceDecision" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`nom-${ligne.id}`}>Nom</Label>
+          <Label htmlFor={`creancier-${ligne.id}`}>Créancier demandeur</Label>
           <Input
-            id={`nom-${ligne.id}`}
-            value={ligne.nom}
-            onChange={(e) => onChange({ nom: e.target.value })}
+            id={`creancier-${ligne.id}`}
+            value={ligne.creancier}
+            onChange={(e) => onChange({ creancier: e.target.value })}
           />
-          <MessagesAlerteChamp alertes={alertes} champ="nom" />
+          <MessagesAlerteChamp alertes={alertes} champ="creancier" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor={`sexe-${ligne.id}`}>Sexe</Label>
-          <Select
-            id={`sexe-${ligne.id}`}
-            value={ligne.sexe}
-            onChange={(e) =>
-              onChange({ sexe: e.target.value as LignePersonneAChargeLocale['sexe'] })
-            }
-          >
-            <option value="HOMME">Homme</option>
-            <option value="FEMME">Femme</option>
-          </Select>
-          <MessagesAlerteChamp alertes={alertes} champ="sexe" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`dateNaissance-${ligne.id}`}>Date de naissance</Label>
+          <Label htmlFor={`libelleBulletin-${ligne.id}`}>Libellé bulletin</Label>
           <Input
-            id={`dateNaissance-${ligne.id}`}
-            type="date"
-            value={ligne.dateNaissance}
-            onChange={(e) => onChange({ dateNaissance: e.target.value })}
+            id={`libelleBulletin-${ligne.id}`}
+            value={ligne.libelleBulletin}
+            onChange={(e) => onChange({ libelleBulletin: e.target.value })}
           />
-          <MessagesAlerteChamp alertes={alertes} champ="dateNaissance" />
+          <MessagesAlerteChamp alertes={alertes} champ="libelleBulletin" />
         </div>
-        {ligne.lienParenteCode === 'ENFANT' ? (
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id={`handicap-${ligne.id}`}
-              checked={ligne.situationHandicap}
-              onChange={(e) => onChange({ situationHandicap: e.target.checked })}
+        <div className="space-y-2">
+          <Label htmlFor={`moisDebut-${ligne.id}`}>Mois de début</Label>
+          <Input
+            id={`moisDebut-${ligne.id}`}
+            type="month"
+            value={ligne.moisDebut}
+            onChange={(e) => onChange({ moisDebut: e.target.value })}
+          />
+          <MessagesAlerteChamp alertes={alertes} champ="moisDebut" />
+        </div>
+        {pension ? (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor={`montantMensuel-${ligne.id}`}>Montant mensuel</Label>
+              <Input
+                id={`montantMensuel-${ligne.id}`}
+                value={ligne.montantMensuel}
+                onChange={(e) => onChange({ montantMensuel: e.target.value })}
+              />
+              <MessagesAlerteChamp alertes={alertes} champ="montantMensuel" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor={`moisFin-${ligne.id}`}>Mois de fin</Label>
+              <Input
+                id={`moisFin-${ligne.id}`}
+                type="month"
+                value={ligne.moisFin}
+                onChange={(e) => onChange({ moisFin: e.target.value })}
+              />
+              <p className="text-muted-foreground text-sm">
+                Laissez vide si la pension est due sans terme fixé.
+              </p>
+              <MessagesAlerteChamp alertes={alertes} champ="moisFin" />
+            </div>
+          </>
+        ) : null}
+        {tiers ? (
+          <div className="space-y-2">
+            <Label htmlFor={`montantTotal-${ligne.id}`}>Montant total</Label>
+            <Input
+              id={`montantTotal-${ligne.id}`}
+              value={ligne.montantTotal}
+              onChange={(e) => onChange({ montantTotal: e.target.value })}
             />
-            <Label htmlFor={`handicap-${ligne.id}`}>Situation de handicap</Label>
-            <MessagesAlerteChamp alertes={alertes} champ="situationHandicap" />
+            <MessagesAlerteChamp alertes={alertes} champ="montantTotal" />
           </div>
         ) : null}
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id={`aCharge-${ligne.id}`}
-            checked={ligne.aCharge}
-            onChange={(e) => onChange({ aCharge: e.target.checked })}
-          />
-          <Label htmlFor={`aCharge-${ligne.id}`}>À charge</Label>
-          <MessagesAlerteChamp alertes={alertes} champ="aCharge" />
-        </div>
       </div>
       <div className="flex gap-2">
         <Button type="button" data-testid="valider-ligne" onClick={onValider}>

@@ -37,7 +37,21 @@ Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figure
 - **Supprimer** une ligne déjà enregistrée part **immédiatement** après confirmation : elle n'attend pas Enregistrer. Le numéro de version de la fiche est mis à jour tout de suite.
 - Si la ligne a déjà servi à un bulletin, elle ne disparaît pas : elle devient **inactive** avec un mois de fin, grisée à l'écran, pour que les bulletins passés restent explicables.
 - Les autres modifications non enregistrées de la même rubrique restent à enregistrer après une suppression immédiate.
-- **Point ouvert :** migrer cette suppression (aperçu + DELETE) vers l'enveloppe, par injection d'un dialogue et non par un mode — temps 2.c ou 3.
+
+### Prêts — modification différée, suppression immédiate
+
+- **Modifier ou ajouter** un prêt ne part qu'au clic **Enregistrer**, ligne par ligne (modifications puis ajouts, ordre d'affichage).
+- **Supprimer** une ligne enregistrée part **immédiatement** après confirmation (aperçu serveur + jeton), comme les personnes à charge.
+- Le **solde restant** est calculé par le serveur et affiché tel quel ; sur une ligne modifiée localement non encore enregistrée, la cellule solde est **vide**.
+- Une alerte non bloquante (mensualité × échéances ≠ montant total) s'affiche sous le champ mensualité après enregistrement ; la ligne est bien enregistrée.
+
+### Saisies sur salaire — deux formes, modification différée
+
+- **Type de saisie** : liste alimentée par le référentiel (`Pension alimentaire`, `Saisie à tiers détenteur`). Le formulaire n'affiche que les champs du type choisi ; l'écran n'envoie jamais un champ de l'autre forme.
+- **Pension alimentaire** : montant mensuel obligatoire, mois de fin facultatif (vide = pension sans terme).
+- **Saisie à tiers détenteur** : montant total obligatoire.
+- Au changement de type alors qu'un montant de l'autre forme est saisi, un **avertissement d'écran** prévient de l'abandon à l'enregistrement ; les valeurs restent en local tant que la ligne n'est pas enregistrée (revenir au type précédent les fait réapparaître).
+- **Supprimer** une ligne enregistrée : confirmation immédiate comme les autres tableaux historisés.
 
 ### Navigation et interaction
 
