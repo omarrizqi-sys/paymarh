@@ -120,6 +120,7 @@ export function RubriqueIdentite({
           <Input
             id="nom"
             value={rubrique.courant.nom}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ nom: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="nom" />
@@ -129,6 +130,7 @@ export function RubriqueIdentite({
           <Input
             id="prenom"
             value={rubrique.courant.prenom}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ prenom: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="prenom" />
@@ -138,6 +140,7 @@ export function RubriqueIdentite({
           <Select
             id="sexe"
             value={rubrique.courant.sexe}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ sexe: e.target.value as SexePersonne })}
           >
             <option value="HOMME">Homme</option>
@@ -155,6 +158,7 @@ export function RubriqueIdentite({
             id="dateNaissance"
             type="date"
             value={rubrique.courant.dateNaissance.slice(0, 10)}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ dateNaissance: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateNaissance" />
@@ -164,6 +168,7 @@ export function RubriqueIdentite({
           <Input
             id="villeNaissance"
             value={rubrique.courant.villeNaissance}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ villeNaissance: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="villeNaissance" />
@@ -173,6 +178,7 @@ export function RubriqueIdentite({
           <Select
             id="paysNaissanceId"
             value={rubrique.courant.paysNaissanceId}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ paysNaissanceId: e.target.value })}
           >
             <option value=""></option>
@@ -189,6 +195,7 @@ export function RubriqueIdentite({
           <Select
             id="nationaliteId"
             value={rubrique.courant.nationaliteId}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ nationaliteId: e.target.value })}
           >
             <option value=""></option>
@@ -205,6 +212,7 @@ export function RubriqueIdentite({
           <Select
             id="situationFamilialeCode"
             value={rubrique.courant.situationFamilialeCode}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ situationFamilialeCode: e.target.value })}
           >
             <option value=""></option>

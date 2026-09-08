@@ -25,7 +25,8 @@ export function useRubriqueFiche<T>({
   envoyer,
   onServeurChange,
 }: RubriqueFicheProps<T>) {
-  const { enregistrerRubrique, notifierSommaire, version } = useRegistreFiche();
+  const { enregistrerRubrique, notifierSommaire, version, enregistrementEnCours } =
+    useRegistreFiche();
   const [courant, setCourant] = useState(valeursServeur);
   const [erreur, setErreur] = useState<string | undefined>();
   const [alertes, setAlertes] = useState<readonly AlerteApi[]>([]);
@@ -121,6 +122,7 @@ export function useRubriqueFiche<T>({
   }, [enregistrerRubrique, id, libelle]);
 
   const modifier = (patch: Partial<T>) => {
+    if (enregistrementEnCours) return;
     setCourant((prev) => {
       const suivant = { ...prev, ...patch };
       courantRef.current = suivant;
@@ -145,6 +147,7 @@ export function useRubriqueFiche<T>({
     alertes,
     version,
     modifiee,
+    verrouille: enregistrementEnCours,
     appliquerServeur: (valeurs: T, nouvelleVersion: number) => {
       courantRef.current = valeurs;
       setCourant(valeurs);

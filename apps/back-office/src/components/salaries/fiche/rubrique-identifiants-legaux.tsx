@@ -81,6 +81,7 @@ export function RubriqueIdentifiantsLegaux({
             type="text"
             inputMode="text"
             value={rubrique.courant.matricule}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ matricule: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="matricule" />
@@ -106,6 +107,7 @@ export function RubriqueIdentifiantsLegaux({
             type="text"
             inputMode="text"
             value={rubrique.courant.numeroPiece}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ numeroPiece: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="numeroPiece" />
@@ -117,6 +119,7 @@ export function RubriqueIdentifiantsLegaux({
             type="text"
             inputMode="text"
             value={rubrique.courant.numeroCnss}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ numeroCnss: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="numeroCnss" />
@@ -128,6 +131,7 @@ export function RubriqueIdentifiantsLegaux({
             type="text"
             inputMode="text"
             value={rubrique.courant.numeroCimr}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ numeroCimr: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="numeroCimr" />

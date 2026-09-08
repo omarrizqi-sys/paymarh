@@ -2,9 +2,10 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
+import { textesSuppressionDiffereeCompteBancaire } from './textes-suppression-tableau-historise';
 
 interface LigneTest {
   readonly id: string;
@@ -17,28 +18,38 @@ function ligne(id: string, surcharges: Partial<LigneTest> = {}): LigneTest {
   return { id, etat: 'ACTIVE', moisFin: null, valeur: 'A', ...surcharges };
 }
 
+function propsCommunes(surcharges: Record<string, unknown> = {}) {
+  return {
+    colonnes: [{ id: 'val', libelle: 'Valeur', render: (l: LigneTest) => l.valeur }],
+    lignes: [ligne('a')],
+    getLigneId: (l: LigneTest) => l.id,
+    estInactive: () => false,
+    estNonEnregistree: () => false,
+    libelleEtatLigne: () => null,
+    idColonneMarque: 'val',
+    formulaireOuvertId: null,
+    onOuvrirFormulaire: () => undefined,
+    onValiderLigne: () => undefined,
+    onAnnulerLigne: () => undefined,
+    onAjouter: () => undefined,
+    onSupprimer: () => undefined,
+    peutModifier: true,
+    renderFormulaire: () => null,
+    ...surcharges,
+  };
+}
+
 describe('EnveloppeTableauRepetable', () => {
   afterEach(() => cleanup());
 
   it('T05 — cliquer une ligne deplie le formulaire sous cette ligne', () => {
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('a'), ligne('b')]}
-        getLigneId={(l) => l.id}
-        estInactive={(l) => l.etat === 'INACTIVE'}
-        estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="b"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={() => <div>form</div>}
+        {...propsCommunes({
+          lignes: [ligne('a'), ligne('b')],
+          formulaireOuvertId: 'b',
+          renderFormulaire: () => <div>form</div>,
+        })}
       />
     );
     expect(screen.getByTestId('formulaire-b')).toBeTruthy();
@@ -60,64 +71,31 @@ describe('EnveloppeTableauRepetable', () => {
     }
     const { rerender } = render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={lignes}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="a"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={renderFormulaire}
+        {...propsCommunes({
+          lignes,
+          formulaireOuvertId: 'a',
+          renderFormulaire,
+        })}
       />
     );
     fireEvent.change(screen.getByLabelText('saisie-a'), { target: { value: 'Modifie' } });
     rerender(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={lignes}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="b"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={renderFormulaire}
+        {...propsCommunes({
+          lignes,
+          formulaireOuvertId: 'b',
+          renderFormulaire,
+        })}
       />
     );
     expect(screen.queryByTestId('formulaire-a')).toBeNull();
     rerender(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={lignes}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="a"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={renderFormulaire}
+        {...propsCommunes({
+          lignes,
+          formulaireOuvertId: 'a',
+          renderFormulaire,
+        })}
       />
     );
     expect(screen.getByLabelText('saisie-a')).toHaveProperty('value', 'Modifie');
@@ -127,26 +105,16 @@ describe('EnveloppeTableauRepetable', () => {
     const onAnnulerLigne = vi.fn();
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('a')]}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="a"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={onAnnulerLigne}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={(_l, actions) => (
-          <button type="button" onClick={actions.onAnnuler}>
-            Annuler la ligne
-          </button>
-        )}
+        {...propsCommunes({
+          lignes: [ligne('a')],
+          formulaireOuvertId: 'a',
+          onAnnulerLigne,
+          renderFormulaire: (_l: LigneTest, actions: { onAnnuler: () => void }) => (
+            <button type="button" onClick={actions.onAnnuler}>
+              Annuler la ligne
+            </button>
+          ),
+        })}
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Annuler la ligne' }));
@@ -157,26 +125,16 @@ describe('EnveloppeTableauRepetable', () => {
     const onValiderLigne = vi.fn();
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('a')]}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId="a"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={onValiderLigne}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={(_l, actions) => (
-          <button type="button" onClick={actions.onValider}>
-            Valider la ligne
-          </button>
-        )}
+        {...propsCommunes({
+          lignes: [ligne('a')],
+          formulaireOuvertId: 'a',
+          onValiderLigne,
+          renderFormulaire: (_l: LigneTest, actions: { onValider: () => void }) => (
+            <button type="button" onClick={actions.onValider}>
+              Valider la ligne
+            </button>
+          ),
+        })}
       />
     );
     fireEvent.click(screen.getByRole('button', { name: 'Valider la ligne' }));
@@ -186,26 +144,17 @@ describe('EnveloppeTableauRepetable', () => {
   it('T09 — ligne inactive en lecture seule sans bouton Supprimer', () => {
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('inact', { etat: 'INACTIVE', moisFin: '08/2026' })]}
-        getLigneId={(l) => l.id}
-        estInactive={(l) => l.etat === 'INACTIVE'}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => 'inactive depuis 08/2026'}
-        idColonneMarque="val"
-        formulaireOuvertId="inact"
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={(_l, actions) => (
-          <div data-testid="formulaire-lecture-seule">
-            {actions.lectureSeule ? 'lecture' : 'edit'}
-          </div>
-        )}
+        {...propsCommunes({
+          lignes: [ligne('inact', { etat: 'INACTIVE', moisFin: '08/2026' })],
+          estInactive: (l: LigneTest) => l.etat === 'INACTIVE',
+          libelleEtatLigne: () => 'inactive depuis 08/2026',
+          formulaireOuvertId: 'inact',
+          renderFormulaire: (_l: LigneTest, actions: { lectureSeule: boolean }) => (
+            <div data-testid="formulaire-lecture-seule">
+              {actions.lectureSeule ? 'lecture' : 'edit'}
+            </div>
+          ),
+        })}
       />
     );
     expect(screen.queryByTestId('supprimer-inact')).toBeNull();
@@ -215,22 +164,12 @@ describe('EnveloppeTableauRepetable', () => {
   it('T10 — ligne non enregistree en dernier avec mention', () => {
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('saved'), ligne('new', { etat: 'NON_ENREGISTREE' })]}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
-        libelleEtatLigne={(l) => (l.etat === 'NON_ENREGISTREE' ? 'non enregistrée' : null)}
-        idColonneMarque="val"
-        formulaireOuvertId={null}
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={() => null}
+        {...propsCommunes({
+          lignes: [ligne('saved'), ligne('new', { etat: 'NON_ENREGISTREE' })],
+          estNonEnregistree: (l: LigneTest) => l.etat === 'NON_ENREGISTREE',
+          libelleEtatLigne: (l: LigneTest) =>
+            l.etat === 'NON_ENREGISTREE' ? 'non enregistrée' : null,
+        })}
       />
     );
     expect(screen.getByTestId('etat-ligne-new').textContent).toContain('non enregistrée');
@@ -240,62 +179,73 @@ describe('EnveloppeTableauRepetable', () => {
     const onSupprimer = vi.fn();
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('new', { etat: 'NON_ENREGISTREE' })]}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
-        libelleEtatLigne={() => 'non enregistrée'}
-        idColonneMarque="val"
-        formulaireOuvertId={null}
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={onSupprimer}
-        suppressionEnCours={false}
-        peutModifier
-        renderFormulaire={() => null}
+        {...propsCommunes({
+          lignes: [ligne('new', { etat: 'NON_ENREGISTREE' })],
+          estNonEnregistree: (l: LigneTest) => l.etat === 'NON_ENREGISTREE',
+          libelleEtatLigne: () => 'non enregistrée',
+          onSupprimer,
+        })}
       />
     );
     fireEvent.click(screen.getByTestId('supprimer-new'));
     expect(onSupprimer).toHaveBeenCalledTimes(1);
   });
 
-  it('TB01 — l enveloppe declenche le comportement de suppression differee sans appel serveur', () => {
-    const onConfirmer = vi.fn();
-    const chargerApercu = vi.fn();
+  it('TB01 — l enveloppe declenche le comportement de suppression differee sans appel serveur', async () => {
+    const confirmer = vi.fn(async () => ({ type: 'termine' as const }));
+    const preparer = vi.fn(async () => textesSuppressionDiffereeCompteBancaire());
     render(
       <EnveloppeTableauRepetable
-        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
-        lignes={[ligne('saved')]}
-        getLigneId={(l) => l.id}
-        estInactive={() => false}
-        estNonEnregistree={() => false}
-        libelleEtatLigne={() => null}
-        idColonneMarque="val"
-        formulaireOuvertId={null}
-        onOuvrirFormulaire={() => undefined}
-        onValiderLigne={() => undefined}
-        onAnnulerLigne={() => undefined}
-        onAjouter={() => undefined}
-        onSupprimer={() => undefined}
-        suppressionEnCours={false}
-        peutModifier
-        strategieSuppression={{
-          titre: 'Supprimer ?',
-          corps: 'Differee',
-          libelleConfirmer: 'Supprimer',
-          libelleAnnuler: 'Garder la ligne',
-          onConfirmer,
-        }}
-        renderFormulaire={() => null}
+        {...propsCommunes({
+          lignes: [ligne('saved')],
+          suppression: { preparer, confirmer },
+        })}
       />
     );
     fireEvent.click(screen.getByTestId('supprimer-saved'));
-    expect(chargerApercu).not.toHaveBeenCalled();
+    await waitFor(() => expect(preparer).toHaveBeenCalledTimes(1));
     fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
-    expect(onConfirmer).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(confirmer).toHaveBeenCalledTimes(1));
+  });
+
+  it('TB02 — recommencer rappelle preparer sans relancer confirmer', async () => {
+    const preparer = vi
+      .fn()
+      .mockResolvedValueOnce({
+        variante: 'historise' as const,
+        titre: 'Supprimer ?',
+        messageServeur: 'Premier',
+        libelleConfirmer: 'Supprimer',
+        libelleAnnuler: 'Garder la ligne',
+      })
+      .mockResolvedValueOnce({
+        variante: 'historise' as const,
+        titre: 'Supprimer ?',
+        messageServeur: 'Second',
+        libelleConfirmer: 'Supprimer',
+        libelleAnnuler: 'Garder la ligne',
+      });
+    const confirmer = vi.fn().mockResolvedValueOnce({
+      type: 'recommencer' as const,
+      preambule: 'La situation a changé depuis l’affichage.',
+    });
+
+    render(
+      <EnveloppeTableauRepetable
+        {...propsCommunes({
+          lignes: [ligne('saved')],
+          suppression: { preparer, confirmer },
+        })}
+      />
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-saved'));
+    await waitFor(() => expect(preparer).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+    await waitFor(() => expect(preparer).toHaveBeenCalledTimes(2));
+    expect(confirmer).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('mention-situation-changee')).toBeTruthy();
+    expect(screen.getByTestId('message-apercu-suppression').textContent).toBe('Second');
   });
 
   it('TB03 — le fichier de l enveloppe ne contient aucun nom de tableau particulier', () => {
@@ -307,5 +257,7 @@ describe('EnveloppeTableauRepetable', () => {
     expect(contenu).not.toMatch(
       /personnes-a-charge|comptes-bancaires|comptesBancaires|personnesACharge/i
     );
+    expect(contenu).not.toMatch(/@\/lib\/api\//);
+    expect(contenu).not.toMatch(/CONFIRMATION_OBSOLETE|CONFLIT_VERSION|AppelApiEchoue/i);
   });
 });

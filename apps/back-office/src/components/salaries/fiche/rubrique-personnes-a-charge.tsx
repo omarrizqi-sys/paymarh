@@ -33,10 +33,13 @@ import {
   type LignePersonneAChargeLocale,
 } from '@/lib/fiche/personnes-a-charge-lignes';
 import { useFormulaireTableau } from './contexte-formulaire-tableau';
-import { DialogueSuppressionLigneTableau } from './dialogue-suppression-ligne-tableau';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
 import { useRegistreFiche } from './registre-fiche-provider';
 import { TeteRubriqueFiche } from './tete-rubrique-fiche';
+import {
+  PREAMBULE_SITUATION_CHANGEE,
+  textesSuppressionHistorisee,
+} from './textes-suppression-tableau-historise';
 
 interface Props {
   readonly companyId: string;
@@ -61,7 +64,10 @@ export function RubriquePersonnesACharge({
     enregistrerRubrique,
     notifierSommaire,
     signalerVersionApresEcritureHorsSequence,
+    signalerDebutEcritureHorsSequence,
+    signalerFinEcritureHorsSequence,
     enregistrerAvantEnvoi,
+    enregistrementEnCours,
     version,
   } = useRegistreFiche();
   const { formulaireOuvertId, ouvrirFormulaire, fermerFormulaire } = useFormulaireTableau();
@@ -71,10 +77,8 @@ export function RubriquePersonnesACharge({
   const [alertes, setAlertes] = useState<readonly AlerteApi[]>([]);
   const [alertesParLigne, setAlertesParLigne] = useState<Record<string, readonly AlerteApi[]>>({});
   const [erreurRubrique, setErreurRubrique] = useState<string | undefined>();
-  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
-  const [dialogueSuppression, setDialogueSuppression] = useState<LignePersonneAChargeLocale | null>(
-    null
-  );
+
+  const jetonSuppressionRef = useRef('');
 
   const snapshotsRef = useRef<Map<string, LignePersonneAChargeLocale>>(new Map());
   const courantRef = useRef(courant);
@@ -123,13 +127,14 @@ export function RubriquePersonnesACharge({
         fermerFormulaire();
         return;
       }
+      if (enregistrementEnCours) return;
       const ligne = courantRef.current.find((l) => l.id === id);
       if (ligne !== undefined && !snapshotsRef.current.has(id)) {
         snapshotsRef.current.set(id, { ...ligne });
       }
       ouvrirFormulaire(id);
     },
-    [fermerFormulaire, ouvrirFormulaire]
+    [enregistrementEnCours, fermerFormulaire, ouvrirFormulaire]
   );
 
   const validerLigne = useCallback(
@@ -349,6 +354,88 @@ export function RubriquePersonnesACharge({
     [liensParente]
   );
 
+  const suppression = useMemo(
+    () => ({
+      preparer: async (ligne: LignePersonneAChargeLocale) => {
+        const reponse = await impactSuppressionPersonneACharge(companyId, salarieId, ligne.id);
+        jetonSuppressionRef.current = reponse.donnees.jetonConfirmation;
+        return textesSuppressionHistorisee({
+          titre: 'Supprimer cette personne à charge ?',
+          messageServeur: reponse.donnees.message,
+          rubriqueModifiee: estModifieeContreReference(courantRef.current, referenceRef.current),
+        });
+      },
+      confirmer: async (ligne: LignePersonneAChargeLocale) => {
+        try {
+          const reponse = await supprimerPersonneACharge(
+            companyId,
+            salarieId,
+            ligne.id,
+            version,
+            jetonSuppressionRef.current
+          );
+          const idsConnus = new Set(courantRef.current.map((l) => l.id));
+          const ligneServeur = extraireLigneReponse(
+            reponse.donnees.personnesACharge,
+            ligne.id,
+            idsConnus
+          );
+          if (ligneServeur !== undefined) {
+            appliquerLigneServeur(ligneServeur, reponse.donnees.version);
+            setCourant((prev) => {
+              const locale = depuisServeur(ligneServeur);
+              const sans = prev.filter((l) => l.id !== ligne.id);
+              if (sans.some((l) => l.id === locale.id)) {
+                return sans.map((l) => (l.id === locale.id ? locale : l));
+              }
+              return [...sans, locale];
+            });
+            setReference((prev) => {
+              const locale = depuisServeur(ligneServeur);
+              const filtre = prev.filter((l) => l.id !== ligne.id);
+              if (filtre.some((l) => l.id === locale.id)) {
+                return filtre.map((l) => (l.id === locale.id ? locale : l));
+              }
+              return [...filtre, locale];
+            });
+          } else {
+            setCourant((prev) => prev.filter((l) => l.id !== ligne.id));
+            setReference((prev) => prev.filter((l) => l.id !== ligne.id));
+            signalerVersionApresEcritureHorsSequence(reponse.donnees.version);
+            onVersionChange(reponse.donnees.version);
+          }
+          notifierSommaire();
+          return { type: 'termine' as const };
+        } catch (erreur) {
+          if (erreur instanceof AppelApiEchoue && erreur.erreur.code === 'CONFIRMATION_OBSOLETE') {
+            return { type: 'recommencer' as const, preambule: PREAMBULE_SITUATION_CHANGEE };
+          }
+          throw erreur;
+        }
+      },
+    }),
+    [
+      appliquerLigneServeur,
+      companyId,
+      notifierSommaire,
+      onVersionChange,
+      salarieId,
+      signalerVersionApresEcritureHorsSequence,
+      version,
+    ]
+  );
+
+  const gererAttenteSuppression = useCallback(
+    (enAttente: boolean) => {
+      if (enAttente) {
+        signalerDebutEcritureHorsSequence();
+      } else {
+        signalerFinEcritureHorsSequence();
+      }
+    },
+    [signalerDebutEcritureHorsSequence, signalerFinEcritureHorsSequence]
+  );
+
   return (
     <Rubrique id="personnes-a-charge" titre="Personnes à charge">
       <TeteRubriqueFiche
@@ -371,9 +458,12 @@ export function RubriquePersonnesACharge({
         onOuvrirFormulaire={ouvrirFormulaireLigne}
         onValiderLigne={validerLigne}
         onAnnulerLigne={annulerLigne}
-        suppressionEnCours={suppressionEnCours}
+        verrouille={enregistrementEnCours}
+        suppression={suppression}
+        onAttenteSuppressionChange={gererAttenteSuppression}
         peutModifier
         onAjouter={() => {
+          if (enregistrementEnCours) return;
           const nouvelle = creerLigneVide();
           setCourant((prev) => {
             const suivant = [...prev, nouvelle];
@@ -391,9 +481,7 @@ export function RubriquePersonnesACharge({
               return suivant;
             });
             notifierSommaire();
-            return;
           }
-          setDialogueSuppression(ligne);
         }}
         renderFormulaire={(ligne, actions) => (
           <FormulairePersonneACharge
@@ -406,72 +494,6 @@ export function RubriquePersonnesACharge({
             onAnnuler={actions.onAnnuler}
           />
         )}
-      />
-
-      <DialogueSuppressionLigneTableau
-        titre="Supprimer cette personne à charge ?"
-        ouvert={dialogueSuppression !== null}
-        rubriqueModifiee={estModifieeContreReference(courant, reference)}
-        onFermer={() => setDialogueSuppression(null)}
-        onConfirme={() => {
-          notifierSommaire();
-        }}
-        chargerApercu={async () => {
-          if (dialogueSuppression === null) {
-            throw new Error('Aucune ligne');
-          }
-          const reponse = await impactSuppressionPersonneACharge(
-            companyId,
-            salarieId,
-            dialogueSuppression.id
-          );
-          return reponse.donnees;
-        }}
-        supprimer={async (jeton) => {
-          if (dialogueSuppression === null) return;
-          setSuppressionEnCours(true);
-          try {
-            const reponse = await supprimerPersonneACharge(
-              companyId,
-              salarieId,
-              dialogueSuppression.id,
-              version,
-              jeton
-            );
-            const idsConnus = new Set(courantRef.current.map((l) => l.id));
-            const ligneServeur = extraireLigneReponse(
-              reponse.donnees.personnesACharge,
-              dialogueSuppression.id,
-              idsConnus
-            );
-            if (ligneServeur !== undefined) {
-              appliquerLigneServeur(ligneServeur, reponse.donnees.version);
-              setCourant((prev) => {
-                const locale = depuisServeur(ligneServeur);
-                const sans = prev.filter((l) => l.id !== dialogueSuppression.id);
-                if (sans.some((l) => l.id === locale.id)) {
-                  return sans.map((l) => (l.id === locale.id ? locale : l));
-                }
-                return [...sans, locale];
-              });
-              setReference((prev) => {
-                const locale = depuisServeur(ligneServeur);
-                const filtre = prev.filter((l) => l.id !== dialogueSuppression.id);
-                if (filtre.some((l) => l.id === locale.id)) {
-                  return filtre.map((l) => (l.id === locale.id ? locale : l));
-                }
-                return [...filtre, locale];
-              });
-            } else {
-              setCourant((prev) => prev.filter((l) => l.id !== dialogueSuppression.id));
-              setReference((prev) => prev.filter((l) => l.id !== dialogueSuppression.id));
-              signalerVersionApresEcritureHorsSequence(reponse.donnees.version);
-              onVersionChange(reponse.donnees.version);
-            }
-          } finally {
-            setSuppressionEnCours(false);
-          }
-        }}
       />
     </Rubrique>
   );

@@ -68,6 +68,7 @@ export function RubriqueDates({
             id="dateEntree"
             type="date"
             value={rubrique.courant.dateEntree.slice(0, 10)}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ dateEntree: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateEntree" />
@@ -78,6 +79,7 @@ export function RubriqueDates({
             id="dateAnciennete"
             type="date"
             value={rubrique.courant.dateAnciennete.slice(0, 10)}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ dateAnciennete: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateAnciennete" />

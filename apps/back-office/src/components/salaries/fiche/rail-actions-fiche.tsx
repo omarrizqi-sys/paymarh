@@ -20,6 +20,7 @@ export function RailActionsFiche({ operations, modeCompact = false }: Props) {
   const {
     nombreModifiees,
     enregistrementEnCours,
+    ecritureHorsSequenceEnCours,
     enregistrer,
     annuler,
     conflitVersion,
@@ -39,7 +40,7 @@ export function RailActionsFiche({ operations, modeCompact = false }: Props) {
       type="button"
       size={modeCompact ? 'icon' : 'default'}
       aria-label="Enregistrer"
-      disabled={nombreModifiees === 0 || enregistrementEnCours}
+      disabled={nombreModifiees === 0 || enregistrementEnCours || ecritureHorsSequenceEnCours}
       onClick={() => void enregistrer()}
       title={nombreModifiees > 0 ? `Enregistrer (${nombreModifiees})` : 'Enregistrer'}
     >

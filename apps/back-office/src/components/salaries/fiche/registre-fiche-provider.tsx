@@ -29,6 +29,7 @@ export interface EntreeSommaireRubrique {
 interface RegistreFicheContexte {
   readonly version: number;
   readonly enregistrementEnCours: boolean;
+  readonly ecritureHorsSequenceEnCours: boolean;
   readonly conflitVersion: boolean;
   readonly resultatsRecap: readonly ResultatRubriqueEnregistrement[];
   readonly alertesGlobales: readonly AlerteApi[];
@@ -43,6 +44,8 @@ interface RegistreFicheContexte {
   enregistrerRubrique(rubrique: RubriqueEnregistrable): () => void;
   mettreAJourVersion(version: number): void;
   signalerVersionApresEcritureHorsSequence(nouvelleVersion: number): void;
+  signalerDebutEcritureHorsSequence(): void;
+  signalerFinEcritureHorsSequence(): void;
   enregistrerAvantEnvoi(callback: () => void): () => void;
   notifierSommaire(): void;
   onRechargerServeur: () => Promise<void>;
@@ -75,6 +78,7 @@ export function RegistreFicheProvider({
   const avantEnvoiRef = useRef<Set<() => void>>(new Set());
   const [version, setVersion] = useState(versionInitiale);
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
+  const [ecritureHorsSequenceEnCours, setEcritureHorsSequenceEnCours] = useState(false);
   const [conflitVersion, setConflitVersion] = useState(false);
   const [resultatsRecap, setResultatsRecap] = useState<readonly ResultatRubriqueEnregistrement[]>(
     []
@@ -130,6 +134,14 @@ export function RegistreFicheProvider({
     },
     [onApresEnregistrement]
   );
+
+  const signalerDebutEcritureHorsSequence = useCallback(() => {
+    setEcritureHorsSequenceEnCours(true);
+  }, []);
+
+  const signalerFinEcritureHorsSequence = useCallback(() => {
+    setEcritureHorsSequenceEnCours(false);
+  }, []);
 
   const enregistrerAvantEnvoi = useCallback((callback: () => void) => {
     avantEnvoiRef.current.add(callback);
@@ -197,6 +209,7 @@ export function RegistreFicheProvider({
     (): RegistreFicheContexte => ({
       version,
       enregistrementEnCours,
+      ecritureHorsSequenceEnCours,
       conflitVersion,
       resultatsRecap,
       alertesGlobales,
@@ -211,6 +224,8 @@ export function RegistreFicheProvider({
       enregistrerRubrique,
       mettreAJourVersion,
       signalerVersionApresEcritureHorsSequence,
+      signalerDebutEcritureHorsSequence,
+      signalerFinEcritureHorsSequence,
       enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,
@@ -218,6 +233,7 @@ export function RegistreFicheProvider({
     [
       version,
       enregistrementEnCours,
+      ecritureHorsSequenceEnCours,
       conflitVersion,
       resultatsRecap,
       alertesGlobales,
@@ -232,6 +248,8 @@ export function RegistreFicheProvider({
       enregistrerRubrique,
       mettreAJourVersion,
       signalerVersionApresEcritureHorsSequence,
+      signalerDebutEcritureHorsSequence,
+      signalerFinEcritureHorsSequence,
       enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,

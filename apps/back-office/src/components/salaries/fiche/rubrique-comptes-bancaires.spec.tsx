@@ -18,6 +18,7 @@ import { FicheSalarieClient } from './fiche-salarie-client';
 import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RubriqueComptesBancaires } from './rubrique-comptes-bancaires';
+import { RubriqueIdentite, type ValeursIdentite } from './rubrique-identite';
 import { RailActionsFiche } from './rail-actions-fiche';
 
 const BANQUES: readonly Banque[] = [
@@ -193,6 +194,34 @@ function rendreRubrique({
   );
 }
 
+function valeursIdentiteDepuisFiche(
+  fiche: FicheSalarieAvecOperations = ficheSalarieBase()
+): ValeursIdentite {
+  return {
+    nom: fiche.nom,
+    prenom: fiche.prenom,
+    sexe: fiche.sexe,
+    dateNaissance: fiche.dateNaissance,
+    villeNaissance: fiche.villeNaissance ?? '',
+    paysNaissanceId: fiche.paysNaissanceId ?? '',
+    nationaliteId: fiche.nationaliteId ?? '',
+    situationFamilialeCode: fiche.situationFamiliale.code ?? '',
+  };
+}
+
+function rubriqueIdentiteTest(): ReactNode {
+  return (
+    <RubriqueIdentite
+      companyId="soc-1"
+      salarieId="sal-1"
+      valeurs={valeursIdentiteDepuisFiche()}
+      pays={PAYS}
+      situationsFamiliales={SITUATIONS}
+      onServeurChange={() => undefined}
+    />
+  );
+}
+
 function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBase()) {
   return render(
     <FicheSalarieClient
@@ -233,6 +262,15 @@ function zoneComptes(): HTMLElement {
   const element = document.getElementById('comptes-bancaires');
   if (element === null) throw new Error('Rubrique comptes bancaires introuvable');
   return element;
+}
+
+async function attendreDialogueSuppressionDifferee(): Promise<void> {
+  await waitFor(() => expect(screen.getByTestId('dialogue-suppression-differee')).toBeTruthy());
+}
+
+async function confirmerSuppressionDifferee(): Promise<void> {
+  await attendreDialogueSuppressionDifferee();
+  fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
 }
 
 function LecteurModifiees() {
@@ -344,7 +382,7 @@ describe('RubriqueComptesBancaires — envoi', () => {
     rendreRubrique({ comptes: [compte()] });
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
-    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    await confirmerSuppressionDifferee();
     expect(screen.queryByTestId('ligne-cpt-1')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
@@ -360,7 +398,7 @@ describe('RubriqueComptesBancaires — envoi', () => {
     rendreRubrique({ comptes: [compte()] });
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
-    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    await confirmerSuppressionDifferee();
     fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
 
     await waitFor(() =>
@@ -602,10 +640,11 @@ describe('RubriqueComptesBancaires — suppression differee', () => {
     expect(remplacerComptesBancaires).not.toHaveBeenCalled();
   });
 
-  it('TB20 — ligne enregistree : fenetre exacte Garder ne retire rien Supprimer retire localement', () => {
+  it('TB20 — ligne enregistree : fenetre exacte Garder ne retire rien Supprimer retire localement', async () => {
     rendreRubrique();
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
+    await attendreDialogueSuppressionDifferee();
     expect(screen.getByTestId('dialogue-suppression-differee-titre').textContent).toBe(
       'Supprimer ce compte bancaire ?'
     );
@@ -618,17 +657,17 @@ describe('RubriqueComptesBancaires — suppression differee', () => {
     expect(remplacerComptesBancaires).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
-    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    await confirmerSuppressionDifferee();
     expect(screen.queryByTestId('ligne-cpt-1')).toBeNull();
     expect(remplacerComptesBancaires).not.toHaveBeenCalled();
   });
 
-  it('TB21 — apres suppression differee Annuler fait revenir la ligne', () => {
+  it('TB21 — apres suppression differee Annuler fait revenir la ligne', async () => {
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     rendreRubrique();
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
-    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    await confirmerSuppressionDifferee();
     expect(screen.queryByTestId('ligne-cpt-1')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
@@ -636,11 +675,11 @@ describe('RubriqueComptesBancaires — suppression differee', () => {
     confirm.mockRestore();
   });
 
-  it('TB22 — ce tableau n emet jamais d appel vers une route d apercu d impact', () => {
+  it('TB22 — ce tableau n emet jamais d appel vers une route d apercu d impact', async () => {
     rendreRubrique();
 
     fireEvent.click(screen.getByTestId('supprimer-cpt-1'));
-    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    await confirmerSuppressionDifferee();
 
     expect(remplacerComptesBancaires).not.toHaveBeenCalled();
     expect(screen.queryByTestId('dialogue-suppression-ligne')).toBeNull();
@@ -739,7 +778,7 @@ describe('RubriqueComptesBancaires — verrouillage', () => {
 
   afterEach(() => cleanup());
 
-  it('TB33 — pendant l enregistrement comptes bancaires verrouilles autres rubriques actives', async () => {
+  it('TB33 — pendant l enregistrement toutes les rubriques sont verrouillees', async () => {
     let resolveComptes: () => void = () => undefined;
     remplacerComptesBancaires.mockImplementation(
       () =>
@@ -748,12 +787,11 @@ describe('RubriqueComptesBancaires — verrouillage', () => {
         })
     );
 
-    rendreRubrique({
-      extra: <input id="nom" aria-label="Nom" defaultValue="Benali" />,
-    });
+    rendreRubrique({ extra: rubriqueIdentiteTest() });
 
     fireEvent.click(screen.getByTestId('ligne-cpt-1'));
     fireEvent.change(champ('titulaire-cpt-1'), { target: { value: 'Pendant' } });
+    validerLigne();
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
     );
@@ -769,13 +807,16 @@ describe('RubriqueComptesBancaires — verrouillage', () => {
     fireEvent.click(screen.getByTestId('ligne-cpt-1'));
     expect(screen.queryByTestId('formulaire-cpt-1')).toBeNull();
 
-    fireEvent.change(champ('nom'), { target: { value: 'Toujours editable' } });
-    expect(champ('nom')).toHaveProperty('value', 'Toujours editable');
+    const nom = champ('nom');
+    expect(nom).toHaveProperty('disabled', true);
+    fireEvent.change(nom, { target: { value: 'Toujours editable' } });
+    expect(nom).toHaveProperty('value', 'Benali');
 
     resolveComptes();
     await waitFor(() =>
       expect(within(zoneComptes()).getByTestId('ajouter-ligne')).toHaveProperty('disabled', false)
     );
+    await waitFor(() => expect(nom).toHaveProperty('disabled', false));
   });
 });
 

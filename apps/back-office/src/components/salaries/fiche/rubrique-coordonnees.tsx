@@ -118,6 +118,7 @@ export function RubriqueCoordonnees({
           <Input
             id="adresse"
             value={rubrique.courant.adresse}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ adresse: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="adresse" />
@@ -127,6 +128,7 @@ export function RubriqueCoordonnees({
           <Input
             id="complementAdresse"
             value={rubrique.courant.complementAdresse}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ complementAdresse: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="complementAdresse" />
@@ -138,6 +140,7 @@ export function RubriqueCoordonnees({
             type="text"
             inputMode="text"
             value={rubrique.courant.codePostal}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ codePostal: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="codePostal" />
@@ -147,6 +150,7 @@ export function RubriqueCoordonnees({
           <Input
             id="ville"
             value={rubrique.courant.ville}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ ville: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="ville" />
@@ -156,6 +160,7 @@ export function RubriqueCoordonnees({
           <Select
             id="paysId"
             value={rubrique.courant.paysId}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ paysId: e.target.value })}
           >
             <option value=""></option>
@@ -177,6 +182,7 @@ export function RubriqueCoordonnees({
             id="telephonePersonnel"
             type="text"
             value={rubrique.courant.telephonePersonnel}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ telephonePersonnel: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="telephonePersonnel" />
@@ -187,6 +193,7 @@ export function RubriqueCoordonnees({
             id="telephoneProfessionnel"
             type="text"
             value={rubrique.courant.telephoneProfessionnel}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ telephoneProfessionnel: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="telephoneProfessionnel" />
@@ -197,6 +204,7 @@ export function RubriqueCoordonnees({
             id="emailPersonnel"
             type="text"
             value={rubrique.courant.emailPersonnel}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ emailPersonnel: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="emailPersonnel" />
@@ -207,6 +215,7 @@ export function RubriqueCoordonnees({
             id="emailProfessionnel"
             type="text"
             value={rubrique.courant.emailProfessionnel}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ emailProfessionnel: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="emailProfessionnel" />
@@ -220,6 +229,7 @@ export function RubriqueCoordonnees({
           <Input
             id="urgencePrenom"
             value={rubrique.courant.urgencePrenom}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ urgencePrenom: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="urgencePrenom" />
@@ -229,6 +239,7 @@ export function RubriqueCoordonnees({
           <Input
             id="urgenceNom"
             value={rubrique.courant.urgenceNom}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ urgenceNom: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="urgenceNom" />
@@ -239,6 +250,7 @@ export function RubriqueCoordonnees({
             id="urgenceTelephone"
             type="text"
             value={rubrique.courant.urgenceTelephone}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ urgenceTelephone: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="urgenceTelephone" />
@@ -249,6 +261,7 @@ export function RubriqueCoordonnees({
             id="urgenceEmail"
             type="text"
             value={rubrique.courant.urgenceEmail}
+            disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ urgenceEmail: e.target.value })}
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="urgenceEmail" />

@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Table,
@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DialogueSuppressionDiffereeTableau } from './dialogue-suppression-differee-tableau';
+import { DialogueConfirmationSuppressionTableau } from './dialogue-confirmation-suppression-tableau';
+import type { TextesConfirmationSuppression } from './textes-suppression-tableau-historise';
 
 export interface ColonneTableauRepetable<T> {
   readonly id: string;
@@ -18,12 +19,12 @@ export interface ColonneTableauRepetable<T> {
   readonly render: (ligne: T) => ReactNode;
 }
 
-export interface ConfirmationSuppressionLigne<T> {
-  readonly titre: string;
-  readonly corps: string;
-  readonly libelleConfirmer: string;
-  readonly libelleAnnuler: string;
-  readonly onConfirmer: (ligne: T) => void;
+export type ResultatConfirmationSuppression =
+  { readonly type: 'termine' } | { readonly type: 'recommencer'; readonly preambule: string };
+
+export interface SuppressionTableauRepetable<T> {
+  readonly preparer: (ligne: T) => Promise<TextesConfirmationSuppression>;
+  readonly confirmer: (ligne: T) => Promise<ResultatConfirmationSuppression>;
 }
 
 export interface PropsEnveloppeTableauRepetable<T> {
@@ -50,8 +51,8 @@ export interface PropsEnveloppeTableauRepetable<T> {
   ) => ReactNode;
   readonly onAjouter: () => void;
   readonly onSupprimer: (ligne: T) => void;
-  readonly strategieSuppression?: ConfirmationSuppressionLigne<T>;
-  readonly suppressionEnCours: boolean;
+  readonly suppression?: SuppressionTableauRepetable<T>;
+  readonly onAttenteSuppressionChange?: (enAttente: boolean) => void;
   readonly peutModifier: boolean;
   readonly verrouille?: boolean;
   readonly testId?: string;
@@ -73,24 +74,92 @@ export function EnveloppeTableauRepetable<T>({
   renderFormulaire,
   onAjouter,
   onSupprimer,
-  strategieSuppression,
-  suppressionEnCours,
+  suppression,
+  onAttenteSuppressionChange,
   peutModifier,
   verrouille = false,
   testId = 'enveloppe-tableau',
 }: PropsEnveloppeTableauRepetable<T>) {
   const [ligneDialogue, setLigneDialogue] = useState<T | null>(null);
+  const [textesDialogue, setTextesDialogue] = useState<TextesConfirmationSuppression | null>(null);
+  const [preambuleDialogue, setPreambuleDialogue] = useState<string | null>(null);
+  const [chargementDialogue, setChargementDialogue] = useState(false);
+  const [erreurDialogue, setErreurDialogue] = useState<string | undefined>();
+
+  const fluxSuppressionActif = ligneDialogue !== null;
+
+  const signalerAttente = useCallback(
+    (enAttente: boolean) => {
+      onAttenteSuppressionChange?.(enAttente);
+    },
+    [onAttenteSuppressionChange]
+  );
+
+  const fermerDialogue = useCallback(() => {
+    setLigneDialogue(null);
+    setTextesDialogue(null);
+    setPreambuleDialogue(null);
+    setChargementDialogue(false);
+    setErreurDialogue(undefined);
+    signalerAttente(false);
+  }, [signalerAttente]);
+
+  const chargerTextes = useCallback(
+    async (ligne: T, preambule: string | null) => {
+      if (suppression === undefined) return;
+      setChargementDialogue(true);
+      setErreurDialogue(undefined);
+      setPreambuleDialogue(preambule);
+      try {
+        const textes = await suppression.preparer(ligne);
+        setTextesDialogue(textes);
+      } catch (erreur) {
+        setErreurDialogue(
+          erreur instanceof Error ? erreur.message : 'Impossible de préparer la suppression.'
+        );
+        signalerAttente(false);
+      } finally {
+        setChargementDialogue(false);
+      }
+    },
+    [signalerAttente, suppression]
+  );
+
+  useEffect(() => {
+    if (ligneDialogue === null || suppression === undefined) return;
+    void chargerTextes(ligneDialogue, null);
+  }, [chargerTextes, ligneDialogue, suppression]);
+
+  async function confirmerSuppression(): Promise<void> {
+    if (ligneDialogue === null || suppression === undefined) return;
+    setChargementDialogue(true);
+    setErreurDialogue(undefined);
+    try {
+      const resultat = await suppression.confirmer(ligneDialogue);
+      if (resultat.type === 'termine') {
+        fermerDialogue();
+        return;
+      }
+      await chargerTextes(ligneDialogue, resultat.preambule);
+    } catch (erreur) {
+      setErreurDialogue(erreur instanceof Error ? erreur.message : 'La suppression a échoué.');
+      signalerAttente(false);
+    } finally {
+      setChargementDialogue(false);
+    }
+  }
 
   function declencherSuppression(ligne: T, event: React.MouseEvent): void {
     event.stopPropagation();
-    if (verrouille) return;
+    if (verrouille || fluxSuppressionActif) return;
 
     if (estNonEnregistree(ligne)) {
       onSupprimer(ligne);
       return;
     }
 
-    if (strategieSuppression !== undefined) {
+    if (suppression !== undefined) {
+      signalerAttente(true);
       setLigneDialogue(ligne);
       return;
     }
@@ -98,7 +167,7 @@ export function EnveloppeTableauRepetable<T>({
     onSupprimer(ligne);
   }
 
-  const saisieBloquee = verrouille;
+  const saisieBloquee = verrouille || fluxSuppressionActif;
 
   return (
     <div className="space-y-3" data-testid={testId}>
@@ -178,7 +247,7 @@ export function EnveloppeTableauRepetable<T>({
                           variant="ghost"
                           size="sm"
                           data-testid={`supprimer-${id}`}
-                          disabled={suppressionEnCours || saisieBloquee}
+                          disabled={fluxSuppressionActif || saisieBloquee}
                           onClick={(event) => declencherSuppression(ligne, event)}
                         >
                           Supprimer
@@ -216,20 +285,15 @@ export function EnveloppeTableauRepetable<T>({
         </Button>
       ) : null}
 
-      {strategieSuppression !== undefined && ligneDialogue !== null ? (
-        <DialogueSuppressionDiffereeTableau
-          titre={strategieSuppression.titre}
-          corps={strategieSuppression.corps}
-          libelleConfirmer={strategieSuppression.libelleConfirmer}
-          libelleAnnuler={strategieSuppression.libelleAnnuler}
-          ouvert
-          onFermer={() => setLigneDialogue(null)}
-          onConfirmer={() => {
-            strategieSuppression.onConfirmer(ligneDialogue);
-            setLigneDialogue(null);
-          }}
-        />
-      ) : null}
+      <DialogueConfirmationSuppressionTableau
+        textes={textesDialogue}
+        preambule={preambuleDialogue}
+        chargement={chargementDialogue}
+        erreur={erreurDialogue}
+        ouvert={ligneDialogue !== null}
+        onFermer={fermerDialogue}
+        onConfirmer={() => void confirmerSuppression()}
+      />
     </div>
   );
 }

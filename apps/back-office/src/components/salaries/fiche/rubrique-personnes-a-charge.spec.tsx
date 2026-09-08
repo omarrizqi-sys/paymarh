@@ -9,7 +9,6 @@ import { FicheSalarieClient } from './fiche-salarie-client';
 import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
-import { DialogueSuppressionLigneTableau } from './dialogue-suppression-ligne-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
 
 const PAYS: readonly Pays[] = [
@@ -195,6 +194,11 @@ function Harness({
 function LecteurVersion() {
   const { version } = useRegistreFiche();
   return <span data-testid="version-registre">{version}</span>;
+}
+
+function LecteurEcritureHorsSequence() {
+  const { ecritureHorsSequenceEnCours } = useRegistreFiche();
+  return <span data-testid="ecriture-hors-sequence">{String(ecritureHorsSequenceEnCours)}</span>;
 }
 
 describe('RubriquePersonnesACharge — envoi', () => {
@@ -416,6 +420,114 @@ describe('RubriquePersonnesACharge — envoi', () => {
 
     resolveSuppression();
   });
+
+  it('T36 — CONFIRMATION_OBSOLETE redemande apercu sans DELETE auto', async () => {
+    impactSuppressionPersonneACharge
+      .mockResolvedValueOnce({ donnees: { message: 'Premier', jetonConfirmation: 'j1' } })
+      .mockResolvedValueOnce({ donnees: { message: 'Second', jetonConfirmation: 'j2' } });
+    supprimerPersonneACharge.mockRejectedValueOnce(
+      new AppelApiEchoue(409, { code: 'CONFIRMATION_OBSOLETE', message: 'Obsolete' })
+    );
+
+    render(<Harness />);
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-1'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() => expect(impactSuppressionPersonneACharge).toHaveBeenCalledTimes(2));
+    expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId('mention-situation-changee')).toBeTruthy();
+    expect(screen.getByTestId('message-apercu-suppression').textContent).toBe('Second');
+  });
+
+  it('T24b — pendant l aller-retour le bouton Enregistrer est inactif', async () => {
+    let resolveSuppression: () => void = () => undefined;
+    impactSuppressionPersonneACharge.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton' },
+    });
+    supprimerPersonneACharge.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveSuppression = () => resolve(ficheReponse([], 6));
+        })
+    );
+
+    render(<Harness />);
+    fireEvent.click(screen.getByTestId('ligne-pac-1'));
+    fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Modif' } });
+    fireEvent.click(screen.getByTestId('valider-ligne'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-1'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', true)
+    );
+
+    resolveSuppression();
+    await waitFor(() => expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1));
+  });
+
+  it('T37 — apres suppression reussie Enregistrer redevient actif si une autre rubrique est modifiee', async () => {
+    impactSuppressionPersonneACharge.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton' },
+    });
+    supprimerPersonneACharge.mockResolvedValue(ficheReponse([], 6));
+
+    rendreFicheComplete();
+    fireEvent.change(champNom(), { target: { value: 'Modifie' } });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-1'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() => expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+  });
+
+  it('T38 — apres echec de suppression le signal de fin est emis et Enregistrer redevient actif', async () => {
+    impactSuppressionPersonneACharge.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton' },
+    });
+    supprimerPersonneACharge.mockRejectedValueOnce(
+      new AppelApiEchoue(400, { code: 'REFUS', message: 'Refus metier' })
+    );
+
+    render(<Harness extra={<LecteurEcritureHorsSequence />} />);
+    fireEvent.click(screen.getByTestId('ligne-pac-1'));
+    fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Modifie' } });
+    fireEvent.click(screen.getByTestId('valider-ligne'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-1'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    await waitFor(() =>
+      expect(screen.getByTestId('ecriture-hors-sequence').textContent).toBe('true')
+    );
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() => expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.getByTestId('ecriture-hors-sequence').textContent).toBe('false')
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+    expect(screen.getByTestId('dialogue-suppression-ligne')).toBeTruthy();
+    expect(screen.getByText('Refus metier')).toBeTruthy();
+  });
 });
 
 describe('RubriquePersonnesACharge — affichage', () => {
@@ -538,109 +650,5 @@ describe('RubriquePersonnesACharge — formulaire', () => {
     fireEvent.click(screen.getByTestId('ligne-pac-1'));
     fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Y' } });
     expect(screen.queryByText('Alerte generale')).toBeNull();
-  });
-});
-
-describe('DialogueSuppressionLigneTableau', () => {
-  afterEach(() => cleanup());
-
-  it('T19 — message serveur tel quel plus mention immediate', async () => {
-    render(
-      <DialogueSuppressionLigneTableau
-        titre="Supprimer cette personne à charge ?"
-        ouvert
-        rubriqueModifiee={false}
-        onFermer={vi.fn()}
-        onConfirme={vi.fn()}
-        chargerApercu={vi.fn(async () => ({
-          message: 'La ligne sera close et restera visible.',
-          jetonConfirmation: 'jeton-1',
-        }))}
-        supprimer={vi.fn()}
-      />
-    );
-    await waitFor(() =>
-      expect(screen.getByTestId('message-apercu-suppression').textContent).toBe(
-        'La ligne sera close et restera visible.'
-      )
-    );
-    expect(screen.getByTestId('dialogue-suppression-ligne-titre').textContent).toBe(
-      'Supprimer cette personne à charge ?'
-    );
-    expect(screen.getByTestId('mention-suppression-immediate').textContent).toBe(
-      'Cette suppression part tout de suite. Le bouton Annuler de la fiche ne reviendra pas dessus.'
-    );
-  });
-
-  it('T20 — mention des modifications non enregistrees', async () => {
-    render(
-      <DialogueSuppressionLigneTableau
-        titre="Supprimer cette personne à charge ?"
-        ouvert
-        rubriqueModifiee
-        onFermer={vi.fn()}
-        onConfirme={vi.fn()}
-        chargerApercu={vi.fn(async () => ({
-          message: 'Msg',
-          jetonConfirmation: 'jeton-1',
-        }))}
-        supprimer={vi.fn()}
-      />
-    );
-    await waitFor(() => expect(screen.getByTestId('mention-modifs-non-enregistrees')).toBeTruthy());
-    expect(screen.getByTestId('mention-modifs-non-enregistrees').textContent).toBe(
-      'Vos autres modifications de cette rubrique restent à enregistrer.'
-    );
-  });
-
-  it('T21 — confirmation envoie le jeton recu', async () => {
-    const supprimer = vi.fn(async () => undefined);
-    render(
-      <DialogueSuppressionLigneTableau
-        titre="Supprimer cette personne à charge ?"
-        ouvert
-        rubriqueModifiee={false}
-        onFermer={vi.fn()}
-        onConfirme={vi.fn()}
-        chargerApercu={vi.fn(async () => ({
-          message: 'Msg',
-          jetonConfirmation: 'jeton-recu',
-        }))}
-        supprimer={supprimer}
-      />
-    );
-    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
-    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
-    await waitFor(() => expect(supprimer).toHaveBeenCalledWith('jeton-recu'));
-  });
-
-  it('T22 — CONFIRMATION_OBSOLETE redemande apercu sans DELETE auto', async () => {
-    const supprimer = vi
-      .fn()
-      .mockRejectedValueOnce(
-        new AppelApiEchoue(409, { code: 'CONFIRMATION_OBSOLETE', message: 'Obsolete' })
-      );
-    const chargerApercu = vi
-      .fn()
-      .mockResolvedValueOnce({ message: 'Premier', jetonConfirmation: 'j1' })
-      .mockResolvedValueOnce({ message: 'Second', jetonConfirmation: 'j2' });
-
-    render(
-      <DialogueSuppressionLigneTableau
-        titre="Supprimer cette personne à charge ?"
-        ouvert
-        rubriqueModifiee={false}
-        onFermer={vi.fn()}
-        onConfirme={vi.fn()}
-        chargerApercu={chargerApercu}
-        supprimer={supprimer}
-      />
-    );
-
-    await waitFor(() => expect(chargerApercu).toHaveBeenCalledTimes(1));
-    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
-    await waitFor(() => expect(chargerApercu).toHaveBeenCalledTimes(2));
-    expect(supprimer).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId('mention-situation-changee')).toBeTruthy();
   });
 });

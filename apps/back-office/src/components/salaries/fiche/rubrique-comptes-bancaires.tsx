@@ -32,12 +32,10 @@ import {
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
 import { possedePermission } from '@/lib/permissions';
 import { useFormulaireTableau } from './contexte-formulaire-tableau';
-import {
-  EnveloppeTableauRepetable,
-  type ConfirmationSuppressionLigne,
-} from './enveloppe-tableau-repetable';
+import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
 import { useRegistreFiche } from './registre-fiche-provider';
 import { TeteRubriqueFiche } from './tete-rubrique-fiche';
+import { textesSuppressionDiffereeCompteBancaire } from './textes-suppression-tableau-historise';
 
 interface Props {
   readonly companyId: string;
@@ -276,24 +274,20 @@ export function RubriqueComptesBancaires({
     [banques]
   );
 
-  const strategieSuppression = useMemo(
-    () =>
-      ({
-        titre: 'Supprimer ce compte bancaire ?',
-        corps:
-          'Cette ligne sera supprimée lors du prochain enregistrement. Le bouton Annuler de la fiche revient dessus.',
-        libelleConfirmer: 'Supprimer',
-        libelleAnnuler: 'Garder la ligne',
-        onConfirmer: (ligne: LigneCompteBancaireLocale) => {
-          setCourant((prev) => {
-            const suivant = prev.filter((item) => item.id !== ligne.id);
-            courantRef.current = suivant;
-            return suivant;
-          });
-          effacerToutesAlertes();
-          notifierSommaire();
-        },
-      }) satisfies ConfirmationSuppressionLigne<LigneCompteBancaireLocale>,
+  const suppression = useMemo(
+    () => ({
+      preparer: async () => textesSuppressionDiffereeCompteBancaire(),
+      confirmer: async (ligne: LigneCompteBancaireLocale) => {
+        setCourant((prev) => {
+          const suivant = prev.filter((item) => item.id !== ligne.id);
+          courantRef.current = suivant;
+          return suivant;
+        });
+        effacerToutesAlertes();
+        notifierSommaire();
+        return { type: 'termine' as const };
+      },
+    }),
     [effacerToutesAlertes, notifierSommaire]
   );
 
@@ -319,11 +313,11 @@ export function RubriqueComptesBancaires({
         onOuvrirFormulaire={ouvrirFormulaireLigne}
         onValiderLigne={validerLigne}
         onAnnulerLigne={annulerLigne}
-        suppressionEnCours={false}
         peutModifier={peutEcrire}
         verrouille={enregistrementEnCours}
-        strategieSuppression={peutEcrire ? strategieSuppression : undefined}
+        suppression={peutEcrire ? suppression : undefined}
         onAjouter={() => {
+          if (enregistrementEnCours) return;
           const nouvelle = creerLigneCompteVide();
           setCourant((prev) => {
             const suivant = [...prev, nouvelle];
@@ -335,13 +329,15 @@ export function RubriqueComptesBancaires({
           notifierSommaire();
         }}
         onSupprimer={(ligne) => {
-          setCourant((prev) => {
-            const suivant = prev.filter((item) => item.id !== ligne.id);
-            courantRef.current = suivant;
-            return suivant;
-          });
-          effacerToutesAlertes();
-          notifierSommaire();
+          if (ligne.nonEnregistree) {
+            setCourant((prev) => {
+              const suivant = prev.filter((item) => item.id !== ligne.id);
+              courantRef.current = suivant;
+              return suivant;
+            });
+            effacerToutesAlertes();
+            notifierSommaire();
+          }
         }}
         renderFormulaire={(ligne, actions) => (
           <FormulaireCompteBancaire
