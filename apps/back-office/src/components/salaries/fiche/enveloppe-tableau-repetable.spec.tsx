@@ -1,4 +1,7 @@
 // @vitest-environment jsdom
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
@@ -26,6 +29,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={(l) => l.etat === 'INACTIVE'}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="b"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -62,6 +66,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="a"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -82,6 +87,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="b"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -102,6 +108,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="a"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -126,6 +133,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="a"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -155,6 +163,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => null}
+        idColonneMarque="val"
         formulaireOuvertId="a"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={onValiderLigne}
@@ -183,6 +192,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={(l) => l.etat === 'INACTIVE'}
         estNonEnregistree={() => false}
         libelleEtatLigne={() => 'inactive depuis 08/2026'}
+        idColonneMarque="val"
         formulaireOuvertId="inact"
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -211,6 +221,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={(l) => (l.etat === 'NON_ENREGISTREE' ? 'non enregistrée' : null)}
+        idColonneMarque="val"
         formulaireOuvertId={null}
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -235,6 +246,7 @@ describe('EnveloppeTableauRepetable', () => {
         estInactive={() => false}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={() => 'non enregistrée'}
+        idColonneMarque="val"
         formulaireOuvertId={null}
         onOuvrirFormulaire={() => undefined}
         onValiderLigne={() => undefined}
@@ -248,5 +260,52 @@ describe('EnveloppeTableauRepetable', () => {
     );
     fireEvent.click(screen.getByTestId('supprimer-new'));
     expect(onSupprimer).toHaveBeenCalledTimes(1);
+  });
+
+  it('TB01 — l enveloppe declenche le comportement de suppression differee sans appel serveur', () => {
+    const onConfirmer = vi.fn();
+    const chargerApercu = vi.fn();
+    render(
+      <EnveloppeTableauRepetable
+        colonnes={[{ id: 'val', libelle: 'Valeur', render: (l) => l.valeur }]}
+        lignes={[ligne('saved')]}
+        getLigneId={(l) => l.id}
+        estInactive={() => false}
+        estNonEnregistree={() => false}
+        libelleEtatLigne={() => null}
+        idColonneMarque="val"
+        formulaireOuvertId={null}
+        onOuvrirFormulaire={() => undefined}
+        onValiderLigne={() => undefined}
+        onAnnulerLigne={() => undefined}
+        onAjouter={() => undefined}
+        onSupprimer={() => undefined}
+        suppressionEnCours={false}
+        peutModifier
+        strategieSuppression={{
+          titre: 'Supprimer ?',
+          corps: 'Differee',
+          libelleConfirmer: 'Supprimer',
+          libelleAnnuler: 'Garder la ligne',
+          onConfirmer,
+        }}
+        renderFormulaire={() => null}
+      />
+    );
+    fireEvent.click(screen.getByTestId('supprimer-saved'));
+    expect(chargerApercu).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+    expect(onConfirmer).toHaveBeenCalledTimes(1);
+  });
+
+  it('TB03 — le fichier de l enveloppe ne contient aucun nom de tableau particulier', () => {
+    const fichier = join(
+      dirname(fileURLToPath(import.meta.url)),
+      'enveloppe-tableau-repetable.tsx'
+    );
+    const contenu = readFileSync(fichier, 'utf8');
+    expect(contenu).not.toMatch(
+      /personnes-a-charge|comptes-bancaires|comptesBancaires|personnesACharge/i
+    );
   });
 });

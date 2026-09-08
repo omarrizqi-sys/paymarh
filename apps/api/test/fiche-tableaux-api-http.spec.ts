@@ -1413,4 +1413,97 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(donnees.mode).toBe('supprimer');
     expect(donnees.message).toBe('La ligne sera supprimée définitivement.');
   });
+
+  it('TB28 — PUT comptes bancaires refuse sans salarie.remuneration.ecrire', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-CB-DROIT-REFUS`,
+    });
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+        [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.ecrire',
+      },
+      body: JSON.stringify({
+        comptes: [{ rib: '007780000000000000000401' }],
+      }),
+    });
+
+    expect(reponse.status).toBe(403);
+    expect(await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } })).toBe(0);
+  });
+
+  it('TB29 — PUT comptes bancaires reussit avec salarie.remuneration.ecrire', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-CB-DROIT-OK`,
+    });
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [{ rib: '007780000000000000000402' }],
+      }),
+    });
+
+    expect(reponse.status).toBe(200);
+    expect(await prisma.compteBancaireSalarie.count({ where: { salarieId: salarie.id } })).toBe(1);
+  });
+
+  it('TB30 — non-regression : personnes a charge non refusees par le controle remuneration', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-PAC-DROIT-OK`,
+    });
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/personnes-a-charge`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId, {
+          [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.ecrire',
+        }),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        lienParenteCode: 'ENFANT',
+        prenom: 'Samir',
+        nom: 'Test',
+        sexe: 'HOMME',
+        dateNaissance: '2015-01-15',
+        aCharge: true,
+      }),
+    });
+
+    expect(reponse.status).toBe(201);
+  });
+
+  it('TB35 — RIB non numerique refuse en 400 CARACTERE_NON_CONFORME', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-CB-RIB-LETTRE`,
+    });
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarie.id}/comptes-bancaires`), {
+      method: 'PUT',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        comptes: [{ rib: '007ABC000000000000000000' }],
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; message: string; champ?: string };
+    expect(corps.code).toBe('CARACTERE_NON_CONFORME');
+    expect(corps.champ).toBe('rib');
+  });
 });

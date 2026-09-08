@@ -151,6 +151,7 @@ function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBas
       pays={PAYS}
       situationsFamiliales={SITUATIONS}
       liensParente={LIENS}
+      banques={[]}
     />
   );
 }

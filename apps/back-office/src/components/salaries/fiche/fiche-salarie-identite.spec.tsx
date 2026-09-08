@@ -11,6 +11,7 @@ const {
   modifierIdentifiantsLegauxSalarie,
   modifierCoordonneesSalarie,
   modifierDatesSalarie,
+  creerPersonneACharge,
   lireSalarie,
   routerRefresh,
 } = vi.hoisted(() => ({
@@ -18,6 +19,7 @@ const {
   modifierIdentifiantsLegauxSalarie: vi.fn(),
   modifierCoordonneesSalarie: vi.fn(),
   modifierDatesSalarie: vi.fn(),
+  creerPersonneACharge: vi.fn(),
   lireSalarie: vi.fn(),
   routerRefresh: vi.fn(),
 }));
@@ -31,6 +33,7 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
       modifierIdentifiantsLegauxSalarie(...args),
     modifierCoordonneesSalarie: (...args: unknown[]) => modifierCoordonneesSalarie(...args),
     modifierDatesSalarie: (...args: unknown[]) => modifierDatesSalarie(...args),
+    creerPersonneACharge: (...args: unknown[]) => creerPersonneACharge(...args),
     lireSalarie: (...args: unknown[]) => lireSalarie(...args),
   };
 });
@@ -124,6 +127,7 @@ function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
       pays={PAYS}
       situationsFamiliales={SITUATIONS}
       liensParente={LIENS_PARENTE}
+      banques={[]}
     />
   );
 }
@@ -156,6 +160,7 @@ describe('Fiche salarie — blocs identite', () => {
     modifierIdentifiantsLegauxSalarie.mockReset();
     modifierCoordonneesSalarie.mockReset();
     modifierDatesSalarie.mockReset();
+    creerPersonneACharge.mockReset();
     lireSalarie.mockReset();
     routerRefresh.mockReset();
   });
@@ -397,5 +402,140 @@ describe('Fiche salarie — blocs identite', () => {
     expect(screen.getByTestId('erreur-rubrique-identifiants-legaux').textContent).toBe(
       "Cette valeur n'est pas disponible."
     );
+  });
+
+  function idsSommaire(): string[] {
+    return screen
+      .getAllByRole('button')
+      .filter((btn) => btn.getAttribute('data-testid')?.startsWith('sommaire-') ?? false)
+      .map((btn) => btn.getAttribute('data-testid')!.replace('sommaire-', ''));
+  }
+
+  it('T19 — ville coordonnees non enregistree survit a ajout personne a charge', async () => {
+    const fiche = ficheBase({ personnesACharge: [] });
+    modifierCoordonneesSalarie.mockImplementation(async (_c, _s, _v, corps) =>
+      reponseOk({ ...fiche, ville: corps.ville ?? fiche.ville, version: 4 })
+    );
+    creerPersonneACharge.mockResolvedValueOnce({
+      donnees: {
+        ...fiche,
+        version: 5,
+        personnesACharge: [
+          {
+            id: 'pac-n',
+            lienParenteCode: 'ENFANT',
+            prenom: 'Nouveau',
+            nom: 'Enfant',
+            sexe: 'HOMME',
+            dateNaissance: '2015-01-01',
+            aCharge: true,
+            situationHandicap: false,
+            etat: 'ACTIVE',
+            moisFin: null,
+          },
+        ],
+      },
+      alertes: [],
+    });
+
+    rendre(fiche);
+
+    fireEvent.change(champ('ville'), { target: { value: 'Rabat' } });
+    fireEvent.click(
+      within(document.getElementById('personnes-a-charge')!).getByTestId('ajouter-ligne')
+    );
+    const prenoms = screen.getAllByLabelText('Prénom');
+    fireEvent.change(prenoms[prenoms.length - 1]!, { target: { value: 'Nouveau' } });
+    fireEvent.click(screen.getAllByTestId('valider-ligne')[0]!);
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
+
+    await waitFor(() => expect(creerPersonneACharge).toHaveBeenCalled());
+    await waitFor(() => expect(modifierCoordonneesSalarie).toHaveBeenCalled());
+    expect(champ('ville')).toHaveProperty('value', 'Rabat');
+  });
+
+  it('T19b — appliquerSlice successifs : patch version seul ne revient pas sur ville', () => {
+    const initial = ficheBase();
+    let etat = initial;
+
+    const appliquerSliceCorrect = (patch: Partial<FicheSalarieAvecOperations>) => {
+      etat = { ...etat, ...patch };
+    };
+
+    appliquerSliceCorrect({ ville: 'Rabat', version: 4 });
+    appliquerSliceCorrect({ version: 5 });
+
+    expect(etat.ville).toBe('Rabat');
+  });
+
+  it('U15 — clic sommaire conserve ordre sommaire et envoi avec tableaux', async () => {
+    const fiche = ficheBase({
+      comptesBancaires: [],
+      personnesACharge: [],
+      operations: [
+        'salarie.lire',
+        'salarie.modifier',
+        'salarie.remuneration.lire',
+        'salarie.remuneration.ecrire',
+      ],
+    });
+    modifierCoordonneesSalarie.mockImplementation(async (_c, _s, _v, corps) =>
+      reponseOk({ ...fiche, ville: corps.ville ?? fiche.ville, version: 4 })
+    );
+    creerPersonneACharge.mockResolvedValueOnce({
+      donnees: {
+        ...fiche,
+        version: 5,
+        personnesACharge: [
+          {
+            id: 'pac-n',
+            lienParenteCode: 'ENFANT',
+            prenom: 'Nouveau',
+            nom: 'Enfant',
+            sexe: 'HOMME',
+            dateNaissance: '2015-01-01',
+            aCharge: true,
+            situationHandicap: false,
+            etat: 'ACTIVE',
+            moisFin: null,
+          },
+        ],
+      },
+      alertes: [],
+    });
+    modifierDatesSalarie.mockResolvedValueOnce(reponseOk({ ...fiche, version: 6 }));
+
+    rendre(fiche);
+
+    const ordreInitial = idsSommaire();
+    expect(ordreInitial).toEqual([
+      'identite',
+      'identifiants-legaux',
+      'coordonnees',
+      'personnes-a-charge',
+      'comptes-bancaires',
+      'dates',
+    ]);
+
+    fireEvent.click(screen.getByTestId('sommaire-coordonnees'));
+    expect(idsSommaire()).toEqual(ordreInitial);
+
+    fireEvent.change(champ('ville'), { target: { value: 'Rabat' } });
+    fireEvent.click(
+      within(document.getElementById('personnes-a-charge')!).getByTestId('ajouter-ligne')
+    );
+    fireEvent.change(screen.getAllByLabelText('Prénom').at(-1)!, { target: { value: 'Nouveau' } });
+    fireEvent.click(screen.getAllByTestId('valider-ligne')[0]!);
+    fireEvent.change(champ('dateEntree'), { target: { value: '2021-02-01' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/i }));
+
+    await waitFor(() => expect(modifierDatesSalarie).toHaveBeenCalled());
+    const ordreAppels = [
+      modifierCoordonneesSalarie,
+      creerPersonneACharge,
+      modifierDatesSalarie,
+    ].map((fn) => fn.mock.invocationCallOrder[0] ?? Infinity);
+    expect(ordreAppels[0]).toBeLessThan(ordreAppels[1] ?? Infinity);
+    expect(ordreAppels[1]).toBeLessThan(ordreAppels[2] ?? Infinity);
   });
 });

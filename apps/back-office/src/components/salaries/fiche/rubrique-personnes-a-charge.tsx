@@ -365,6 +365,7 @@ export function RubriquePersonnesACharge({
         estInactive={(l) => l.etat === 'INACTIVE'}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={libelleEtatLigne}
+        idColonneMarque="prenom"
         ligneEnErreur={(ligne) => (alertesParLigne[ligne.id]?.length ?? 0) > 0}
         formulaireOuvertId={formulaireOuvertId}
         onOuvrirFormulaire={ouvrirFormulaireLigne}

@@ -3,8 +3,15 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { LienParente, Pays, SituationFamiliale } from '@paymarh/shared-types';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
+import type { Banque, LienParente, Pays, SituationFamiliale } from '@paymarh/shared-types';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
@@ -21,6 +28,7 @@ import {
 import { RubriqueCoordonnees, type ValeursCoordonnees } from './rubrique-coordonnees';
 import { RubriqueDates, type ValeursDates } from './rubrique-dates';
 import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
+import { RubriqueComptesBancaires } from './rubrique-comptes-bancaires';
 import { RubriqueRemunerationPlaceholder } from './rubrique-remuneration-placeholder';
 import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
@@ -34,6 +42,7 @@ interface Props {
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
   readonly liensParente: readonly LienParente[];
+  readonly banques: readonly Banque[];
 }
 
 function SyncVersion({ version }: { readonly version: number }) {
@@ -70,6 +79,7 @@ function ContenuFicheSalarie({
   pays,
   situationsFamiliales,
   liensParente,
+  banques,
   onFicheChange,
 }: {
   readonly companyId: string;
@@ -78,7 +88,8 @@ function ContenuFicheSalarie({
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
   readonly liensParente: readonly LienParente[];
-  readonly onFicheChange: (fiche: FicheSalarieAvecOperations) => void;
+  readonly banques: readonly Banque[];
+  readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
 
@@ -86,9 +97,9 @@ function ContenuFicheSalarie({
 
   const appliquerSlice = useCallback(
     (patch: Partial<FicheSalarieAvecOperations>) => {
-      onFicheChange({ ...fiche, ...patch });
+      onFicheChange((prev) => ({ ...prev, ...patch }));
     },
-    [fiche, onFicheChange]
+    [onFicheChange]
   );
 
   const valeursIdentite = useMemo(
@@ -233,6 +244,18 @@ function ContenuFicheSalarie({
                   liensParente={liensParente}
                   onVersionChange={(version) => appliquerSlice({ version })}
                 />
+                {'comptesBancaires' in fiche ? (
+                  <RubriqueComptesBancaires
+                    companyId={companyId}
+                    salarieId={salarieId}
+                    comptesServeur={fiche.comptesBancaires ?? []}
+                    banques={banques}
+                    operations={fiche.operations}
+                    onComptesChange={(comptes, version) =>
+                      appliquerSlice({ comptesBancaires: comptes, version })
+                    }
+                  />
+                ) : null}
                 <RubriqueDates
                   companyId={companyId}
                   salarieId={salarieId}
@@ -260,6 +283,7 @@ export function FicheSalarieClient({
   pays,
   situationsFamiliales,
   liensParente,
+  banques,
 }: Props) {
   const router = useRouter();
   const [fiche, setFiche] = useState(initial);
@@ -287,6 +311,7 @@ export function FicheSalarieClient({
           pays={pays}
           situationsFamiliales={situationsFamiliales}
           liensParente={liensParente}
+          banques={banques}
           onFicheChange={setFiche}
         />
       </FormulaireTableauProvider>

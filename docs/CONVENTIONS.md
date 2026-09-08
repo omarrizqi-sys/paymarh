@@ -209,6 +209,17 @@ On compose directement les composants shadcn `Table` (`TableHeader`, `TableBody`
 
 ---
 
+## 12.1 Ce que l'écran retient d'une réponse d'écriture — CRITIQUE (module 2)
+
+**Règle générale :** les routes POST, PATCH et DELETE des tableaux renvoient la fiche entière, relue en base. L'écran **ne l'applique jamais en bloc**. Il n'en retient que **deux choses** :
+
+- le nouveau numéro de version ;
+- la ligne portant l'identifiant concerné par l'appel.
+
+**Exception — comptes bancaires (PUT groupé) :** le `PUT /salaries/:id/comptes-bancaires` remplace toute la liste ; il n'existe pas « une » ligne concernée. Pour cette rubrique seule, l'écran retient le **numéro de version** et **l'intégralité du bloc `comptesBancaires`** de la réponse. Rien d'autre. Voir ADR 0023.
+
+---
+
 ## 13. Enveloppe générique des tableaux répétables (module 2)
 
 L'enveloppe (`EnveloppeTableauRepetable`) porte **l'enveloppe seulement** :
@@ -220,12 +231,18 @@ L'enveloppe (`EnveloppeTableauRepetable`) porte **l'enveloppe seulement** :
 - boutons **Valider la ligne** / **Annuler la ligne** (replient sans appel serveur) ;
 - lignes non enregistrées en dernier avec mention « non enregistrée » ;
 - lignes inactives grisées, formulaire en lecture seule, bouton Supprimer absent du DOM ;
+- **pas de colonne « État »** : le mot « état » désigne un état métier (active / inactive / supprimée). Les mentions « non enregistrée », « inactive depuis MM/AAAA » et « en erreur » sont portées **dans une colonne métier** choisie par le tableau consommateur (`idColonneMarque`), sous la valeur de la ligne ; le fond `bg-destructive/5` signale aussi une ligne en erreur ;
 - suppression locale immédiate pour les lignes jamais enregistrées ;
-- confirmation serveur pour les lignes déjà enregistrées.
+- **confirmation de suppression fournie par le tableau appelant** via `strategieSuppression` : objet `{ titre, corps, libelleConfirmer, libelleAnnuler, onConfirmer(ligne) }`. L'enveloppe affiche la fenêtre et appelle le callback ; **elle ne sait pas ce que fait `onConfirmer`, ni s'il émet un appel serveur**. L'enveloppe **ne connaît aucun mode de suppression** ;
+- prop `verrouille` : grise champs et boutons pendant l'enregistrement global (une rubrique à la fois, voir points ouverts).
+
+L'enveloppe **ne connaît aucun nom de tableau particulier** : pas de condition « si tel tableau ».
+
+**Point ouvert :** migrer la suppression avec aperçu de Personnes à charge vers l'enveloppe, par injection d'un dialogue et non par un mode (temps 2.c ou 3). Aujourd'hui, Personnes à charge garde son `DialogueSuppressionLigneTableau` en dehors de l'enveloppe.
 
 L'enveloppe **ne porte pas** de générateur de formulaire : chaque tableau écrit son formulaire à la main. Cette décision est figée.
 
-Elle reçoit du tableau consommateur : colonnes, rendu du formulaire, callbacks d'envoi et de suppression.
+Elle reçoit du tableau consommateur : colonnes, `idColonneMarque`, rendu du formulaire, callbacks d'envoi, stratégie de suppression.
 
 ---
 

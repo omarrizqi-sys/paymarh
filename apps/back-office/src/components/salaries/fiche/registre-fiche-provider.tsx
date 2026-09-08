@@ -18,6 +18,7 @@ import {
   type ResultatRubriqueEnregistrement,
   type RubriqueEnregistrable,
 } from '@/lib/fiche/orchestrateur-enregistrement';
+import { ORDRE_RUBRIQUES_FICHE_SALARIE } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
 
 export interface EntreeSommaireRubrique {
   readonly id: string;
@@ -71,7 +72,6 @@ export function RegistreFicheProvider({
   children,
 }: PropsProvider) {
   const rubriquesRef = useRef<Map<string, RubriqueEnregistrable>>(new Map());
-  const ordreRef = useRef<string[]>([]);
   const avantEnvoiRef = useRef<Set<() => void>>(new Set());
   const [version, setVersion] = useState(versionInitiale);
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
@@ -84,9 +84,9 @@ export function RegistreFicheProvider({
   const [rechargementEnAttente, setRechargementEnAttente] = useState(false);
 
   const rubriquesOrdonnees = useCallback((): RubriqueEnregistrable[] => {
-    return ordreRef.current
-      .map((id) => rubriquesRef.current.get(id))
-      .filter((rubrique): rubrique is RubriqueEnregistrable => rubrique !== undefined);
+    return ORDRE_RUBRIQUES_FICHE_SALARIE.map((id) => rubriquesRef.current.get(id)).filter(
+      (rubrique): rubrique is RubriqueEnregistrable => rubrique !== undefined
+    );
   }, []);
 
   const notifierSommaire = useCallback(() => {
@@ -110,13 +110,9 @@ export function RegistreFicheProvider({
   const enregistrerRubrique = useCallback(
     (rubrique: RubriqueEnregistrable) => {
       rubriquesRef.current.set(rubrique.id, rubrique);
-      if (!ordreRef.current.includes(rubrique.id)) {
-        ordreRef.current.push(rubrique.id);
-      }
       notifierSommaire();
       return () => {
         rubriquesRef.current.delete(rubrique.id);
-        ordreRef.current = ordreRef.current.filter((id) => id !== rubrique.id);
         notifierSommaire();
       };
     },

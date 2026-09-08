@@ -8,6 +8,11 @@ import {
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
+import { assertEcritureComptesBancairesSalarie } from '../../common/remuneration/assert-ecriture-comptes-bancaires-salarie.js';
+import {
+  PERMISSION_SERVICE,
+  type PermissionService,
+} from '../../common/permissions/permission.service.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { companyScope } from '../../common/tenancy/tenant-scope.js';
@@ -56,6 +61,7 @@ import {
   validerRibCompte,
 } from './validation-tableaux-salarie.js';
 import { VerrouillageOptimisteService } from './verrouillage/verrouillage-optimiste.service.js';
+import { ValidationBloquanteError } from '../companies/validation-fiche.js';
 
 const MESSAGE_NEUTRE = 'Ressource introuvable.';
 
@@ -65,6 +71,13 @@ function versDate(valeur: string): Date {
 
 function relancerValidation(erreur: unknown): never {
   if (erreur instanceof ValidationBloquanteTableauError) {
+    throw new BadRequestException({
+      code: erreur.code,
+      message: erreur.message,
+      champ: erreur.champ,
+    });
+  }
+  if (erreur instanceof ValidationBloquanteError) {
     throw new BadRequestException({
       code: erreur.code,
       message: erreur.message,
@@ -84,7 +97,8 @@ export class TableauxSalarieService {
     private readonly historisation: HistorisationLigneTemporelleService,
     private readonly emplois: EmploisService,
     @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort,
-    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort
+    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort,
+    @Inject(PERMISSION_SERVICE) private readonly permissions: PermissionService
   ) {}
 
   async creerPersonneACharge(
@@ -232,6 +246,7 @@ export class TableauxSalarieService {
     dto: RemplacerComptesBancairesDto,
     versionAttendue: number
   ) {
+    assertEcritureComptesBancairesSalarie(this.tenantContext, this.permissions);
     const salarie = await this.trouverSalarie(salarieId);
     try {
       assertPartVirement(dto.comptes);
@@ -252,7 +267,11 @@ export class TableauxSalarieService {
     }[] = [];
 
     for (const [indexLigne, compte] of dto.comptes.entries()) {
-      validerRibCompte(compte.rib);
+      try {
+        validerRibCompte(compte.rib);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
       const alertesCompte: AlerteApi[] = [...collecterAlertesIdentifiantsBancaires(compte)];
       const banqueId = await resoudreBanqueDepuisRib(this.prisma, compte.rib, compte.banqueId);
       const alerteBanque = await collecterAlerteBanqueIncoherente(

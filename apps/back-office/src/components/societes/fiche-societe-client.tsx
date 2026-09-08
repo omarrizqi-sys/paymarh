@@ -18,6 +18,7 @@ import type {
   TypeHeure,
 } from '@paymarh/shared-types';
 import { afficherDateInactivite, afficherDatesExoneration } from '@/lib/affichage/conditions';
+import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
 import { formaterMoisAAAA_MM, libelleEtatDossier } from '@/lib/affichage/libelles';
 import { AppelApiEchoue } from '@/lib/api/client';
 import {
@@ -108,7 +109,7 @@ export function FicheSocieteClient({ initial }: { readonly initial: DonneesFiche
     if (err instanceof AppelApiEchoue) {
       if (err.erreur.champ) setErreurs({ [err.erreur.champ]: err.erreur.message });
       else setErreurGlobale(err.erreur.message);
-    } else setErreurGlobale('Une erreur est survenue.');
+    } else setErreurGlobale(MESSAGE_ERREUR_GENERIQUE);
   }
 
   return (

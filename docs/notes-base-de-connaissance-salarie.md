@@ -37,6 +37,7 @@ Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figure
 - **Supprimer** une ligne déjà enregistrée part **immédiatement** après confirmation : elle n'attend pas Enregistrer. Le numéro de version de la fiche est mis à jour tout de suite.
 - Si la ligne a déjà servi à un bulletin, elle ne disparaît pas : elle devient **inactive** avec un mois de fin, grisée à l'écran, pour que les bulletins passés restent explicables.
 - Les autres modifications non enregistrées de la même rubrique restent à enregistrer après une suppression immédiate.
+- **Point ouvert :** migrer cette suppression (aperçu + DELETE) vers l'enveloppe, par injection d'un dialogue et non par un mode — temps 2.c ou 3.
 
 ### Navigation et interaction
 
@@ -44,6 +45,14 @@ Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figure
 - **Confirmation des opérations sensibles** — déroulé aperçu → jeton → confirmation ; jeton périmé si le dossier a changé entre l'aperçu et la confirmation.
 - **Alerte de réembauche** — ouverture de la fiche existante depuis l'alerte ; ce que l'utilisateur voit et décide.
 - **Date de sortie** — écran de confirmation lors de la première saisie d'une date de sortie (pas lors d'une modification ou d'une effacement ultérieur).
+
+### Comptes bancaires — PUT groupé, répartition, suppression différée (temps 2.b)
+
+- **Un seul enregistrement** remplace toute la liste des comptes ; pas d'appels ligne par ligne.
+- **Répartition du virement** : avec un seul compte, le serveur force la part à vide (totalité du virement) ; avec plusieurs comptes, la somme des parts doit être 100 %.
+- **Alertes par position** : une alerte peut cibler la 2e ligne du tableau envoyé (`indexLigne`), pas un identifiant.
+- **Suppression différée** : retirer une ligne déjà enregistrée ne part qu'au prochain Enregistrer ; Annuler de la fiche la restaure.
+- **Droits** : sans `salarie.remuneration.lire`, la rubrique est absente ; sans `ecrire`, lecture seule.
 
 ### Affichage et libellés
 
