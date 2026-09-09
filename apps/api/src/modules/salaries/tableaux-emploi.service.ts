@@ -21,7 +21,7 @@ import type {
 import { versDate } from './deductions-emploi.js';
 import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
-import { INCLUDE_COLLECTIONS_EMPLOI, mapperCollectionsEmploi } from './mappers/tableaux.mapper.js';
+import { INCLUDE_COLLECTIONS_EMPLOI } from './mappers/tableaux.mapper.js';
 import { INCLUDE_EMPLOI_COMPLET, versEmploiComplet } from './mappers/emploi.mapper.js';
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
@@ -322,10 +322,9 @@ export class TableauxEmploiService {
   private async reponseEmploi(salarieId: string, emploiId: string, alertes: AlerteApi[] = []) {
     const emploi = await this.chargerEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
-    const base = versEmploiComplet(emploi, moisEnCours);
-    const collections = mapperCollectionsEmploi(emploi, moisEnCours);
+    const emploiMappe = versEmploiComplet(emploi, moisEnCours);
     const resolutions = await this.heritage.resoudrePourEmploi(emploi, moisEnCours);
-    return okEcriture({ ...base, ...collections, resolutions }, alertes);
+    return okEcriture({ ...emploiMappe, resolutions }, alertes);
   }
 
   private async chargerEmploi(id: string) {

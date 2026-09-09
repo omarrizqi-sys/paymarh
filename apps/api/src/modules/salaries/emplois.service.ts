@@ -508,10 +508,16 @@ export class EmploisService {
     });
     const resolutions = await this.heritage.resoudrePourEmplois(emplois, moisEnCours);
     return trierEmploisPourFiche(
-      emplois.map((e, index) => ({
-        ...versEmploiComplet(e, moisEnCours),
-        resolutions: resolutions[index],
-      }))
+      emplois.map((e, index) => {
+        const resolutionsEmploi = resolutions[index];
+        if (resolutionsEmploi === undefined) {
+          throw new Error(`Emploi ${e.id} sans resolutions`);
+        }
+        return {
+          ...versEmploiComplet(e, moisEnCours),
+          resolutions: resolutionsEmploi,
+        };
+      })
     );
   }
 

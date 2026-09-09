@@ -1,6 +1,7 @@
 import { ValidationPipe, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { Decimal } from 'decimal.js';
+import type { EmploiFiche } from '@paymarh/shared-types';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { COEFFICIENT_HEBDO_VERS_MENSUEL } from '../src/modules/companies/heures-mensuelles.js';
 import { AppModule } from '../src/app.module.js';
@@ -184,6 +185,33 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     });
     utilisateurId = utilisateur.id;
     societeA = await creerSocieteTest(prisma, forme.id, compte.id, `${PREFIXE}-SA`);
+  });
+
+  it('un emploi lu par GET /emplois/:id porte statutsParticuliers et resolutions', async () => {
+    const salarie = await creerSalarieMin(prisma, societeA.companyId, {
+      matricule: `${PREFIXE}-CLES-EMPLOI`,
+    });
+    const { donnees: cree } = await creerEmploiViaApi(
+      app,
+      utilisateurId,
+      societeA.companyId,
+      salarie.id,
+      societeA.etablissementPrincipalId
+    );
+
+    const lecture = await fetch(urlLocale(app, `/emplois/${cree.id}`), {
+      headers: entetes(utilisateurId, societeA.companyId),
+    });
+    expect(lecture.status).toBe(200);
+    const { donnees } = (await lecture.json()) as { donnees: EmploiFiche };
+
+    expect('statutsParticuliers' in donnees).toBe(true);
+    expect('resolutions' in donnees).toBe(true);
+    expect(donnees.statutsParticuliers.length).toBeGreaterThanOrEqual(0);
+    expect(
+      donnees.resolutions.dureeContractuelle === null ||
+        typeof donnees.resolutions.dureeContractuelle === 'object'
+    ).toBe(true);
   });
 
   afterAll(async () => {

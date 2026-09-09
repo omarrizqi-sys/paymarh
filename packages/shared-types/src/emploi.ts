@@ -86,24 +86,29 @@ export interface StatutParticulierFiche {
 }
 
 /**
- * Forme d un emploi tel que GET /salaries/:id le rend (avant masquage).
- *
- * `remuneration`, `paiement`, `primesContractuelles` et `avantagesEnNature`
- * sont absents (cle retiree, jamais null) sans `salarie.remuneration.lire`.
- * `operations` n est ajoute que par la couche d enrichissement de lecture.
- * `resolutions` est ajoute par la lecture complete, pas par le mapper de base.
+ * Forme d’un emploi tel que l’API le rend (avant masquage).
  */
 export interface EmploiFiche {
   readonly id: Uuid;
   readonly version: number;
   readonly numeroOrdre: number;
   readonly contrat: ContratEmploiFiche;
+  /**
+   * Optionalité = masquage sans la permission `salarie.remuneration.lire` :
+   * la clé est absente, jamais `null`. Même règle pour `paiement`,
+   * `primesContractuelles` et `avantagesEnNature`.
+   */
   readonly remuneration?: RemunerationEmploiFiche;
   readonly paiement?: PaiementEmploiFiche;
   readonly affectation: AffectationEmploiFiche;
   readonly primesContractuelles?: readonly PrimeContractuelleFiche[];
   readonly avantagesEnNature?: readonly AvantageEnNatureFiche[];
-  readonly statutsParticuliers?: readonly StatutParticulierFiche[];
-  readonly resolutions?: ResolutionsEmploi;
+  readonly statutsParticuliers: readonly StatutParticulierFiche[];
+  readonly resolutions: ResolutionsEmploi;
+  /**
+   * Présent sur GET /salaries/:id uniquement, où l’enrichisseur le pose ;
+   * absent partout ailleurs, y compris sur GET /emplois/:id.
+   * Ce n’est pas un masquage de droits.
+   */
   readonly operations?: readonly Permission[];
 }

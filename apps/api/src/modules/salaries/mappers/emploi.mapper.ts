@@ -131,7 +131,7 @@ export function versEmploiComplet(
     statutsParticuliers?: Parameters<typeof mapperCollectionsEmploi>[0]['statutsParticuliers'];
   },
   moisEnCours: string
-): EmploiFiche {
+): Omit<EmploiFiche, 'resolutions'> {
   const contrat = resoudrePourAffichage(emploi.contratVersions, moisEnCours);
   const remuneration = resoudrePourAffichage(emploi.remunerationVersions, moisEnCours);
   const affectation = resoudrePourAffichage(emploi.affectationVersions, moisEnCours);
@@ -140,7 +140,7 @@ export function versEmploiComplet(
     throw new Error(`Emploi ${emploi.id} incomplet au mois ${moisEnCours}`);
   }
 
-  const base = {
+  return {
     id: emploi.id,
     version: emploi.version,
     numeroOrdre: emploi.numeroOrdre,
@@ -148,27 +148,15 @@ export function versEmploiComplet(
     remuneration: versRemuneration(remuneration),
     paiement: versPaiement(remuneration),
     affectation: versAffectation(affectation),
+    ...mapperCollectionsEmploi(
+      {
+        primesContractuelles: emploi.primesContractuelles ?? [],
+        avantagesEnNature: emploi.avantagesEnNature ?? [],
+        statutsParticuliers: emploi.statutsParticuliers ?? [],
+      },
+      moisEnCours
+    ),
   };
-
-  if (
-    emploi.primesContractuelles !== undefined ||
-    emploi.avantagesEnNature !== undefined ||
-    emploi.statutsParticuliers !== undefined
-  ) {
-    return {
-      ...base,
-      ...mapperCollectionsEmploi(
-        {
-          primesContractuelles: emploi.primesContractuelles ?? [],
-          avantagesEnNature: emploi.avantagesEnNature ?? [],
-          statutsParticuliers: emploi.statutsParticuliers ?? [],
-        },
-        moisEnCours
-      ),
-    };
-  }
-
-  return base;
 }
 
 export function versVersionsContrat(versions: readonly ContratVersion[]) {

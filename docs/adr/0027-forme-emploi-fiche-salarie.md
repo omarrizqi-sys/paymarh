@@ -2,7 +2,7 @@
 
 - **Date :** 2026-09-09
 - **Statut :** accepté
-- **Contexte :** temps 3, prompt 3-0
+- **Contexte :** temps 3, prompt 3-0 ; corrigé le même jour (correctif du 3-0)
 
 ## Contexte
 
@@ -14,8 +14,8 @@ Les écrans d'emploi arrivent à l'étape suivante. Découvrir la forme au momen
 
 `EmploiFicheNonType` disparaît. Il est remplacé par `EmploiFiche`, transcription de ce que le code produit réellement :
 
-- `versEmploiComplet` (identité, contrat, rémunération, paiement, affectation, et éventuellement les collections) ;
-- l'objet `resolutions` ajouté par `listerEmploisPourFicheSalarie` (lecture complète, pas le mapper de base) ;
+- `versEmploiComplet` (identité, contrat, rémunération, paiement, affectation, **et les trois collections**) ;
+- l'objet `resolutions`, ajouté par les **trois** chemins qui servent un emploi : `listerEmploisPourFicheSalarie`, `avecResolutions`, `reponseEmploi` ;
 - `operations` ajouté uniquement par `enrichirFicheSalarie` sur le chemin **GET** `/salaries/:id`.
 
 Aucun champ inventé, aucun champ omis, aucun renommage, aucune réorganisation.
@@ -26,11 +26,28 @@ Les types annexes atteignables depuis cette forme (`ResolutionChamp`, `NiveauHer
 
 Sans la permission `salarie.remuneration.lire`, l'intercepteur **retire la clé** : `remuneration`, `paiement`, `primesContractuelles`, `avantagesEnNature`. Une clé masquée est absente de la réponse, jamais `null`. Un `| null` mentirait sur le contrat et pousserait l'écran à tester la mauvaise chose (`=== null` au lieu de `'cle' in objet` / `=== undefined`).
 
-`operations` suit la même règle : présent sur GET, absent des réponses d'écriture. Optionnel, jamais nullable.
+### Correctif : une seule signification pour l'absence
 
-`statutsParticuliers` et `resolutions` sont optionnels pour la même raison de transcription : `versEmploiComplet` peut omettre les collections, et `resolutions` n'est ajouté que par la lecture complète.
+La première version de cet ADR déclarait `statutsParticuliers` et `resolutions` optionnels, et affirmait à tort que `resolutions` n'était ajouté que par `listerEmploisPourFicheSalarie`. Ces deux choix reproduisaient le défaut que le prompt 3-0 venait de retirer du champ `etat` : une même forme (clé absente) pour deux significations sans rapport.
 
-Le mapper `versEmploiComplet` déclare `EmploiFiche` comme type de retour, sans conversion forcée.
+#### Branche `return base` de `versEmploiComplet`
+
+Introduite au commit `90b4b13` (temps 2.1.b-4, 2026-09-03), lorsque les collections ont été greffées sur un mapper qui n'en avait pas. Si les trois relations Prisma étaient `undefined`, la fonction renvoyait un objet sans `primesContractuelles`, `avantagesEnNature` ni `statutsParticuliers`.
+
+Cette branche n'avait **aucun appelant** : les trois appels chargent l'emploi avec `INCLUDE_COLLECTIONS_EMPLOI`, Prisma pose donc les relations comme tableaux (éventuellement vides), jamais `undefined`. Son intention d'origine n'a pas pu être établie. Elle est retirée comme code mort daté. `versEmploiComplet` retourne désormais toujours les trois collections.
+
+#### `statutsParticuliers` et `resolutions` obligatoires
+
+- `statutsParticuliers` n'est ni masquable (absent du registre des rubriques de rémunération) ni omis par un chemin.
+- `resolutions` est ajouté par les trois chemins qui servent un emploi au client.
+
+Les déclarer optionnels laissait croire qu'une clé absente pouvait signifier « ce chemin ne les remplit pas ». Ce n'est plus vrai.
+
+#### Règle qui en résulte
+
+Dans `EmploiFiche`, un champ optionnel signifie **« masqué faute de la permission `salarie.remuneration.lire` »**, à l'unique exception d'`operations` : présent sur GET `/salaries/:id` uniquement, où l'enrichisseur le pose ; absent partout ailleurs, y compris sur GET `/emplois/:id`. Ce n'est pas un masquage de droits. Un changement d'API qui poserait `operations` sur les autres chemins est un point ouvert, hors de ce correctif.
+
+Le mapper `versEmploiComplet` ne pose pas `resolutions` : ce n'est plus `EmploiFiche` à lui seul. Les appelants l'ajoutent avant la réponse HTTP.
 
 ## Conséquences
 
