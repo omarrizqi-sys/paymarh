@@ -241,6 +241,8 @@ L'enveloppe (`EnveloppeTableauRepetable`) porte **l'enveloppe seulement** :
 
 Les textes partagés des tableaux historisés vivent dans `textes-suppression-tableau-historise.ts` (variante `historise` avec message serveur, variante `differee` pour comptes bancaires). Seul le **titre** est propre à chaque tableau.
 
+Les quatre chemins d'écriture d'un tableau ligne à ligne — saisie locale, enregistrement réussi, suppression immédiate réussie, suppression locale d'une ligne jamais enregistrée — écrivent **tous** les states **et** les `ref` correspondantes, dans l'updater du state, à partir de la valeur calculée. Sans exception. Le registre lit ces `ref` pour savoir si la rubrique est modifiée.
+
 L'enveloppe **ne connaît aucun nom de tableau particulier** : pas de condition « si tel tableau ».
 
 L'enveloppe **ne porte pas** de générateur de formulaire : chaque tableau écrit son formulaire à la main. Cette décision est figée.

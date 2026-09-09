@@ -67,10 +67,8 @@ export function RubriquePrets({ companyId, salarieId, lignesServeur, onVersionCh
   const snapshotsRef = useRef<Map<string, LignePretLocale>>(new Map());
   const courantRef = useRef(courant);
   const referenceRef = useRef(reference);
-  const lignesServeurRef = useRef(lignesServeur);
   courantRef.current = courant;
   referenceRef.current = reference;
-  lignesServeurRef.current = lignesServeur;
 
   const reinitialiserRubrique = useCallback(() => {
     const suivant = referenceRef.current.map((l) => ({ ...l }));
@@ -150,7 +148,7 @@ export function RubriquePrets({ companyId, salarieId, lignesServeur, onVersionCh
   const appliquerLigneServeur = useCallback(
     (ligneServeur: PretSalarie, nouvelleVersion: number) => {
       const locale = depuisServeur(ligneServeur);
-      setCourant((prev) => {
+      const prochainCourant = (prev: LignePretLocale[]) => {
         const ids = prev.map((l) => l.id);
         if (ids.includes(ligneServeur.id)) {
           return prev.map((l) => (l.id === ligneServeur.id ? locale : l));
@@ -167,13 +165,26 @@ export function RubriquePrets({ companyId, salarieId, lignesServeur, onVersionCh
           return copie;
         }
         return [...prev.filter((l) => l.id !== ligneServeur.id), locale];
-      });
-      setReference((prev) => {
-        const existe = prev.some((l) => l.id === locale.id);
-        if (existe) {
+      };
+      const prochainReference = (prev: LignePretLocale[]) => {
+        if (prev.some((l) => l.id === locale.id)) {
           return prev.map((l) => (l.id === locale.id ? locale : l));
         }
         return [...prev, locale];
+      };
+      const suivantCourant = prochainCourant(courantRef.current);
+      courantRef.current = suivantCourant;
+      setCourant((prev) => {
+        const suivant = prochainCourant(prev);
+        courantRef.current = suivant;
+        return suivant;
+      });
+      const suivantReference = prochainReference(referenceRef.current);
+      referenceRef.current = suivantReference;
+      setReference((prev) => {
+        const suivant = prochainReference(prev);
+        referenceRef.current = suivant;
+        return suivant;
       });
       signalerVersionApresEcritureHorsSequence(nouvelleVersion);
       onVersionChange(nouvelleVersion);
@@ -302,25 +313,43 @@ export function RubriquePrets({ companyId, salarieId, lignesServeur, onVersionCh
           const ligneServeur = extraireLigneReponse(reponse.donnees.prets, ligne.id, idsConnus);
           if (ligneServeur !== undefined) {
             appliquerLigneServeur(ligneServeur, reponse.donnees.version);
-            setCourant((prev) => {
-              const locale = depuisServeur(ligneServeur);
+            const locale = depuisServeur(ligneServeur);
+            const prochain = (prev: LignePretLocale[]) => {
               const sans = prev.filter((l) => l.id !== ligne.id);
               if (sans.some((l) => l.id === locale.id)) {
                 return sans.map((l) => (l.id === locale.id ? locale : l));
               }
               return [...sans, locale];
+            };
+            const suivantCourant = prochain(courantRef.current);
+            courantRef.current = suivantCourant;
+            setCourant((prev) => {
+              const suivant = prochain(prev);
+              courantRef.current = suivant;
+              return suivant;
             });
+            const suivantReference = prochain(referenceRef.current);
+            referenceRef.current = suivantReference;
             setReference((prev) => {
-              const locale = depuisServeur(ligneServeur);
-              const filtre = prev.filter((l) => l.id !== ligne.id);
-              if (filtre.some((l) => l.id === locale.id)) {
-                return filtre.map((l) => (l.id === locale.id ? locale : l));
-              }
-              return [...filtre, locale];
+              const suivant = prochain(prev);
+              referenceRef.current = suivant;
+              return suivant;
             });
           } else {
-            setCourant((prev) => prev.filter((l) => l.id !== ligne.id));
-            setReference((prev) => prev.filter((l) => l.id !== ligne.id));
+            const suivantCourant = courantRef.current.filter((l) => l.id !== ligne.id);
+            const suivantReference = referenceRef.current.filter((l) => l.id !== ligne.id);
+            courantRef.current = suivantCourant;
+            referenceRef.current = suivantReference;
+            setCourant((prev) => {
+              const suivant = prev.filter((l) => l.id !== ligne.id);
+              courantRef.current = suivant;
+              return suivant;
+            });
+            setReference((prev) => {
+              const suivant = prev.filter((l) => l.id !== ligne.id);
+              referenceRef.current = suivant;
+              return suivant;
+            });
             signalerVersionApresEcritureHorsSequence(reponse.donnees.version);
             onVersionChange(reponse.donnees.version);
           }

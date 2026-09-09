@@ -535,6 +535,67 @@ describe('RubriquePersonnesACharge — envoi', () => {
     expect(screen.getByTestId('dialogue-suppression-ligne')).toBeTruthy();
     expect(screen.getByText('Refus metier')).toBeTruthy();
   });
+
+  it('T66 — apres suppression de la seule ligne modifiee Enregistrer redevient inactif', async () => {
+    impactSuppressionPersonneACharge.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton' },
+    });
+    supprimerPersonneACharge.mockResolvedValue(ficheReponse([], 6));
+
+    render(<Harness extra={<LecteurEcritureHorsSequence />} />);
+    fireEvent.click(screen.getByTestId('ligne-pac-1'));
+    fireEvent.change(screen.getByLabelText('Prénom'), { target: { value: 'Modif' } });
+    fireEvent.click(screen.getByTestId('valider-ligne'));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', false)
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-1'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() => expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1));
+    await waitFor(() =>
+      expect(screen.getByTestId('ecriture-hors-sequence').textContent).toBe('false')
+    );
+    expect(screen.getByRole('button', { name: /Enregistrer/i })).toHaveProperty('disabled', true);
+  });
+
+  it('T67 — apres suppression hors sequence Annuler ne fait pas reapparaitre la ligne', async () => {
+    impactSuppressionPersonneACharge.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton' },
+    });
+    const ligneA = personne({ id: 'pac-a', prenom: 'Amine' });
+    const ligneB = personne({ id: 'pac-b', prenom: 'Badr' });
+    const ligneC = personne({ id: 'pac-c', prenom: 'Chaima' });
+    supprimerPersonneACharge.mockResolvedValue(ficheReponse([ligneA, ligneC], 6));
+
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    rendreFicheComplete(
+      ficheSalarieBase({
+        personnesACharge: [ligneA, ligneB, ligneC],
+        nombrePersonnesACharge: 3,
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('supprimer-pac-b'));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-ligne')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+    await waitFor(() => expect(supprimerPersonneACharge).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(screen.queryByTestId('ligne-pac-b')).toBeNull());
+
+    fireEvent.change(champNom(), { target: { value: 'Modifie' } });
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Annuler' })).toHaveProperty('disabled', false)
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Annuler' }));
+
+    expect(screen.getByTestId('ligne-pac-a')).toBeTruthy();
+    expect(screen.getByTestId('ligne-pac-c')).toBeTruthy();
+    expect(screen.queryByTestId('ligne-pac-b')).toBeNull();
+    confirm.mockRestore();
+  });
 });
 
 describe('RubriquePersonnesACharge — affichage', () => {

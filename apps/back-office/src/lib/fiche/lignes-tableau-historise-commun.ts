@@ -57,6 +57,10 @@ export function estModifieeContreReferenceTableau<T extends LigneTableauHistoris
   const idsCourant = new Set(courant.map((l) => l.id));
 
   if (courant.some((l) => l.etat === 'NON_ENREGISTREE')) return true;
+  // Aucun chemin client ne produit aujourd’hui une ligne présente en référence,
+  // absente du courant, et dont l’état n’est pas « ACTIVE ». La condition est
+  // conservée délibérément : on ne retire pas une contrainte dont on ne peut
+  // pas prouver l’inutilité.
   if (reference.some((l) => !idsCourant.has(l.id) && l.etat === 'ACTIVE')) return true;
 
   for (const ligne of courant) {

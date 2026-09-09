@@ -48,7 +48,7 @@ describe('personnes-a-charge — registre et envoi', () => {
     expect(ordre[0]).toBe('l1');
   });
 
-  it('T17 — reinitialiser ramene aux valeurs du dernier enregistrement reussi', () => {
+  it('T17 — estModifiee faux quand courant et reference portent le dernier enregistrement', () => {
     const dernierEnregistrement = [ref('l1', { prenom: 'Enregistre' })];
     const courantApresSaisie = [ref('l1', { prenom: 'Brouillon' })];
     expect(estModifieeContreReference(courantApresSaisie, dernierEnregistrement)).toBe(true);
