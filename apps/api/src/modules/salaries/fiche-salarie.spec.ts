@@ -95,6 +95,11 @@ describe('historisation temporelle (lignes repetables)', () => {
   it('une ligne closee au mois evalue diverge etat affiche et lisibilite inclusive', () => {
     const ligne = { moisEffetDebut: '2025-01', moisEffetFin: '2025-07' as string | null };
     expect(ligneLisiblePourMois(ligne, '2025-07')).toBe(true);
-    expect(deduireEtatLigne(ligne, '2025-07')).toBe('INACTIVE');
+    expect(deduireEtatLigne(ligne, '2025-07')).toBe('CLOTUREE');
+  });
+
+  it('une ligne dont le mois de debut est posterieur au mois en cours est PAS_ENCORE_EFFECTIVE', () => {
+    const ligne = { moisEffetDebut: '2026-03', moisEffetFin: null as string | null };
+    expect(deduireEtatLigne(ligne, '2025-07')).toBe('PAS_ENCORE_EFFECTIVE');
   });
 });

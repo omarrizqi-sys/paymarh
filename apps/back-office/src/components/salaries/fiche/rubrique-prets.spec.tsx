@@ -230,19 +230,19 @@ describe('RubriquePrets — envoi et alertes', () => {
 describe('RubriquePrets — affichage', () => {
   afterEach(() => cleanup());
 
-  it('T51 — ligne INACTIVE sans bouton supprimer', () => {
-    render(<Harness lignes={[pret({ etat: 'INACTIVE', moisEffetFin: '2026-08' })]} />);
+  it('T51 — ligne CLOTUREE sans bouton supprimer', () => {
+    render(<Harness lignes={[pret({ etat: 'CLOTUREE', moisEffetFin: '2026-08' })]} />);
     expect(screen.queryByTestId('supprimer-pret-1')).toBeNull();
     fireEvent.click(screen.getByTestId('ligne-pret-1'));
     expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
   });
 
-  it('T61 — ligne INACTIVE sans moisEffetFin reste modifiable (pas encore effective au mois en cours)', () => {
+  it('T61 — ligne PAS_ENCORE_EFFECTIVE sans moisEffetFin reste modifiable', () => {
     render(
       <Harness
         lignes={[
           pret({
-            etat: 'INACTIVE',
+            etat: 'PAS_ENCORE_EFFECTIVE',
             moisEffetFin: null,
             moisEffetDebut: '2025-01',
             libelleObjet: 'Pret personnel',

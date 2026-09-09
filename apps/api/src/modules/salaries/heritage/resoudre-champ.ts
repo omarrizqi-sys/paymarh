@@ -1,4 +1,4 @@
-import type { NiveauHeritage, ResolutionChamp } from './niveaux-heritage.js';
+import type { NiveauHeritage, ResolutionChamp } from '@paymarh/shared-types';
 
 export interface CandidatHeritage<T> {
   readonly valeur: T | null | undefined;

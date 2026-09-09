@@ -43,7 +43,7 @@ Une ligne propagée ne peut être ni modifiée ni supprimée depuis la fiche sal
 
 Les lignes de statut particulier portent des **dates civiles** (`dateDebut` / `dateFin`) : c'est un héritage du schéma de l'étape 2.1.a. Les autres tableaux historisés portent des **mois**. Le schéma n'est pas unifié.
 
-En lecture uniquement, une ligne de statut expose `etat` (`ACTIVE` | `INACTIVE`), dérivé de ses dates civiles converties en mois et du mois en cours du salarié, avec le même vocabulaire que les autres tableaux. Aucun champ n'est stocké ; aucune écriture, aucune migration.
+En lecture uniquement, une ligne de statut expose `etat` (`ACTIVE` | `PAS_ENCORE_EFFECTIVE` | `CLOTUREE`), dérivé de ses dates civiles converties en mois et du mois en cours du salarié, avec le même vocabulaire que les autres tableaux (ADR 0026). Aucun champ n'est stocké ; aucune écriture, aucune migration.
 
 ### Transaction unique
 

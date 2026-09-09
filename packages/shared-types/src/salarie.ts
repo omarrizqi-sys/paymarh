@@ -16,12 +16,11 @@
  *    colonnes Decimal, ou l arrondi binaire d un flottant fausserait une paie.
  */
 import type { Uuid } from './common';
+import type { EmploiFiche } from './emploi';
+import type { EtatLigneFiche } from './etat-ligne';
 
 /** Etat deduit du salarie — jamais stocke (voir deductions-salarie.ts). */
 export type EtatSalarie = 'ACTIF' | 'INACTIF';
-
-/** Etat deduit d une ligne de tableau repetable au mois en cours. */
-export type EtatLigneFiche = 'ACTIVE' | 'INACTIVE';
 
 export type SexePersonne = 'HOMME' | 'FEMME';
 
@@ -93,19 +92,6 @@ export interface SaisieSurSalaire {
 }
 
 /**
- * ECHAPPATOIRE TEMPORAIRE — A REMPLACER EN 2.1.c-3.
- *
- * La forme d un emploi de la fiche n est decrite nulle part et le back-office
- * ne lit pas encore `fiche.emplois`. La typer aujourd hui produirait un
- * contrat que personne ne consomme ; elle sera ecrite avec l ecran des
- * emplois (2.1.c-3), sur du code qui s en sert.
- *
- * L alias est nomme pour qu une simple recherche le retrouve : ne pas le
- * remplacer par un `Record<string, unknown>` anonyme.
- */
-export type EmploiFicheNonType = Record<string, unknown>;
-
-/**
  * ATTENTION AUX CLES OPTIONNELLES CI-DESSOUS.
  *
  * `comptesBancaires` est optionnelle parce que la reponse ne la contient PAS
@@ -164,7 +150,7 @@ export interface FicheSalarie {
   readonly urgenceEmail: string | null;
   readonly dateEntree: string;
   readonly dateAnciennete: string;
-  readonly emplois: readonly EmploiFicheNonType[];
+  readonly emplois: readonly EmploiFiche[];
   /** Personnes a charge au mois en cours — deduit, jamais stocke. */
   readonly nombrePersonnesACharge: number;
   readonly personnesACharge: readonly PersonneACharge[];

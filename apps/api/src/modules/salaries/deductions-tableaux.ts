@@ -1,16 +1,15 @@
+import type { EtatLigneFiche } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { EtatBulletin, type MoisBulletin } from './bulletin/bulletin.port.js';
 import { ligneLisiblePourMois, type LigneTemporelle } from './historisation-temporelle.js';
 import { moisSuivant } from './mois-en-cours/mois-en-cours.service.js';
 
-export type EtatLigneTableau = 'ACTIVE' | 'INACTIVE';
-
-export function deduireEtatLigne(ligne: LigneTemporelle, moisEnCours: string): EtatLigneTableau {
+export function deduireEtatLigne(ligne: LigneTemporelle, moisEnCours: string): EtatLigneFiche {
   if (ligne.moisEffetDebut > moisEnCours) {
-    return 'INACTIVE';
+    return 'PAS_ENCORE_EFFECTIVE';
   }
   if (ligne.moisEffetFin !== null && ligne.moisEffetFin <= moisEnCours) {
-    return 'INACTIVE';
+    return 'CLOTUREE';
   }
   return 'ACTIVE';
 }

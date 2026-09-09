@@ -10,7 +10,7 @@ import {
   type SnapshotEtablissementHeritage,
   type SnapshotSalarieHeritage,
 } from './assembler-resolutions.js';
-import type { ResolutionsEmploi } from './niveaux-heritage.js';
+import type { ResolutionsEmploi } from '@paymarh/shared-types';
 
 interface VersionsEmploiHeritage {
   readonly remunerationVersions: readonly {

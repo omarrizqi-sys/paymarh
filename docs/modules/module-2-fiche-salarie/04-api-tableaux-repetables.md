@@ -53,7 +53,7 @@ Lors d'un changement de type, l'API remet à `null` les montants et `moisFin` in
 
 - `nombrePersonnesACharge` — compté depuis les lignes actives cochées « à charge »
 - `soldeRestant` (prêt) — déduit du montant total, mensualité et échéances prélevées via bulletins
-- `etat` (`ACTIVE` / `INACTIVE`) — sur les lignes à validité temporelle
+- `etat` (`ACTIVE` / `PAS_ENCORE_EFFECTIVE` / `CLOTUREE`) — sur les lignes à validité temporelle (ADR 0026)
 
 ### Contrôles salarié
 

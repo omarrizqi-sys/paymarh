@@ -1,4 +1,4 @@
-import type { EmploiFicheNonType, FicheSalarie } from '@paymarh/shared-types';
+import type { EmploiFiche, FicheSalarie } from '@paymarh/shared-types';
 import type { Prisma, Salarie } from '../../../generated/prisma/client.js';
 import {
   declarerCleRubrique,
@@ -37,7 +37,7 @@ export async function versFicheSalarie(
     saisiesSurSalaire?: Parameters<typeof mapperCollectionsSalarie>[0]['saisiesSurSalaire'];
   },
   moisEnCours: string,
-  emplois: readonly unknown[] = [],
+  emplois: readonly EmploiFiche[] = [],
   bulletins: readonly MoisBulletin[] = []
 ): Promise<FicheSalarie> {
   const deduite = await deduireLigneSalarie(prisma, salarie.id);
@@ -95,9 +95,7 @@ export async function versFicheSalarie(
     urgenceEmail: salarie.urgenceEmail,
     dateEntree: formaterDate(salarie.dateEntree),
     dateAnciennete: formaterDate(salarie.dateAnciennete),
-    emplois: trierEmploisPourFiche(
-      emplois as Parameters<typeof trierEmploisPourFiche>[0]
-    ) as readonly EmploiFicheNonType[],
+    emplois: trierEmploisPourFiche(emplois),
     ...(salarie.personnesACharge !== undefined
       ? mapperCollectionsSalarie(
           {

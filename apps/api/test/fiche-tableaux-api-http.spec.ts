@@ -284,7 +284,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       };
       const ligne = corps.donnees.prets.find((p) => p.id === pret.id);
       expect(ligne).toBeDefined();
-      expect(ligne?.etat).toBe('INACTIVE');
+      expect(ligne?.etat).toBe('CLOTUREE');
       expect(ligne?.moisEffetFin).toBe('2025-07');
 
       const enBase = await prisma.pret.findUnique({ where: { id: pret.id } });
@@ -1266,7 +1266,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         };
       };
       const ligne = corps.donnees.personnesACharge.find((p) => p.id === pac.id);
-      expect(ligne?.etat).toBe('INACTIVE');
+      expect(ligne?.etat).toBe('CLOTUREE');
       expect(ligne?.moisEffetFin).toBe('2025-07');
       expect(corps.donnees.nombrePersonnesACharge).toBe(1);
     } finally {

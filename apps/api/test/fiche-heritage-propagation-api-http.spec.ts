@@ -544,7 +544,7 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     expect('remuneration' in donnees).toBe(false);
   });
 
-  it('ligne de statut dont la date de fin est depassee : etat INACTIVE', async () => {
+  it('ligne de statut dont la date de fin est depassee : etat CLOTUREE', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-ETAT-INACT`,
     });
@@ -572,7 +572,7 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
       donnees: { statutsParticuliers: { statutCode: string; etat: string }[] };
     };
     const ligne = donnees.statutsParticuliers.find((s) => s.statutCode === 'IDMAJ');
-    expect(ligne?.etat).toBe('INACTIVE');
+    expect(ligne?.etat).toBe('CLOTUREE');
   });
 
   it('ligne de statut courante : etat ACTIVE', async () => {
@@ -720,7 +720,7 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
     expect(ligne?.dateFin?.toISOString().slice(0, 10)).toBe('2025-07-31');
   });
 
-  it('ligne propagee inactivee au retrait : etat INACTIVE', async () => {
+  it('ligne propagee inactivee au retrait : etat CLOTUREE', async () => {
     const typeTahfizId = (
       await prisma.typeExoneration.findUniqueOrThrow({ where: { code: 'TAHFIZ' } })
     ).id;
@@ -755,7 +755,7 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
       donnees: { statutsParticuliers: { statutCode: string; etat: string }[] };
     };
     const ligne = donnees.statutsParticuliers.find((s) => s.statutCode === 'TAHFIZ');
-    expect(ligne?.etat).toBe('INACTIVE');
+    expect(ligne?.etat).toBe('CLOTUREE');
   });
 });
 

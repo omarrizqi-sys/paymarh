@@ -1,7 +1,7 @@
-import type { Permission, RessourceAvecOperations } from '@paymarh/shared-types';
+import type { EmploiFiche, Permission, RessourceAvecOperations } from '@paymarh/shared-types';
 
 /** Fiche salarie enrichie des operations autorisees pour l appelant. */
-export function enrichirFicheSalarie<T extends { emplois: readonly Record<string, unknown>[] }>(
+export function enrichirFicheSalarie<T extends { emplois: readonly EmploiFiche[] }>(
   fiche: T,
   operations: readonly Permission[],
   operationsEmploi: readonly Permission[]

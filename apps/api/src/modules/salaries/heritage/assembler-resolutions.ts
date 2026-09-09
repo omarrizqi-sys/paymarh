@@ -1,6 +1,6 @@
 import type { Decimal } from 'decimal.js';
 import { ligneLisiblePourMois } from '../historisation-temporelle.js';
-import type { LigneGrilleHoraireResolue, ResolutionsEmploi } from './niveaux-heritage.js';
+import type { LigneGrilleHoraireResolue, ResolutionsEmploi } from '@paymarh/shared-types';
 import { premierNonNul } from './resoudre-champ.js';
 
 export interface SnapshotSalarieHeritage {

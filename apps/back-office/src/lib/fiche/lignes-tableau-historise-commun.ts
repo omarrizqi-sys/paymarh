@@ -26,18 +26,14 @@ export function formaterMoisFin(moisEffetFin: string | null): string {
   return `${mois}/${annee}`;
 }
 
-/**
- * L'API pose etat INACTIVE dans deux cas sans rapport : clôture historisée (moisEffetFin
- * renseigné) ou ligne pas encore effective au mois en cours (moisEffetFin null).
- * Ne jamais tester etat seul pour griser ou verrouiller : c'est la combinaison des deux champs.
- */
+/** Ligne terminee au mois en cours : plus modifiable, plus supprimable depuis l'ecran. */
 export function estLigneTableauCloturee(ligne: LigneTableauHistoriseBase): boolean {
-  return ligne.etat === 'INACTIVE' && ligne.moisEffetFin !== null;
+  return ligne.etat === 'CLOTUREE';
 }
 
 export function libelleEtatLigneHistorise(ligne: LigneTableauHistoriseBase): string | null {
   if (ligne.etat === 'NON_ENREGISTREE') return 'non enregistrée';
-  if (estLigneTableauCloturee(ligne)) {
+  if (estLigneTableauCloturee(ligne) && ligne.moisEffetFin !== null) {
     return `inactive depuis ${formaterMoisFin(ligne.moisEffetFin)}`;
   }
   return null;

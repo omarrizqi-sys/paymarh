@@ -1,3 +1,4 @@
+import type { EmploiFiche } from '@paymarh/shared-types';
 import type { Prisma } from '../../../generated/prisma/client.js';
 import {
   declarerCleRubrique,
@@ -130,7 +131,7 @@ export function versEmploiComplet(
     statutsParticuliers?: Parameters<typeof mapperCollectionsEmploi>[0]['statutsParticuliers'];
   },
   moisEnCours: string
-) {
+): EmploiFiche {
   const contrat = resoudrePourAffichage(emploi.contratVersions, moisEnCours);
   const remuneration = resoudrePourAffichage(emploi.remunerationVersions, moisEnCours);
   const affectation = resoudrePourAffichage(emploi.affectationVersions, moisEnCours);

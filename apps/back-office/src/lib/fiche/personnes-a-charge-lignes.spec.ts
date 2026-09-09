@@ -56,7 +56,7 @@ describe('personnes-a-charge — registre et envoi', () => {
   });
 
   it('libelleEtatLigne formate une ligne inactive avec mois de fin', () => {
-    const inactive = ref('l1', { etat: 'INACTIVE', moisEffetFin: '2026-08' });
-    expect(libelleEtatLigne(inactive)).toBe('inactive depuis 08/2026');
+    const cloturee = ref('l1', { etat: 'CLOTUREE', moisEffetFin: '2026-08' });
+    expect(libelleEtatLigne(cloturee)).toBe('inactive depuis 08/2026');
   });
 });

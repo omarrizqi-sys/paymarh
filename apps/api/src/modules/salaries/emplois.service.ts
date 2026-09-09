@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { AlerteApi } from '@paymarh/shared-types';
+import type { AlerteApi, EmploiFiche } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
@@ -498,7 +498,10 @@ export class EmploisService {
     return okEcriture({ id });
   }
 
-  async listerEmploisPourFicheSalarie(salarieId: string, moisEnCours: string) {
+  async listerEmploisPourFicheSalarie(
+    salarieId: string,
+    moisEnCours: string
+  ): Promise<EmploiFiche[]> {
     const emplois = await this.prisma.emploi.findMany({
       where: { salarieId },
       include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },

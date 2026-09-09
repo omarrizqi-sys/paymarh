@@ -540,8 +540,8 @@ describe('RubriquePersonnesACharge — envoi', () => {
 describe('RubriquePersonnesACharge — affichage', () => {
   afterEach(() => cleanup());
 
-  it('T25 — ligne INACTIVE affichee grisee avec mois de fin MM/AAAA', () => {
-    render(<Harness lignes={[personne({ etat: 'INACTIVE', moisEffetFin: '2026-08' })]} />);
+  it('T25 — ligne CLOTUREE affichee grisee avec mois de fin MM/AAAA', () => {
+    render(<Harness lignes={[personne({ etat: 'CLOTUREE', moisEffetFin: '2026-08' })]} />);
     expect(screen.getByTestId('ligne-pac-1').className).toMatch(/opacity-60/);
     expect(screen.getByTestId('etat-ligne-pac-1').textContent).toBe('inactive depuis 08/2026');
   });

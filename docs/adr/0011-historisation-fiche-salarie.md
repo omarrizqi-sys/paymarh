@@ -82,7 +82,7 @@ Pour les personnes à charge, prêts et saisies :
 1. **Aperçu** — `GET …/impact-suppression` indique si la ligne sera supprimée ou close (`mode`).
 2. **Confirmation** — `DELETE …?confirmationJeton=` avec le jeton retourné.
 3. **Sans bulletin** — la ligne disparaît.
-4. **Avec bulletin** — la ligne reste lisible, `etat: INACTIVE`, `moisEffetFin` renseigné.
+4. **Avec bulletin** — la ligne reste lisible, `etat: CLOTUREE`, `moisEffetFin` renseigné.
 
 ### Deux règles distinctes pour `moisEffetFin`
 
@@ -101,7 +101,7 @@ Une ligne close possède **deux interprétations distinctes**, volontairement no
 
 | Lecture                     | Fonction               | Au mois de clôture (`moisEffetFin = mois en cours`)                                                                                                                                                      |
 | --------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **État affiché**            | `deduireEtatLigne`     | `INACTIVE` — la ligne n'est plus opérationnelle pour les saisies du mois en cours (ex. suppression d'un prêt : plus de retenue à partir de ce mois).                                                     |
+| **État affiché**            | `deduireEtatLigne`     | `CLOTUREE` — la ligne n'est plus opérationnelle pour les saisies du mois en cours (ex. suppression d'un prêt : plus de retenue à partir de ce mois). Voir ADR 0026.                                      |
 | **Lisibilité pour un mois** | `ligneLisiblePourMois` | `true` — le mois de fin est **inclus** : le bulletin du mois en cours couvre encore cette ligne ; le compteur `nombrePersonnesACharge` et le recalcul des bulletins passés s'appuient sur cette lecture. |
 
 **Ne pas aligner** les deux fonctions sur une comparaison stricte (`<` vs `<=`) : faire disparaître la ligne du compteur ou de la résolution bulletin au mois de clôture fausserait la déduction pour charges de famille et la reproductibilité des bulletins déjà produits ou en cours de production.

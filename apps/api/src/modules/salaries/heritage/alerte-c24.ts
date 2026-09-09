@@ -1,7 +1,7 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { CODES_REPONSE } from '../reponses/codes-reponse.js';
-import type { LigneGrilleHoraireResolue } from './niveaux-heritage.js';
+import type { LigneGrilleHoraireResolue } from '@paymarh/shared-types';
 
 /**
  * C24 — alerte si le repos hebdomadaire tombe un jour ou la grille resolue

@@ -9,7 +9,7 @@ import { textesSuppressionDiffereeCompteBancaire } from './textes-suppression-ta
 
 interface LigneTest {
   readonly id: string;
-  readonly etat: 'ACTIVE' | 'INACTIVE' | 'NON_ENREGISTREE';
+  readonly etat: 'ACTIVE' | 'CLOTUREE' | 'NON_ENREGISTREE';
   readonly moisFin: string | null;
   readonly valeur: string;
 }
@@ -145,8 +145,8 @@ describe('EnveloppeTableauRepetable', () => {
     render(
       <EnveloppeTableauRepetable
         {...propsCommunes({
-          lignes: [ligne('inact', { etat: 'INACTIVE', moisFin: '08/2026' })],
-          estInactive: (l: LigneTest) => l.etat === 'INACTIVE',
+          lignes: [ligne('inact', { etat: 'CLOTUREE', moisFin: '08/2026' })],
+          estInactive: (l: LigneTest) => l.etat === 'CLOTUREE',
           libelleEtatLigne: () => 'inactive depuis 08/2026',
           formulaireOuvertId: 'inact',
           renderFormulaire: (_l: LigneTest, actions: { lectureSeule: boolean }) => (

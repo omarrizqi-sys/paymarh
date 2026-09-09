@@ -27,16 +27,36 @@ export type {
   ImpactSuppressionCompteBancaire,
   ResultatSuppression,
 } from './impact-suppression';
+export type { EtatLigneFiche } from './etat-ligne';
+export type {
+  NiveauHeritage,
+  ResolutionChamp,
+  LigneGrilleHoraireResolue,
+  ResolutionsEmploi,
+} from './heritage';
+export type {
+  StatutCadre,
+  ModeDeterminationSalaire,
+  ModePaiement,
+  BaseSaisieDuree,
+  OrigineStatutParticulier,
+  ContratEmploiFiche,
+  RemunerationEmploiFiche,
+  PaiementEmploiFiche,
+  AffectationEmploiFiche,
+  PrimeContractuelleFiche,
+  AvantageEnNatureFiche,
+  StatutParticulierFiche,
+  EmploiFiche,
+} from './emploi';
 export type {
   EtatSalarie,
-  EtatLigneFiche,
   SexePersonne,
   SituationFamilialeSalarie,
   PersonneACharge,
   CompteBancaireSalarie,
   PretSalarie,
   SaisieSurSalaire,
-  EmploiFicheNonType,
   FicheSalarie,
 } from './salarie';
 export type { User } from './user';
