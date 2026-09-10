@@ -3,6 +3,7 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
+  MENTION_MODIFS_FICHE_NON_ENREGISTREES,
   MENTION_MODIFS_NON_ENREGISTREES,
   MENTION_SUPPRESSION_IMMEDIATE,
   type TextesConfirmationSuppression,
@@ -30,6 +31,8 @@ export function DialogueConfirmationSuppressionTableau({
   if (!ouvert || textes === null) return null;
 
   const varianteHistorise = textes.variante === 'historise';
+  const varianteFiche = textes.variante === 'fiche';
+  const varianteAvecMessageServeur = varianteHistorise || varianteFiche;
 
   return (
     <div
@@ -37,25 +40,35 @@ export function DialogueConfirmationSuppressionTableau({
       role="dialog"
       aria-modal="true"
       aria-labelledby={
-        varianteHistorise
-          ? 'dialogue-suppression-ligne-titre'
-          : 'dialogue-suppression-differee-titre'
+        varianteFiche
+          ? 'dialogue-suppression-fiche-titre'
+          : varianteHistorise
+            ? 'dialogue-suppression-ligne-titre'
+            : 'dialogue-suppression-differee-titre'
       }
       data-testid={
-        varianteHistorise ? 'dialogue-suppression-ligne' : 'dialogue-suppression-differee'
+        varianteFiche
+          ? 'dialogue-suppression-fiche'
+          : varianteHistorise
+            ? 'dialogue-suppression-ligne'
+            : 'dialogue-suppression-differee'
       }
     >
       <div className="bg-background max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border p-6 shadow-lg">
         <h2
           id={
-            varianteHistorise
-              ? 'dialogue-suppression-ligne-titre'
-              : 'dialogue-suppression-differee-titre'
+            varianteFiche
+              ? 'dialogue-suppression-fiche-titre'
+              : varianteHistorise
+                ? 'dialogue-suppression-ligne-titre'
+                : 'dialogue-suppression-differee-titre'
           }
           data-testid={
-            varianteHistorise
-              ? 'dialogue-suppression-ligne-titre'
-              : 'dialogue-suppression-differee-titre'
+            varianteFiche
+              ? 'dialogue-suppression-fiche-titre'
+              : varianteHistorise
+                ? 'dialogue-suppression-ligne-titre'
+                : 'dialogue-suppression-differee-titre'
           }
           className="mb-4 text-lg font-semibold"
         >
@@ -68,7 +81,7 @@ export function DialogueConfirmationSuppressionTableau({
           </p>
         ) : null}
 
-        {varianteHistorise ? (
+        {varianteAvecMessageServeur ? (
           <>
             {textes.messageServeur ? (
               <p className="mb-3 text-sm" data-testid="message-apercu-suppression">
@@ -76,16 +89,20 @@ export function DialogueConfirmationSuppressionTableau({
               </p>
             ) : null}
 
-            <p className="mb-3 text-sm" data-testid="mention-suppression-immediate">
-              {MENTION_SUPPRESSION_IMMEDIATE}
-            </p>
+            {varianteHistorise ? (
+              <p className="mb-3 text-sm" data-testid="mention-suppression-immediate">
+                {MENTION_SUPPRESSION_IMMEDIATE}
+              </p>
+            ) : null}
 
             {textes.rubriqueModifiee ? (
               <p
                 className="text-muted-foreground mb-3 text-sm"
                 data-testid="mention-modifs-non-enregistrees"
               >
-                {MENTION_MODIFS_NON_ENREGISTREES}
+                {varianteFiche
+                  ? MENTION_MODIFS_FICHE_NON_ENREGISTREES
+                  : MENTION_MODIFS_NON_ENREGISTREES}
               </p>
             ) : null}
           </>
@@ -112,11 +129,13 @@ export function DialogueConfirmationSuppressionTableau({
           </Button>
           <Button
             variant="destructive"
-            disabled={chargement || (varianteHistorise && !textes.messageServeur)}
+            disabled={chargement || (varianteAvecMessageServeur && !textes.messageServeur)}
             data-testid={
-              varianteHistorise
-                ? 'confirmer-suppression-ligne'
-                : 'dialogue-suppression-differee-confirmer'
+              varianteFiche
+                ? 'confirmer-suppression-fiche'
+                : varianteHistorise
+                  ? 'confirmer-suppression-ligne'
+                  : 'dialogue-suppression-differee-confirmer'
             }
             onClick={onConfirmer}
           >

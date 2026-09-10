@@ -1,4 +1,4 @@
-export type VarianteDialogueSuppression = 'historise' | 'differee';
+export type VarianteDialogueSuppression = 'historise' | 'differee' | 'fiche';
 
 export interface TextesConfirmationSuppression {
   readonly variante: VarianteDialogueSuppression;
@@ -16,6 +16,9 @@ export const MENTION_SUPPRESSION_IMMEDIATE =
 export const MENTION_MODIFS_NON_ENREGISTREES =
   'Vos autres modifications de cette rubrique restent à enregistrer.';
 
+export const MENTION_MODIFS_FICHE_NON_ENREGISTREES =
+  'Vos modifications non enregistrées seront perdues.';
+
 export const PREAMBULE_SITUATION_CHANGEE = 'La situation a changé depuis l’affichage.';
 
 export function textesSuppressionHistorisee(options: {
@@ -30,6 +33,20 @@ export function textesSuppressionHistorisee(options: {
     rubriqueModifiee: options.rubriqueModifiee,
     libelleConfirmer: 'Supprimer',
     libelleAnnuler: 'Garder la ligne',
+  };
+}
+
+export function textesSuppressionFiche(options: {
+  readonly messageServeur: string;
+  readonly modificationsNonEnregistrees: boolean;
+}): TextesConfirmationSuppression {
+  return {
+    variante: 'fiche',
+    titre: 'Supprimer ce salarié ?',
+    messageServeur: options.messageServeur,
+    rubriqueModifiee: options.modificationsNonEnregistrees,
+    libelleConfirmer: 'Supprimer',
+    libelleAnnuler: 'Garder le salarié',
   };
 }
 

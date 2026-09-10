@@ -311,7 +311,12 @@ function ContenuFicheSalarie({
           </>
         }
         renderRail={(compact) => (
-          <RailActionsFiche operations={fiche.operations} modeCompact={compact} />
+          <RailActionsFiche
+            operations={fiche.operations}
+            companyId={companyId}
+            salarieId={salarieId}
+            modeCompact={compact}
+          />
         )}
       />
     </div>

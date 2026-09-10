@@ -1,11 +1,31 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { createElement, useEffect, useState, type ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppelApiEchoue } from '@/lib/api/client';
+import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
 import type { RubriqueEnregistrable } from '@/lib/fiche/orchestrateur-enregistrement';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RailActionsFiche } from './rail-actions-fiche';
+
+const routerPush = vi.fn();
+const { impactSuppressionSalarie, supprimerSalarie } = vi.hoisted(() => ({
+  impactSuppressionSalarie: vi.fn(),
+  supprimerSalarie: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: routerPush, refresh: vi.fn() }),
+}));
+
+vi.mock('@/lib/api/salaries', async (importOriginal) => {
+  const reel = await importOriginal();
+  return {
+    ...(reel as Record<string, unknown>),
+    impactSuppressionSalarie: (...args: unknown[]) => impactSuppressionSalarie(...args),
+    supprimerSalarie: (...args: unknown[]) => supprimerSalarie(...args),
+  };
+});
 
 function RubriqueTest({ rubrique }: { readonly rubrique: RubriqueEnregistrable }) {
   const { enregistrerRubrique } = useRegistreFiche();
@@ -52,21 +72,30 @@ function RubriqueModifiable({
 function Harness({
   rubriques,
   onRecharger = vi.fn(async () => undefined),
+  versionInitiale = 1,
   children,
 }: {
   readonly rubriques?: RubriqueEnregistrable[];
   readonly onRecharger?: () => Promise<void>;
+  readonly versionInitiale?: number;
   readonly children?: ReactNode;
 }) {
   return createElement(
     RegistreFicheProvider,
-    { versionInitiale: 1, onRechargerServeur: onRecharger },
+    { versionInitiale, onRechargerServeur: onRecharger },
     rubriques?.map((rubrique) => createElement(RubriqueTest, { key: rubrique.id, rubrique })),
     children,
     createElement(RailActionsFiche, {
       operations: ['salarie.modifier', 'salarie.supprimer'],
+      companyId: 'soc-test',
+      salarieId: 'sal-test',
     })
   );
+}
+
+function LecteurEcritureHorsSequence() {
+  const { ecritureHorsSequenceEnCours } = useRegistreFiche();
+  return <span data-testid="ecriture-hors-sequence">{String(ecritureHorsSequenceEnCours)}</span>;
 }
 
 describe('RailActionsFiche', () => {
@@ -301,10 +330,197 @@ describe('RailActionsFiche', () => {
       createElement(
         RegistreFicheProvider,
         { versionInitiale: 1, onRechargerServeur: vi.fn() },
-        createElement(RailActionsFiche, { operations: ['salarie.modifier'] })
+        createElement(RailActionsFiche, {
+          operations: ['salarie.modifier'],
+          companyId: 'soc-test',
+          salarieId: 'sal-test',
+        })
       )
     );
 
     expect(screen.queryByRole('button', { name: 'Supprimer' })).toBeNull();
+  });
+});
+
+describe('RailActionsFiche — suppression fiche', () => {
+  beforeEach(() => {
+    impactSuppressionSalarie.mockReset();
+    supprimerSalarie.mockReset();
+    routerPush.mockReset();
+  });
+
+  afterEach(() => cleanup());
+
+  it('SF01 — clic Supprimer demande l apercu et affiche le message serveur', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: {
+        message: 'Message serveur suppression fiche',
+        jetonConfirmation: 'jeton-apercu',
+      },
+    });
+
+    render(createElement(Harness, null));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+
+    await waitFor(() =>
+      expect(impactSuppressionSalarie).toHaveBeenCalledWith('soc-test', 'sal-test')
+    );
+    await waitFor(() => expect(screen.getByTestId('dialogue-suppression-fiche')).toBeTruthy());
+    expect(screen.getByTestId('message-apercu-suppression').textContent).toBe(
+      'Message serveur suppression fiche'
+    );
+    expect(screen.getByTestId('dialogue-suppression-fiche-titre').textContent).toBe(
+      'Supprimer ce salarié ?'
+    );
+  });
+
+  it('SF02 — confirmation envoie DELETE avec jeton et version puis navigue vers la liste', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+    supprimerSalarie.mockResolvedValue({ donnees: { id: 'sal-test' }, alertes: [] });
+
+    render(createElement(Harness, { versionInitiale: 7 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-fiche'));
+
+    await waitFor(() =>
+      expect(supprimerSalarie).toHaveBeenCalledWith('soc-test', 'sal-test', 7, 'jeton-apercu')
+    );
+    expect(routerPush).toHaveBeenCalledWith('/societes/soc-test/salaries');
+  });
+
+  it('SF03 — Garder le salarie ferme la fenetre sans appel DELETE', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+
+    render(createElement(Harness, null));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('dialogue-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByRole('button', { name: 'Garder le salarié' }));
+
+    expect(supprimerSalarie).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('dialogue-suppression-fiche')).toBeNull();
+  });
+
+  it('SF04 — echec de suppression reactive Enregistrer et Annuler', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+    supprimerSalarie.mockRejectedValueOnce(
+      new AppelApiEchoue(500, { code: 'ERREUR', message: 'Detail interne' })
+    );
+
+    render(
+      createElement(Harness, {
+        children: createElement(
+          'div',
+          null,
+          createElement(RubriqueModifiable, {
+            id: 'identite',
+            libelle: 'Identite',
+            envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
+          }),
+          createElement(LecteurEcritureHorsSequence)
+        ),
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('marquer-identite'));
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-fiche'));
+
+    await waitFor(() =>
+      expect(screen.getByTestId('ecriture-hors-sequence').textContent).toBe('false')
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /Enregistrer/ })).toHaveProperty('disabled', false)
+    );
+    expect(screen.getByRole('button', { name: 'Annuler' })).toHaveProperty('disabled', false);
+  });
+
+  it('SF05 — refus metier laisse la fenetre ouverte avec le message serveur', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+    supprimerSalarie.mockRejectedValueOnce(
+      new AppelApiEchoue(409, {
+        code: 'SUPPRESSION_INTERDITE',
+        message: 'Des bulletins existent pour ce salarie.',
+      })
+    );
+
+    render(createElement(Harness, null));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-fiche'));
+
+    await waitFor(() => expect(screen.getByTestId('dialogue-suppression-fiche')).toBeTruthy());
+    expect(screen.getByText('Des bulletins existent pour ce salarie.')).toBeTruthy();
+    expect(screen.queryByText(MESSAGE_ERREUR_GENERIQUE)).toBeNull();
+  });
+
+  it('SF06 — modifications non enregistrees : phrase supplementaire affichee', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+
+    render(
+      createElement(Harness, {
+        children: createElement(RubriqueModifiable, {
+          id: 'identite',
+          libelle: 'Identite',
+          envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
+        }),
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('marquer-identite'));
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+
+    await waitFor(() => expect(screen.getByTestId('mention-modifs-non-enregistrees')).toBeTruthy());
+    expect(screen.getByTestId('mention-modifs-non-enregistrees').textContent).toBe(
+      'Vos modifications non enregistrées seront perdues.'
+    );
+  });
+
+  it('SF07 — sans modification la phrase supplementaire est absente', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+
+    render(createElement(Harness, null));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('dialogue-suppression-fiche')).toBeTruthy());
+    expect(screen.queryByTestId('mention-modifs-non-enregistrees')).toBeNull();
+  });
+
+  it('SF08 — conflit de version ferme la fenetre et affiche le bandeau fiche', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+    supprimerSalarie.mockRejectedValueOnce(
+      new AppelApiEchoue(409, {
+        code: 'CONFLIT_VERSION',
+        message: 'La fiche a ete modifiee entre-temps.',
+      })
+    );
+
+    render(createElement(Harness, null));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-fiche'));
+
+    await waitFor(() => expect(screen.getByTestId('bandeau-conflit-version')).toBeTruthy());
+    expect(screen.queryByTestId('dialogue-suppression-fiche')).toBeNull();
   });
 });

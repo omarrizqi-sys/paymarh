@@ -249,6 +249,21 @@ L'enveloppe **ne porte pas** de générateur de formulaire : chaque tableau écr
 
 Elle reçoit du tableau consommateur : colonnes, `idColonneMarque`, rendu du formulaire, callbacks d'envoi, objet `suppression` injecté.
 
+### Suppression de la fiche salarié (rail)
+
+La suppression d'une **fiche entière** ne passe **pas** par l'enveloppe. Le rail (`RailActionsFiche`) monte lui-même le composant partagé `DialogueConfirmationSuppressionTableau` (variante `fiche` dans `textes-suppression-tableau-historise.ts`).
+
+Différences avec la suppression d'une ligne de tableau historisée :
+
+- **Pas de `mode`** dans l'aperçu : le serveur renvoie un seul `message`, affiché tel quel.
+- **Pas de reprise du jeton** : le jeton ne dépend que de l'identifiant du salarié ; la fenêtre ne propose pas de relancer l'aperçu après un refus.
+- **Pas de mention « suppression immédiate »** : la phrase sur le bouton Annuler de la fiche ne s'applique qu'aux lignes de tableau.
+- **Phrase distincte** si la fiche porte des modifications non enregistrées : « Vos modifications non enregistrées seront perdues. »
+- **Libellé d'annulation** : « Garder le salarié » (le rail porte déjà un bouton « Annuler » pour la saisie).
+- **Succès** : retour à la liste des salariés de la société, sans message éphémère.
+
+Pendant l'aller-retour, le rail signale `ecritureHorsSequenceEnCours` comme pour une suppression de ligne ; le signal de fin part au succès **et** à l'échec.
+
 ---
 
 ## 14. Chaînes d'affichage et exceptions API

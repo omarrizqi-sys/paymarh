@@ -183,6 +183,10 @@ Lors de la création ou de la vérification d'une fiche, le logiciel peut signal
 
 Une fiche peut être supprimée tant qu'**aucun bulletin de paie** n'a été produit pour ce salarié (sur tous ses emplois). Dès qu'un bulletin existe, la suppression est refusée : la fiche reste en place. Cette règle protège l'historique de paie déjà calculé ou validé.
 
+**À l'écran** : le bouton « Supprimer » du rail de droite ouvre une fenêtre de confirmation. Le message affiché vient du serveur, sans reformulation. Si vous avez des modifications non enregistrées sur la fiche, une phrase vous prévient qu'elles seront perdues. Confirmer supprime définitivement la fiche et vous ramène à la liste des salariés — sans message de succès séparé : l'absence du salarié dans la liste en tient lieu. « Garder le salarié » ferme la fenêtre sans rien envoyer.
+
+Contrairement à la suppression d'une ligne de tableau (prêt, personne à charge, etc.), la suppression de fiche ne propose pas de relancer l'aperçu : le jeton de confirmation ne devient pas obsolète.
+
 ---
 
 ## Emplois et historique

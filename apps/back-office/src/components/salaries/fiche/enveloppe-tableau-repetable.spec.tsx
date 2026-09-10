@@ -259,5 +259,6 @@ describe('EnveloppeTableauRepetable', () => {
     );
     expect(contenu).not.toMatch(/@\/lib\/api\//);
     expect(contenu).not.toMatch(/CONFIRMATION_OBSOLETE|CONFLIT_VERSION|AppelApiEchoue/i);
+    expect(contenu).not.toMatch(/suppression.*fiche|supprimerSalarie|impactSuppressionSalarie/i);
   });
 });

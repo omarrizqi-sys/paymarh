@@ -192,7 +192,11 @@ function Harness({
           liensParente={LIENS}
           onVersionChange={onVersionChange}
         />
-        <RailActionsFiche operations={['salarie.modifier']} />
+        <RailActionsFiche
+          operations={['salarie.modifier']}
+          companyId="soc-test"
+          salarieId="sal-test"
+        />
       </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );

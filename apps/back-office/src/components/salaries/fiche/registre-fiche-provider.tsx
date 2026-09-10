@@ -46,6 +46,7 @@ interface RegistreFicheContexte {
   signalerVersionApresEcritureHorsSequence(nouvelleVersion: number): void;
   signalerDebutEcritureHorsSequence(): void;
   signalerFinEcritureHorsSequence(): void;
+  signalerConflitVersion(): void;
   enregistrerAvantEnvoi(callback: () => void): () => void;
   notifierSommaire(): void;
   onRechargerServeur: () => Promise<void>;
@@ -147,6 +148,10 @@ export function RegistreFicheProvider({
     setEcritureHorsSequenceEnCours(false);
   }, []);
 
+  const signalerConflitVersion = useCallback(() => {
+    setConflitVersion(true);
+  }, []);
+
   const enregistrerAvantEnvoi = useCallback((callback: () => void) => {
     avantEnvoiRef.current.add(callback);
     return () => {
@@ -230,6 +235,7 @@ export function RegistreFicheProvider({
       signalerVersionApresEcritureHorsSequence,
       signalerDebutEcritureHorsSequence,
       signalerFinEcritureHorsSequence,
+      signalerConflitVersion,
       enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,
@@ -254,6 +260,7 @@ export function RegistreFicheProvider({
       signalerVersionApresEcritureHorsSequence,
       signalerDebutEcritureHorsSequence,
       signalerFinEcritureHorsSequence,
+      signalerConflitVersion,
       enregistrerAvantEnvoi,
       notifierSommaire,
       onRechargerServeur,

@@ -7,6 +7,10 @@ import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rub
 import { SqueletteFicheSalarie } from './squelette-fiche-salarie';
 import { RailActionsFiche } from './rail-actions-fiche';
 
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
+
 function EnregistrerRubriquesSommaire() {
   const { enregistrerRubrique } = useRegistreFiche();
   useEffect(() => {
@@ -64,7 +68,12 @@ describe('SqueletteFicheSalarie et sommaire', () => {
             createElement('section', { id: 'identite' }, 'Identite visible'),
             createElement('section', { id: 'coordonnees' }, 'Coordonnees visible')
           ),
-          renderRail: () => createElement(RailActionsFiche, { operations: ['salarie.modifier'] }),
+          renderRail: () =>
+            createElement(RailActionsFiche, {
+              operations: ['salarie.modifier'],
+              companyId: 'soc-test',
+              salarieId: 'sal-test',
+            }),
         })
       )
     );
@@ -86,6 +95,8 @@ describe('SqueletteFicheSalarie et sommaire', () => {
           renderRail: (compact) =>
             createElement(RailActionsFiche, {
               operations: ['salarie.modifier', 'salarie.supprimer'],
+              companyId: 'soc-test',
+              salarieId: 'sal-test',
               modeCompact: compact,
             }),
         })

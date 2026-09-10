@@ -128,7 +128,11 @@ function Harness({
           lignesServeur={lignes}
           onVersionChange={vi.fn()}
         />
-        <RailActionsFiche operations={['salarie.modifier']} />
+        <RailActionsFiche
+          operations={['salarie.modifier']}
+          companyId="soc-test"
+          salarieId="sal-test"
+        />
       </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );

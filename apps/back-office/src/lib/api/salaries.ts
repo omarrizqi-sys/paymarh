@@ -59,6 +59,26 @@ export async function lireSalarie(
   return appelerSalarieGet<FicheSalarieAvecOperations>(companyId, `/salaries/${salarieId}`);
 }
 
+export async function impactSuppressionSalarie(
+  companyId: string,
+  salarieId: string
+): Promise<{ donnees: ImpactSuppressionLigneTableau }> {
+  return appelerSalarieGet<ImpactSuppressionLigneTableau>(
+    companyId,
+    `/salaries/${salarieId}/impact-suppression`
+  );
+}
+
+export async function supprimerSalarie(
+  companyId: string,
+  salarieId: string,
+  version: number,
+  confirmationJeton: string
+): Promise<ReponseEcriture<{ readonly id: string }>> {
+  const query = new URLSearchParams({ confirmationJeton });
+  return appelerSalarieDelete(companyId, `/salaries/${salarieId}?${query.toString()}`, version);
+}
+
 /** Corps de POST /salaries — cles facultatives absentes si vides, jamais chaine vide. */
 export interface CorpsCreationSalarie {
   readonly nom: string;

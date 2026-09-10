@@ -194,7 +194,7 @@ function rendreRubrique({
           operations={operations}
           onComptesChange={onComptesChange}
         />
-        <RailActionsFiche operations={operations} />
+        <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
       </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );
@@ -900,7 +900,7 @@ function HarnessComptesParentSynchronise({
           operations={operations}
           onComptesChange={(suivant, _version) => setComptes(suivant)}
         />
-        <RailActionsFiche operations={operations} />
+        <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
       </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );
