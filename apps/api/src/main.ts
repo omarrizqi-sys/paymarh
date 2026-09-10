@@ -1,8 +1,9 @@
 import 'reflect-metadata';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
+import { creerPipeValidationGlobale } from './common/validation/pipe-validation-globale.js';
 import { API_VERSION } from './version.js';
 
 /**
@@ -20,13 +21,7 @@ async function bootstrap(): Promise<void> {
   // Validation systematique des entrees. `whitelist` supprime tout champ non
   // declare dans les DTO : un client ne peut pas glisser de propriete
   // inattendue dans une requete.
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    })
-  );
+  app.useGlobalPipes(creerPipeValidationGlobale());
 
   const corsOrigins = (configService.get<string>('API_CORS_ORIGINS') ?? 'http://localhost:3000')
     .split(',')

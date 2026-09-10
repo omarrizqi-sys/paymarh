@@ -1,5 +1,5 @@
 import type { ReponseEcriture } from '@paymarh/shared-types';
-import { AppelApiEchoue, entetesApi, urlApi } from './client';
+import { AppelApiEchoue, entetesApi, extraireErreur, urlApi } from './client';
 import { journaliserErreurServeur } from './ecrire-trace-stderr';
 
 const HEADER_COMPANY_ID = 'x-paymarh-company-id';
@@ -11,23 +11,6 @@ async function lireCorps(reponse: Response): Promise<unknown> {
   } catch {
     return null;
   }
-}
-
-function extraireErreur(
-  corps: unknown,
-  statut: number
-): { code: string; message: string; champ?: string } {
-  if (typeof corps === 'object' && corps !== null) {
-    const c = corps as Record<string, unknown>;
-    if (typeof c.message === 'string') {
-      return {
-        code: typeof c.code === 'string' ? c.code : 'ERREUR',
-        message: c.message,
-        champ: typeof c.champ === 'string' ? c.champ : undefined,
-      };
-    }
-  }
-  return { code: 'ERREUR', message: `L’API a répondu avec le code ${statut}.` };
 }
 
 /** En-tetes pour les appels fiche salarie : societe courante via l URL. */
@@ -90,12 +73,12 @@ export async function appelerSalariePatch<T>(
   }
 }
 
-/** POST JSON vers l API salarie ({ donnees, alertes }). */
+/** POST JSON vers l API salarie ({ donnees, alertes }). If-Match optionnel (creation). */
 export async function appelerSalariePost<T>(
   companyId: string,
   chemin: string,
   corps: unknown,
-  ifMatch: number
+  ifMatch?: number
 ): Promise<ReponseEcriture<T>> {
   const methode = 'POST' as const;
   const url = `${urlApi()}${chemin}`;

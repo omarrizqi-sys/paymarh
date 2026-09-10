@@ -1,4 +1,5 @@
-import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { creerPipeValidationGlobale } from '../src/common/validation/pipe-validation-globale.js';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
@@ -672,9 +673,7 @@ describe('TAHFIZ — inactivation d une ligne deja utilisee par un bulletin', ()
       .useValue(port)
       .compile();
     app = compiled.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
-    );
+    app.useGlobalPipes(creerPipeValidationGlobale());
     await app.init();
     await app.listen(0);
   });
@@ -811,9 +810,7 @@ describe('TAHFIZ — retrecissement des dates et lecture par lot', () => {
       .useValue(port)
       .compile();
     app = compiled.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
-    );
+    app.useGlobalPipes(creerPipeValidationGlobale());
     await app.init();
     await app.listen(0);
   });
@@ -1023,9 +1020,7 @@ describe('TAHFIZ — transaction unique avec le parametrage societe', () => {
       })
       .compile();
     app = compiled.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true })
-    );
+    app.useGlobalPipes(creerPipeValidationGlobale());
     await app.init();
     await app.listen(0);
   });

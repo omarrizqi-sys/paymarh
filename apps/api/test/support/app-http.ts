@@ -1,7 +1,8 @@
-import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import type { AddressInfo } from 'node:net';
 import { AppModule } from '../../src/app.module.js';
+import { creerPipeValidationGlobale } from '../../src/common/validation/pipe-validation-globale.js';
 import { SocleTestModule } from '../../src/modules/salaries/test/socle-test.module.js';
 
 export async function creerAppHttp(): Promise<INestApplication> {
@@ -9,13 +10,7 @@ export async function creerAppHttp(): Promise<INestApplication> {
     imports: [AppModule, SocleTestModule],
   }).compile();
   const app = moduleRef.createNestApplication();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    })
-  );
+  app.useGlobalPipes(creerPipeValidationGlobale());
   await app.init();
   return app;
 }

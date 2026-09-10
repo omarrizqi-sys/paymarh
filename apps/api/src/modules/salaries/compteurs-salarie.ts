@@ -24,7 +24,7 @@ export interface DonneesSalarieCreation {
   nom: string;
   prenom: string;
   sexe: 'HOMME' | 'FEMME';
-  dateNaissance: Date;
+  dateNaissance: Date | null;
   dateEntree: Date;
   dateAnciennete: Date;
 }

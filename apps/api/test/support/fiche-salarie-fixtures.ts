@@ -64,7 +64,7 @@ export interface DonneesSalarieMin {
   matricule: string;
   nom?: string;
   prenom?: string;
-  dateNaissance?: Date;
+  dateNaissance?: Date | null;
   numeroPiece?: string | null;
   numeroCnss?: string | null;
   codePostal?: string | null;
@@ -88,7 +88,8 @@ export async function creerSalarieMin(
         nom: donnees.nom ?? 'Alami',
         prenom: donnees.prenom ?? 'Said',
         sexe: 'HOMME',
-        dateNaissance: donnees.dateNaissance ?? new Date('1990-05-15'),
+        dateNaissance:
+          donnees.dateNaissance !== undefined ? donnees.dateNaissance : new Date('1990-05-15'),
         numeroPiece: donnees.numeroPiece ?? null,
         numeroCnss: donnees.numeroCnss ?? null,
         codePostal: donnees.codePostal ?? null,

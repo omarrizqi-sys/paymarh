@@ -61,6 +61,10 @@ export function useRegistreFiche(): RegistreFicheContexte {
   return contexte;
 }
 
+export function useRegistreFicheOptionnel(): RegistreFicheContexte | null {
+  return useContext(ContexteRegistreFiche);
+}
+
 interface PropsProvider {
   readonly versionInitiale: number;
   readonly onRechargerServeur: () => Promise<void>;

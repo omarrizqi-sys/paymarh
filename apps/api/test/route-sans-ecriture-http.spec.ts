@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { creerPipeValidationGlobale } from '../src/common/validation/pipe-validation-globale.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { SocleTestModule } from '../src/modules/salaries/test/socle-test.module.js';
@@ -29,13 +30,7 @@ describe('RouteSansEcriture - garde a l execution', () => {
     }).compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      })
-    );
+    app.useGlobalPipes(creerPipeValidationGlobale());
     await app.init();
     await app.listen(0);
 

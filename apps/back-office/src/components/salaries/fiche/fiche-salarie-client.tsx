@@ -21,6 +21,8 @@ import type {
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
+import { consommerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
+import { repartirAlertesCreation } from '@/lib/fiche/repartir-alertes-creation';
 import {
   AvertissementNavigationFiche,
   confirmerNavigationAvecModifications,
@@ -103,6 +105,8 @@ function ContenuFicheSalarie({
   readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
+  const [alertesCreation] = useState(() => consommerAlertesCreationSalarie(salarieId) ?? []);
+  const alertesParBloc = useMemo(() => repartirAlertesCreation(alertesCreation), [alertesCreation]);
 
   useDefilementRubriqueSommaire(rubriqueVisibleId);
 
@@ -118,7 +122,7 @@ function ContenuFicheSalarie({
       nom: fiche.nom,
       prenom: fiche.prenom,
       sexe: fiche.sexe,
-      dateNaissance: fiche.dateNaissance,
+      dateNaissance: fiche.dateNaissance ?? '',
       villeNaissance: fiche.villeNaissance ?? '',
       paysNaissanceId: fiche.paysNaissanceId ?? '',
       nationaliteId: fiche.nationaliteId ?? '',
@@ -218,12 +222,15 @@ function ContenuFicheSalarie({
                   valeurs={valeursIdentite}
                   pays={pays}
                   situationsFamiliales={situationsFamiliales}
+                  alertesExternes={
+                    alertesParBloc.identite.length > 0 ? alertesParBloc.identite : undefined
+                  }
                   onServeurChange={(valeurs, version, extras) =>
                     appliquerSlice({
                       nom: valeurs.nom,
                       prenom: valeurs.prenom,
                       sexe: valeurs.sexe,
-                      dateNaissance: valeurs.dateNaissance,
+                      dateNaissance: valeurs.dateNaissance === '' ? null : valeurs.dateNaissance,
                       villeNaissance: valeurs.villeNaissance === '' ? null : valeurs.villeNaissance,
                       paysNaissanceId:
                         valeurs.paysNaissanceId === '' ? null : valeurs.paysNaissanceId,
@@ -239,6 +246,11 @@ function ContenuFicheSalarie({
                   salarieId={salarieId}
                   valeurs={valeursIdentifiantsLegaux}
                   typePieceIdentite={fiche.typePieceIdentite}
+                  alertesExternes={
+                    alertesParBloc['identifiants-legaux'].length > 0
+                      ? alertesParBloc['identifiants-legaux']
+                      : undefined
+                  }
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
                 <RubriqueCoordonnees
@@ -246,6 +258,9 @@ function ContenuFicheSalarie({
                   salarieId={salarieId}
                   valeurs={valeursCoordonnees}
                   pays={pays}
+                  alertesExternes={
+                    alertesParBloc.coordonnees.length > 0 ? alertesParBloc.coordonnees : undefined
+                  }
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
                 <RubriquePersonnesACharge
@@ -272,6 +287,9 @@ function ContenuFicheSalarie({
                   salarieId={salarieId}
                   valeurs={valeursDates}
                   dateSortie={fiche.dateSortie}
+                  alertesExternes={
+                    alertesParBloc.dates.length > 0 ? alertesParBloc.dates : undefined
+                  }
                   onServeurChange={(valeurs, version) => appliquerSlice({ ...valeurs, version })}
                 />
                 <RubriquePrets

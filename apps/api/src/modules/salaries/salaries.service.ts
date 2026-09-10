@@ -262,6 +262,7 @@ export class SalariesService {
 
     const dateEntree = versDate(dto.dateEntree);
     const dateAnciennete = dto.dateAnciennete ? versDate(dto.dateAnciennete) : dateEntree;
+    const dateNaissance = dto.dateNaissance ? versDate(dto.dateNaissance) : null;
 
     await this.controlerBlocages({
       companyId,
@@ -271,7 +272,7 @@ export class SalariesService {
       nom: dto.nom,
       prenom: dto.prenom,
       sexe: dto.sexe,
-      dateNaissance: versDate(dto.dateNaissance),
+      dateNaissance,
       villeNaissance: dto.villeNaissance,
       numeroCimr: dto.numeroCimr,
     });
@@ -294,7 +295,7 @@ export class SalariesService {
         companyId,
         nom: dto.nom,
         prenom: dto.prenom,
-        dateNaissance: versDate(dto.dateNaissance),
+        dateNaissance,
         numeroPiece: identifiantLegalSaisi(dto.numeroPiece),
       })),
     ];
@@ -304,7 +305,7 @@ export class SalariesService {
       nom: dto.nom,
       prenom: dto.prenom,
       sexe: dto.sexe,
-      dateNaissance: versDate(dto.dateNaissance),
+      dateNaissance,
       villeNaissance: dto.villeNaissance ?? null,
       paysNaissanceId: dto.paysNaissanceId ?? null,
       nationaliteId: dto.nationaliteId ?? null,
@@ -430,7 +431,9 @@ export class SalariesService {
       donnees.prenom = dto.prenom;
     }
     if (dto.sexe !== undefined) donnees.sexe = dto.sexe;
-    if (dto.dateNaissance !== undefined) donnees.dateNaissance = versDate(dto.dateNaissance);
+    if (dto.dateNaissance !== undefined) {
+      donnees.dateNaissance = dto.dateNaissance ? versDate(dto.dateNaissance) : null;
+    }
     if (dto.villeNaissance !== undefined) {
       assertAlphabetiqueSalarie(dto.villeNaissance, 'villeNaissance');
       donnees.villeNaissance = dto.villeNaissance;
@@ -444,7 +447,12 @@ export class SalariesService {
     return this.appliquerModification(id, existant, versionAttendue, donnees, {
       nom: dto.nom ?? existant.nom,
       prenom: dto.prenom ?? existant.prenom,
-      dateNaissance: dto.dateNaissance ? versDate(dto.dateNaissance) : existant.dateNaissance,
+      dateNaissance:
+        dto.dateNaissance !== undefined
+          ? dto.dateNaissance
+            ? versDate(dto.dateNaissance)
+            : null
+          : existant.dateNaissance,
       numeroPiece: existant.numeroPiece,
     });
   }
@@ -631,7 +639,7 @@ export class SalariesService {
     contexteAlertes: {
       nom: string;
       prenom: string;
-      dateNaissance?: Date;
+      dateNaissance?: Date | null;
       dateEntree?: Date;
       dateAnciennete?: Date;
       numeroPiece?: string | null;
@@ -707,7 +715,7 @@ export class SalariesService {
     nom?: string;
     prenom?: string;
     sexe?: 'HOMME' | 'FEMME';
-    dateNaissance?: Date;
+    dateNaissance?: Date | null;
     villeNaissance?: string;
     numeroCimr?: string;
   }) {

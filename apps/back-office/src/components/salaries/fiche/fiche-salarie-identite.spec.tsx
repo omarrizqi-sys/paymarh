@@ -5,6 +5,7 @@ import type { Pays, SituationFamiliale } from '@paymarh/shared-types';
 import { AppelApiEchoue } from '@/lib/api/client';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { FicheSalarieClient } from './fiche-salarie-client';
+import { deposerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
 
 const {
   modifierIdentiteSalarie,
@@ -272,6 +273,37 @@ describe('Fiche salarie — blocs identite', () => {
     const champNom = champ('nom').parentElement;
     expect(champNom?.textContent).toContain('Format de mail inattendu.');
     expect(screen.queryByTestId('alertes-tete-identite')).toBeNull();
+  });
+
+  it('U8b — un refus CHAMP_OBLIGATOIRE sur nom s affiche sous le champ, pas en tete', async () => {
+    modifierIdentiteSalarie.mockRejectedValue(
+      new AppelApiEchoue(400, {
+        code: 'CHAMP_OBLIGATOIRE',
+        message: 'Ce champ est obligatoire.',
+        champ: 'nom',
+      })
+    );
+    rendre();
+
+    fireEvent.change(champ('nom'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/ }));
+
+    await waitFor(() => expect(screen.getByText('Ce champ est obligatoire.')).toBeTruthy());
+    expect(champ('nom').parentElement?.textContent).toContain('Ce champ est obligatoire.');
+    expect(screen.queryByTestId('erreur-rubrique-identite')?.textContent ?? '').not.toContain(
+      'Ce champ est obligatoire.'
+    );
+  });
+
+  it('U8c — la date de naissance ne porte pas la marque des champs obligatoires', () => {
+    rendre();
+    expect(screen.getByLabelText('Date de naissance')).toBeTruthy();
+    expect(screen.queryByLabelText('Date de naissance *')).toBeNull();
+  });
+
+  it('U8d — date de naissance absente : le champ est vide, sans tiret ni remplacement', () => {
+    rendre(ficheBase({ dateNaissance: null }));
+    expect(champ('dateNaissance')).toHaveProperty('value', '');
   });
 
   it('U9 — une alerte sans nom de champ s affiche en tete de son bloc', async () => {
@@ -545,5 +577,19 @@ describe('Fiche salarie — blocs identite', () => {
     ].map((fn) => fn.mock.invocationCallOrder[0] ?? Infinity);
     expect(ordreAppels[0]).toBeLessThan(ordreAppels[1] ?? Infinity);
     expect(ordreAppels[1]).toBeLessThan(ordreAppels[2] ?? Infinity);
+  });
+
+  it('la date d anciennete ne porte pas la marque des champs obligatoires', () => {
+    rendre();
+    expect(screen.getByLabelText('Date d’ancienneté')).toBeTruthy();
+    expect(screen.queryByLabelText('Date d’ancienneté *')).toBeNull();
+  });
+
+  it('affiche sous le champ une alerte deposee a la creation', () => {
+    deposerAlertesCreationSalarie('sal-1', [
+      { code: 'HOMONYME', message: 'Un homonyme existe deja.', champ: 'nom' },
+    ]);
+    rendre();
+    expect(screen.getByText('Un homonyme existe deja.')).toBeTruthy();
   });
 });

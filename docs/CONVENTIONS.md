@@ -260,3 +260,25 @@ Elle reçoit du tableau consommateur : colonnes, `idColonneMarque`, rendu du for
 1. **Situations familiales** — la liste déroulante accorde ses libellés en genre à partir du sexe saisi localement, parce qu'elle affiche des valeurs non encore choisies. Le libellé de la valeur enregistrée (`fiche.situationFamiliale.libelle`) vient du serveur.
 
 2. **Message d'aperçu avant suppression de ligne de tableau** — le champ `message` renvoyé par `GET …/impact-suppression` est affiché tel quel. Seul le serveur sait si la ligne sera supprimée définitivement ou rendue inactive, et pourquoi.
+
+### Structure unique d'un refus
+
+Un refus — de forme (ValidationPipe) ou métier — sort **toujours** sous la même forme, jamais un tableau de phrases anglaises :
+
+```json
+{ "code": "CHAMP_OBLIGATOIRE", "message": "Ce champ est obligatoire.", "champ": "nom" }
+```
+
+`message` est une chaîne française. `champ` désigne **un seul** champ (le premier en erreur, ordre de déclaration du DTO). Voir [`adr/0029-traduction-refus-forme.md`](./adr/0029-traduction-refus-forme.md).
+
+---
+
+## 15. Écran de création d'un salarié
+
+La création d'un salarié n'est **pas une fiche**. Route : `/societes/[id]/salaries/nouveau`. Composants dans `apps/back-office/src/components/salaries/creation/`.
+
+**Les quatre blocs d'identité sont importés depuis `fiche/`, jamais copiés.** Identité, Identifiants et immatriculations, Coordonnées, Dates clés — dans cet ordre (celui de la fiche, tableaux exclus). Un champ ajouté à un bloc sert les deux écrans.
+
+La fiche envoie chaque rubrique séparément (`RubriqueEnregistrable`). La création livre les valeurs sans les envoyer (`RubriqueCreable`, quatre implémenteurs) et émet **un seul** `POST /salaries`. Voir [`adr/0028-registre-creation-salarie.md`](./adr/0028-registre-creation-salarie.md).
+
+À la création : le matricule reste saisi (facultatif, phrase d'aide sous le champ) ; la date de sortie et l'état actif/inactif sont absents du DOM. Un champ facultatif vide après trim est omis du corps, pas envoyé vide. `dateNaissance` est facultative (reprise de dossier). `nom`, `prenom` et `dateEntree` ne peuvent pas être vides — voir [`adr/0030-champs-jamais-vides-date-naissance.md`](./adr/0030-champs-jamais-vides-date-naissance.md).

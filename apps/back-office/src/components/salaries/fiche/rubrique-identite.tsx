@@ -1,6 +1,7 @@
 'use client';
 
 import type {
+  AlerteApi,
   Pays,
   SituationFamiliale,
   SituationFamilialeSalarie,
@@ -28,10 +29,12 @@ export interface ValeursIdentite {
 
 interface Props {
   readonly companyId: string;
-  readonly salarieId: string;
+  readonly salarieId?: string;
   readonly valeurs: ValeursIdentite;
   readonly pays: readonly Pays[];
   readonly situationsFamiliales: readonly SituationFamiliale[];
+  readonly alertesExternes?: readonly AlerteApi[];
+  readonly erreurExterne?: string | null;
   readonly onServeurChange: (
     valeurs: ValeursIdentite,
     version: number,
@@ -56,12 +59,16 @@ export function RubriqueIdentite({
   valeurs,
   pays,
   situationsFamiliales,
+  alertesExternes,
+  erreurExterne,
   onServeurChange,
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'identite',
     libelle: 'Identité',
     valeursServeur: valeurs,
+    alertesExternes,
+    erreurExterne,
     estModifiee: (courant, serveur) =>
       courant.nom !== serveur.nom ||
       courant.prenom !== serveur.prenom ||
@@ -72,11 +79,14 @@ export function RubriqueIdentite({
       courant.nationaliteId !== serveur.nationaliteId ||
       courant.situationFamilialeCode !== serveur.situationFamilialeCode,
     envoyer: async (version, courant) => {
+      if (salarieId === undefined) {
+        throw new Error('La rubrique Identité ne s’envoie pas à la création.');
+      }
       const reponse = await modifierIdentiteSalarie(companyId, salarieId, version, {
         nom: courant.nom,
         prenom: courant.prenom,
         sexe: courant.sexe,
-        dateNaissance: courant.dateNaissance,
+        dateNaissance: courant.dateNaissance === '' ? null : courant.dateNaissance,
         villeNaissance: videOuNull(courant.villeNaissance),
         paysNaissanceId: videOuNull(courant.paysNaissanceId),
         nationaliteId: videOuNull(courant.nationaliteId),
@@ -87,7 +97,7 @@ export function RubriqueIdentite({
           nom: reponse.donnees.nom,
           prenom: reponse.donnees.prenom,
           sexe: reponse.donnees.sexe,
-          dateNaissance: reponse.donnees.dateNaissance,
+          dateNaissance: reponse.donnees.dateNaissance ?? '',
           villeNaissance: reponse.donnees.villeNaissance ?? '',
           paysNaissanceId: reponse.donnees.paysNaissanceId ?? '',
           nationaliteId: reponse.donnees.nationaliteId ?? '',
@@ -153,7 +163,7 @@ export function RubriqueIdentite({
       <h3 className="text-sm font-medium">État civil</h3>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="dateNaissance">Date de naissance *</Label>
+          <Label htmlFor="dateNaissance">Date de naissance</Label>
           <Input
             id="dateNaissance"
             type="date"

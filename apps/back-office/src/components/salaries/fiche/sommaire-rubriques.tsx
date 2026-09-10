@@ -1,15 +1,20 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRegistreFiche } from './registre-fiche-provider';
+import { useRegistreFicheOptionnel, type EntreeSommaireRubrique } from './registre-fiche-provider';
 
 interface Props {
+  readonly entrees?: readonly EntreeSommaireRubrique[];
   readonly rubriqueVisibleId?: string;
   readonly onRubriqueVisibleChange?: (id: string) => void;
 }
 
-export function SommaireRubriques({ rubriqueVisibleId, onRubriqueVisibleChange }: Props) {
-  const { rubriquesSommaire } = useRegistreFiche();
+export function SommaireRubriques({ entrees, rubriqueVisibleId, onRubriqueVisibleChange }: Props) {
+  const registre = useRegistreFicheOptionnel();
+  const rubriquesSommaire = entrees ?? registre?.rubriquesSommaire;
+  if (rubriquesSommaire === undefined) {
+    throw new Error('SommaireRubriques exige un registre de fiche ou des entrees.');
+  }
 
   return (
     <nav aria-label="Sommaire des rubriques" className="space-y-1">

@@ -125,7 +125,7 @@ export interface FicheSalarie {
   readonly nom: string;
   readonly prenom: string;
   readonly sexe: SexePersonne;
-  readonly dateNaissance: string;
+  readonly dateNaissance: string | null;
   readonly villeNaissance: string | null;
   readonly paysNaissanceId: Uuid | null;
   readonly nationaliteId: Uuid | null;

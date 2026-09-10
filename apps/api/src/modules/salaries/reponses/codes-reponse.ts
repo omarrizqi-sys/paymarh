@@ -1,3 +1,5 @@
+import { CODES_REFUS_FORME } from '../../../common/errors/codes-refus-forme.js';
+
 /** Codes de blocage, d alerte et de confirmation — registre unique fiche salarie. */
 export const CODES_REPONSE = {
   EN_TETE_IF_MATCH_REQUIS: {
@@ -12,14 +14,8 @@ export const CODES_REPONSE = {
     code: 'VALEUR_INDISPONIBLE',
     message: 'Cette valeur n’est pas disponible.',
   },
-  CHAMP_INTERDIT: {
-    code: 'CHAMP_INTERDIT',
-    message: 'Ce champ ne peut pas être fourni par le client.',
-  },
-  CHAMP_OBLIGATOIRE: {
-    code: 'CHAMP_OBLIGATOIRE',
-    message: 'Ce champ est obligatoire.',
-  },
+  CHAMP_INTERDIT: CODES_REFUS_FORME.CHAMP_INTERDIT,
+  CHAMP_OBLIGATOIRE: CODES_REFUS_FORME.CHAMP_OBLIGATOIRE,
   MOIS_FORMAT_INVALIDE: {
     code: 'MOIS_FORMAT_INVALIDE',
     message: 'Le mois doit être au format AAAA-MM.',
@@ -32,10 +28,7 @@ export const CODES_REPONSE = {
     code: 'CONFIRMATION_OBSOLETE',
     message: 'Le contexte a changé depuis l’aperçu. Relancez l’aperçu puis confirmez.',
   },
-  CARACTERE_NON_CONFORME: {
-    code: 'CARACTERE_NON_CONFORME',
-    message: 'Ce champ contient un caractère non conforme à son type.',
-  },
+  CARACTERE_NON_CONFORME: CODES_REFUS_FORME.CARACTERE_NON_CONFORME,
   ANCIENNETE_POSTERIEURE_ENTREE: {
     code: 'ANCIENNETE_POSTERIEURE_ENTREE',
     message: 'La date d’ancienneté est postérieure à la date d’entrée.',

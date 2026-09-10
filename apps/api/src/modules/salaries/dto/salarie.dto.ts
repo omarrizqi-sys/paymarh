@@ -1,31 +1,40 @@
 import {
   IsDateString,
   IsEnum,
+  IsNotEmpty,
   IsOptional,
   IsString,
   IsUUID,
   MaxLength,
   ValidateIf,
 } from 'class-validator';
+import { TrimSiChaine, VideVersNull } from '../../../common/validation/trim-si-chaine.js';
 
 export class CreerSalarieDto {
   @IsOptional()
   @IsString()
   matricule?: string;
 
+  @TrimSiChaine()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
   nom!: string;
 
+  @TrimSiChaine()
   @IsString()
+  @IsNotEmpty()
   @MaxLength(200)
   prenom!: string;
 
   @IsEnum(['HOMME', 'FEMME'])
   sexe!: 'HOMME' | 'FEMME';
 
+  @IsOptional()
+  @VideVersNull()
+  @ValidateIf((_, v) => v !== null)
   @IsDateString()
-  dateNaissance!: string;
+  dateNaissance?: string | null;
 
   @IsOptional()
   @IsString()
@@ -107,6 +116,8 @@ export class CreerSalarieDto {
   @IsString()
   urgenceEmail?: string;
 
+  @TrimSiChaine()
+  @IsNotEmpty()
   @IsDateString()
   dateEntree!: string;
 
@@ -187,12 +198,18 @@ export class VerifierSalarieDto {
 }
 
 export class ModifierIdentiteSalarieDto {
-  @IsOptional()
+  @ValidateIf((_, v) => v !== undefined)
+  @TrimSiChaine()
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   nom?: string;
 
-  @IsOptional()
+  @ValidateIf((_, v) => v !== undefined)
+  @TrimSiChaine()
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
   prenom?: string;
 
   @IsOptional()
@@ -200,8 +217,10 @@ export class ModifierIdentiteSalarieDto {
   sexe?: 'HOMME' | 'FEMME';
 
   @IsOptional()
+  @VideVersNull()
+  @ValidateIf((_, v) => v !== null)
   @IsDateString()
-  dateNaissance?: string;
+  dateNaissance?: string | null;
 
   @IsOptional()
   @ValidateIf((_, v) => v !== null)
@@ -313,7 +332,9 @@ export class ModifierIdentifiantsLegauxSalarieDto {
 }
 
 export class ModifierDatesSalarieDto {
-  @IsOptional()
+  @ValidateIf((_, v) => v !== undefined)
+  @TrimSiChaine()
+  @IsNotEmpty()
   @IsDateString()
   dateEntree?: string;
 

@@ -55,6 +55,15 @@ Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figure
 
 ### Navigation et interaction
 
+- **Créer un salarié** — depuis la liste, le bouton n'apparaît que si l'on a le droit de créer. Il ouvre l'écran « Nouveau salarié », pas une fiche vide.
+- L'écran reprend les **quatre blocs d'identité** de la fiche, dans le même ordre : Identité, Identifiants et immatriculations, Coordonnées, Dates clés. On n'y saisit ni emploi, ni personne à charge, ni prêt : on crée, on arrive sur la fiche, on complète ensuite.
+- **Matricule** : le champ est visible et facultatif. Une phrase sous le champ indique de le laisser vide pour une attribution automatique. Si l'on reprend un plan de matricules d'un logiciel précédent, on le saisit ici.
+- **Date de sortie** et **état actif/inactif** : absents. Ce n'est pas grisé : il n'y a rien à saisir, le serveur les déduira plus tard.
+- **Créer le salarié** (libellé volontairement distinct d'« Enregistrer ») : un seul envoi. En cas de succès, on arrive sur la fiche du salarié, y compris si le serveur a signalé une alerte (homonyme, réembauche, format de contact…). L'alerte s'affiche alors à sa place habituelle, sous le champ concerné ou en tête du bloc Identité.
+- Si le serveur **refuse** la création, rien n'est créé. La saisie reste à l'écran. Un refus rattaché à un champ s'affiche sous ce champ ; un refus sans champ s'affiche en tête du bloc Identité.
+- **Annuler** vide le formulaire. On ne change pas d'écran, rien n'est envoyé.
+- Un lien **Retour à la liste** ramène à la liste des salariés.
+
 - **Modification simultanée d'une fiche** — rechargement obligatoire si la fiche a changé entre-temps (If-Match).
 - **Confirmation des opérations sensibles** — déroulé aperçu → jeton → confirmation ; jeton périmé si le dossier a changé entre l'aperçu et la confirmation.
 - **Alerte de réembauche** — ouverture de la fiche existante depuis l'alerte ; ce que l'utilisateur voit et décide.
@@ -83,6 +92,7 @@ Ces sujets dépendent de l'interface ou du déroulé utilisateur ; ils ne figure
 
 ### Saisie et formulaires
 
+- Création d'un salarié — écran dédié (voir notes ci-dessous).
 - Création d'une fiche pas à pas.
 - Création et modification d'un emploi pas à pas.
 - Saisie des personnes à charge, prêts, saisies, comptes bancaires.

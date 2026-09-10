@@ -49,7 +49,22 @@ async function lireCorps(reponse: Response): Promise<unknown> {
   }
 }
 
-function extraireErreur(corps: unknown, statut: number): ErreurApi {
+const MOTIF_CHAMP_INTERDIT = /^property (\S+) should not exist$/i;
+const MOTIF_CHAMP_DEBUT = /^(\S+) /;
+
+function nomChampDepuisPhraseClassValidator(phrase: string): string | undefined {
+  const interdit = MOTIF_CHAMP_INTERDIT.exec(phrase);
+  if (interdit?.[1] !== undefined) return interdit[1];
+  const debut = MOTIF_CHAMP_DEBUT.exec(phrase);
+  return debut?.[1];
+}
+
+/**
+ * Lit { code, message, champ }. Si l API renvoyait encore le tableau anglais
+ * de class-validator, on en extrait le premier champ et on substitue le
+ * message francais deja connu — jamais la phrase anglaise.
+ */
+export function extraireErreur(corps: unknown, statut: number): ErreurApi {
   if (typeof corps === 'object' && corps !== null) {
     const c = corps as Record<string, unknown>;
     if (typeof c.message === 'string') {
@@ -58,6 +73,20 @@ function extraireErreur(corps: unknown, statut: number): ErreurApi {
         message: c.message,
         champ: typeof c.champ === 'string' ? c.champ : undefined,
       };
+    }
+    if (Array.isArray(c.message)) {
+      const phrases = c.message.filter((item): item is string => typeof item === 'string');
+      const premiere = phrases[0];
+      if (premiere !== undefined) {
+        const interdit = MOTIF_CHAMP_INTERDIT.test(premiere);
+        return {
+          code: interdit ? 'CHAMP_INTERDIT' : 'CHAMP_OBLIGATOIRE',
+          message: interdit
+            ? 'Ce champ ne peut pas être fourni par le client.'
+            : 'Ce champ est obligatoire.',
+          champ: nomChampDepuisPhraseClassValidator(premiere),
+        };
+      }
     }
   }
   return { code: 'ERREUR', message: `L’API a répondu avec le code ${statut}.` };

@@ -1,4 +1,5 @@
-import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { creerPipeValidationGlobale } from '../src/common/validation/pipe-validation-globale.js';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
@@ -405,13 +406,7 @@ describe('API fiche salarie — endpoints salarie (2.1.b-2)', () => {
       .compile();
 
     const appBulletin = moduleRef.createNestApplication();
-    appBulletin.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      })
-    );
+    appBulletin.useGlobalPipes(creerPipeValidationGlobale());
     await appBulletin.init();
     await appBulletin.listen(0);
 

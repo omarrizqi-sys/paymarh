@@ -422,4 +422,10 @@ describe('ListeSalariesClient', () => {
     rendre(donneesInitiales({ operations: ['salarie.lire', 'salarie.creer'] }), true);
     expect(screen.getByRole('button', { name: 'Créer un salarié' })).toBeTruthy();
   });
+
+  it('Creer un salarie mene a l ecran de creation', () => {
+    rendre(donneesInitiales({ operations: ['salarie.lire', 'salarie.creer'] }), true);
+    fireEvent.click(screen.getByRole('button', { name: 'Créer un salarié' }));
+    expect(routerPush).toHaveBeenCalledWith('/societes/soc-1/salaries/nouveau');
+  });
 });

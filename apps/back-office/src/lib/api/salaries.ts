@@ -7,6 +7,7 @@ import {
   appelerSalariePut,
 } from './client-salarie';
 import type {
+  FicheSalarie,
   FicheSalarieAvecOperations,
   ListeSalariesDonnees,
   ListerSalariesParams,
@@ -58,6 +59,44 @@ export async function lireSalarie(
   return appelerSalarieGet<FicheSalarieAvecOperations>(companyId, `/salaries/${salarieId}`);
 }
 
+/** Corps de POST /salaries — cles facultatives absentes si vides, jamais chaine vide. */
+export interface CorpsCreationSalarie {
+  readonly nom: string;
+  readonly prenom: string;
+  readonly sexe: 'HOMME' | 'FEMME';
+  readonly dateNaissance?: string;
+  readonly dateEntree: string;
+  readonly matricule?: string;
+  readonly villeNaissance?: string;
+  readonly paysNaissanceId?: string;
+  readonly nationaliteId?: string;
+  readonly situationFamilialeCode?: string;
+  readonly numeroPiece?: string;
+  readonly numeroCnss?: string;
+  readonly numeroCimr?: string;
+  readonly adresse?: string;
+  readonly complementAdresse?: string;
+  readonly ville?: string;
+  readonly codePostal?: string;
+  readonly paysId?: string;
+  readonly telephonePersonnel?: string;
+  readonly telephoneProfessionnel?: string;
+  readonly emailPersonnel?: string;
+  readonly emailProfessionnel?: string;
+  readonly urgencePrenom?: string;
+  readonly urgenceNom?: string;
+  readonly urgenceTelephone?: string;
+  readonly urgenceEmail?: string;
+  readonly dateAnciennete?: string;
+}
+
+export async function creerSalarie(
+  companyId: string,
+  corps: CorpsCreationSalarie
+): Promise<ReponseEcriture<FicheSalarie>> {
+  return appelerSalariePost<FicheSalarie>(companyId, '/salaries', corps);
+}
+
 export async function modifierIdentiteSalarie(
   companyId: string,
   salarieId: string,
@@ -66,7 +105,7 @@ export async function modifierIdentiteSalarie(
     nom?: string;
     prenom?: string;
     sexe?: 'HOMME' | 'FEMME';
-    dateNaissance?: string;
+    dateNaissance?: string | null;
     villeNaissance?: string | null;
     paysNaissanceId?: string | null;
     nationaliteId?: string | null;

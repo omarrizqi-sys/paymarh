@@ -1,5 +1,6 @@
 'use client';
 
+import type { AlerteApi } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,9 +18,11 @@ export interface ValeursIdentifiantsLegaux {
 
 interface Props {
   readonly companyId: string;
-  readonly salarieId: string;
+  readonly salarieId?: string;
   readonly valeurs: ValeursIdentifiantsLegaux;
   readonly typePieceIdentite: string | null;
+  readonly matriculeFacultatif?: boolean;
+  readonly alertesExternes?: readonly AlerteApi[];
   readonly onServeurChange: (valeurs: ValeursIdentifiantsLegaux, version: number) => void;
 }
 
@@ -32,18 +35,24 @@ export function RubriqueIdentifiantsLegaux({
   salarieId,
   valeurs,
   typePieceIdentite,
+  matriculeFacultatif = false,
+  alertesExternes,
   onServeurChange,
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'identifiants-legaux',
     libelle: 'Identifiants et immatriculations',
     valeursServeur: valeurs,
+    alertesExternes,
     estModifiee: (courant, serveur) =>
       courant.matricule !== serveur.matricule ||
       courant.numeroPiece !== serveur.numeroPiece ||
       courant.numeroCnss !== serveur.numeroCnss ||
       courant.numeroCimr !== serveur.numeroCimr,
     envoyer: async (version, courant) => {
+      if (salarieId === undefined) {
+        throw new Error('La rubrique Identifiants ne s’envoie pas à la création.');
+      }
       const reponse = await modifierIdentifiantsLegauxSalarie(companyId, salarieId, version, {
         matricule: courant.matricule,
         numeroPiece: videOuNull(courant.numeroPiece),
@@ -75,7 +84,7 @@ export function RubriqueIdentifiantsLegaux({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="matricule">Matricule *</Label>
+          <Label htmlFor="matricule">{matriculeFacultatif ? 'Matricule' : 'Matricule *'}</Label>
           <Input
             id="matricule"
             type="text"
@@ -84,6 +93,11 @@ export function RubriqueIdentifiantsLegaux({
             disabled={rubrique.verrouille}
             onChange={(e) => rubrique.modifier({ matricule: e.target.value })}
           />
+          {matriculeFacultatif ? (
+            <p className="text-muted-foreground text-xs" data-testid="aide-matricule-creation">
+              Laissez vide pour que le matricule soit attribué automatiquement.
+            </p>
+          ) : null}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="matricule" />
         </div>
         <div className="space-y-2">

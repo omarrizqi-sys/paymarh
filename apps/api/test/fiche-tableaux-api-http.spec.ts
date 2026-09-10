@@ -1,4 +1,5 @@
-import { ValidationPipe, type INestApplication } from '@nestjs/common';
+import type { INestApplication } from '@nestjs/common';
+import { creerPipeValidationGlobale } from '../src/common/validation/pipe-validation-globale.js';
 import { Test } from '@nestjs/testing';
 import { Decimal } from 'decimal.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -64,13 +65,7 @@ async function creerAppAvecPorts(options: {
 
   const compiled = await moduleRef.compile();
   const app = compiled.createNestApplication();
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-    })
-  );
+  app.useGlobalPipes(creerPipeValidationGlobale());
   await app.init();
   await app.listen(0);
   return app;

@@ -90,4 +90,38 @@ describe('client-salarie — ecritures tableaux', () => {
       expect((erreur as AppelApiEchoue).erreur.code).toBe('VALEUR_REFUSEE');
     }
   });
+
+  it('T05 — POST de creation sans If-Match : l en-tete est absent', async () => {
+    await appelerSalariePost('soc-1', '/salaries', { nom: 'Benali' });
+
+    const [, options] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(options.method).toBe('POST');
+    expect((options.headers as Record<string, string>)['if-match']).toBeUndefined();
+  });
+
+  it('T06 — un tableau class-validator est lu comme refus de champ, pas comme ERREUR', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => ({
+        message: [
+          'dateNaissance must be a valid ISO 8601 date string',
+          'dateEntree must be a valid ISO 8601 date string',
+        ],
+        error: 'Bad Request',
+        statusCode: 400,
+      }),
+    });
+
+    await expect(appelerSalariePost('soc-1', '/salaries', { nom: 'Benali' })).rejects.toMatchObject(
+      {
+        statut: 400,
+        erreur: {
+          code: 'CHAMP_OBLIGATOIRE',
+          message: 'Ce champ est obligatoire.',
+          champ: 'dateNaissance',
+        },
+      }
+    );
+  });
 });

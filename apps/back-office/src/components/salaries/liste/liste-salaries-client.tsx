@@ -227,7 +227,9 @@ export function ListeSalariesClient({
           ) : null}
         </div>
       }
-      renderRail={(compact) => <RailActionsListe operations={operations} modeCompact={compact} />}
+      renderRail={(compact) => (
+        <RailActionsListe operations={operations} companyId={companyId} modeCompact={compact} />
+      )}
     />
   );
 }

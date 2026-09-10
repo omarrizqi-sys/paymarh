@@ -1,6 +1,6 @@
 'use client';
 
-import type { Pays } from '@paymarh/shared-types';
+import type { AlerteApi, Pays } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +28,10 @@ export interface ValeursCoordonnees {
 
 interface Props {
   readonly companyId: string;
-  readonly salarieId: string;
+  readonly salarieId?: string;
   readonly valeurs: ValeursCoordonnees;
   readonly pays: readonly Pays[];
+  readonly alertesExternes?: readonly AlerteApi[];
   readonly onServeurChange: (valeurs: ValeursCoordonnees, version: number) => void;
 }
 
@@ -43,12 +44,14 @@ export function RubriqueCoordonnees({
   salarieId,
   valeurs,
   pays,
+  alertesExternes,
   onServeurChange,
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'coordonnees',
     libelle: 'Coordonnées',
     valeursServeur: valeurs,
+    alertesExternes,
     estModifiee: (courant, serveur) =>
       courant.adresse !== serveur.adresse ||
       courant.complementAdresse !== serveur.complementAdresse ||
@@ -64,6 +67,9 @@ export function RubriqueCoordonnees({
       courant.urgenceTelephone !== serveur.urgenceTelephone ||
       courant.urgenceEmail !== serveur.urgenceEmail,
     envoyer: async (version, courant) => {
+      if (salarieId === undefined) {
+        throw new Error('La rubrique Coordonnées ne s’envoie pas à la création.');
+      }
       const reponse = await modifierCoordonneesSalarie(companyId, salarieId, version, {
         adresse: videOuNull(courant.adresse),
         complementAdresse: videOuNull(courant.complementAdresse),

@@ -1,5 +1,6 @@
 'use client';
 
+import type { AlerteApi } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,9 +16,11 @@ export interface ValeursDates {
 
 interface Props {
   readonly companyId: string;
-  readonly salarieId: string;
+  readonly salarieId?: string;
   readonly valeurs: ValeursDates;
-  readonly dateSortie: string | null;
+  readonly dateSortie?: string | null;
+  readonly afficherDateSortie?: boolean;
+  readonly alertesExternes?: readonly AlerteApi[];
   readonly onServeurChange: (valeurs: ValeursDates, version: number) => void;
 }
 
@@ -26,16 +29,22 @@ export function RubriqueDates({
   salarieId,
   valeurs,
   dateSortie,
+  afficherDateSortie = true,
+  alertesExternes,
   onServeurChange,
 }: Props) {
   const rubrique = useRubriqueFiche({
     id: 'dates',
     libelle: 'Dates clés',
     valeursServeur: valeurs,
+    alertesExternes,
     estModifiee: (courant, serveur) =>
       courant.dateEntree !== serveur.dateEntree ||
       courant.dateAnciennete !== serveur.dateAnciennete,
     envoyer: async (version, courant) => {
+      if (salarieId === undefined) {
+        throw new Error('La rubrique Dates ne s’envoie pas à la création.');
+      }
       const reponse = await modifierDatesSalarie(companyId, salarieId, version, {
         dateEntree: courant.dateEntree,
         dateAnciennete: courant.dateAnciennete,
@@ -74,7 +83,7 @@ export function RubriqueDates({
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateEntree" />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="dateAnciennete">Date d’ancienneté *</Label>
+          <Label htmlFor="dateAnciennete">Date d’ancienneté</Label>
           <Input
             id="dateAnciennete"
             type="date"
@@ -84,16 +93,18 @@ export function RubriqueDates({
           />
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateAnciennete" />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="dateSortie">Date de sortie</Label>
-          <Input
-            id="dateSortie"
-            type="date"
-            value={dateSortie?.slice(0, 10) ?? ''}
-            readOnly
-            disabled
-          />
-        </div>
+        {afficherDateSortie ? (
+          <div className="space-y-2">
+            <Label htmlFor="dateSortie">Date de sortie</Label>
+            <Input
+              id="dateSortie"
+              type="date"
+              value={dateSortie?.slice(0, 10) ?? ''}
+              readOnly
+              disabled
+            />
+          </div>
+        ) : null}
       </div>
     </Rubrique>
   );

@@ -71,7 +71,7 @@ export async function versFicheSalarie(
     nom: salarie.nom,
     prenom: salarie.prenom,
     sexe: salarie.sexe,
-    dateNaissance: formaterDate(salarie.dateNaissance),
+    dateNaissance: salarie.dateNaissance !== null ? formaterDate(salarie.dateNaissance) : null,
     villeNaissance: salarie.villeNaissance,
     paysNaissanceId: salarie.paysNaissanceId,
     nationaliteId: salarie.nationaliteId,

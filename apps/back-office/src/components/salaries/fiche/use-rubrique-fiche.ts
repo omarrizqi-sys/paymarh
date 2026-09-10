@@ -6,7 +6,9 @@ import { AppelApiEchoue } from '@/lib/api/client';
 import { estConflitVersion } from '@/lib/fiche/codes-conflit';
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
 import { valeursStructurellementEgales } from '@/lib/egalite-valeurs';
-import { useRegistreFiche } from './registre-fiche-provider';
+import { useRegistreCreationOptionnel } from '@/lib/fiche/contexte-registre-creation';
+import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
+import { useRegistreFicheOptionnel } from './registre-fiche-provider';
 
 export interface RubriqueFicheProps<T> {
   readonly id: string;
@@ -15,6 +17,9 @@ export interface RubriqueFicheProps<T> {
   readonly estModifiee: (courant: T, serveur: T) => boolean;
   readonly envoyer: (version: number, courant: T) => Promise<EnvoiRubriqueResultat>;
   readonly onServeurChange: (valeurs: T, version: number) => void;
+  readonly alertesExternes?: readonly AlerteApi[];
+  /** `null` = effacer ; `undefined` = la fiche n utilise pas ce canal. */
+  readonly erreurExterne?: string | null;
 }
 
 export function useRubriqueFiche<T>({
@@ -24,12 +29,34 @@ export function useRubriqueFiche<T>({
   estModifiee,
   envoyer,
   onServeurChange,
+  alertesExternes,
+  erreurExterne,
 }: RubriqueFicheProps<T>) {
-  const { enregistrerRubrique, notifierSommaire, version, enregistrementEnCours } =
-    useRegistreFiche();
+  const fiche = useRegistreFicheOptionnel();
+  const creation = useRegistreCreationOptionnel();
+
+  const enregistrerRubriqueFiche = fiche?.enregistrerRubrique;
+  const enregistrerRubriqueCreation = creation?.enregistrerRubrique;
+  const notifierSommaire =
+    fiche?.notifierSommaire ?? creation?.notifierSommaire ?? (() => undefined);
+  const version = fiche?.version ?? 0;
+  const enregistrementEnCours =
+    fiche?.enregistrementEnCours ?? creation?.enregistrementEnCours ?? false;
+
   const [courant, setCourant] = useState(valeursServeur);
   const [erreur, setErreur] = useState<string | undefined>();
-  const [alertes, setAlertes] = useState<readonly AlerteApi[]>([]);
+  const [alertes, setAlertes] = useState<readonly AlerteApi[]>(
+    alertesExternes !== undefined ? alertesExternes : []
+  );
+  // Copie pendant le rendu (pas un effect) : le test de forme ValidationPipe
+  // lit l alerte des le retour de fetch, avant le prochain effect.
+  const [alertesExternesVues, setAlertesExternesVues] = useState(alertesExternes);
+  if (alertesExternes !== alertesExternesVues) {
+    setAlertesExternesVues(alertesExternes);
+    if (alertesExternes !== undefined) {
+      setAlertes(alertesExternes);
+    }
+  }
   const courantRef = useRef(courant);
   const envoyerRef = useRef(envoyer);
   envoyerRef.current = envoyer;
@@ -93,10 +120,28 @@ export function useRubriqueFiche<T>({
   });
 
   useEffect(() => {
+    if (erreurExterne === undefined) return;
+    setErreur(erreurExterne === null ? undefined : erreurExterne);
+  }, [erreurExterne]);
+
+  useEffect(() => {
+    if (enregistrerRubriqueCreation !== undefined) {
+      return enregistrerRubriqueCreation({
+        id,
+        libelle,
+        valeurs: () => courantRef.current,
+        reinitialiser: () => reinitialiserRef.current(),
+      });
+    }
+
+    if (enregistrerRubriqueFiche === undefined) {
+      return undefined;
+    }
+
     const lireEstModifiee = () =>
       estModifieeRef.current(courantRef.current, valeursServeurRef.current);
 
-    const desenregistrer = enregistrerRubrique({
+    return enregistrerRubriqueFiche({
       id,
       libelle,
       estModifiee: lireEstModifiee,
@@ -111,15 +156,32 @@ export function useRubriqueFiche<T>({
           if (erreurApi instanceof AppelApiEchoue && estConflitVersion(erreurApi.erreur.code)) {
             throw erreurApi;
           }
-          if (erreurApi instanceof Error) {
+          if (erreurApi instanceof AppelApiEchoue) {
+            if (erreurApi.statut >= 500 || erreurApi.erreur.code === 'ERREUR') {
+              setErreur(MESSAGE_ERREUR_GENERIQUE);
+            } else if (erreurApi.erreur.champ !== undefined && erreurApi.erreur.champ.length > 0) {
+              setAlertes([
+                {
+                  code: erreurApi.erreur.code,
+                  message: erreurApi.erreur.message,
+                  champ: erreurApi.erreur.champ,
+                },
+              ]);
+            } else {
+              setErreur(erreurApi.erreur.message);
+            }
+          } else if (erreurApi instanceof Error) {
             setErreur(erreurApi.message);
           }
           throw erreurApi;
         }
       },
     });
-    return desenregistrer;
-  }, [enregistrerRubrique, id, libelle]);
+  }, [enregistrerRubriqueCreation, enregistrerRubriqueFiche, id, libelle]);
+
+  if (fiche === null && creation === null) {
+    throw new Error('useRubriqueFiche exige un registre de fiche ou de creation.');
+  }
 
   const modifier = (patch: Partial<T>) => {
     if (enregistrementEnCours) return;

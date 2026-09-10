@@ -47,32 +47,40 @@ export async function calculerAlertesRapprochement(
     }
   }
 
-  const candidatsReembauche = await prisma.salarie.findMany({
-    where: {
-      companyId: saisie.companyId,
-      ...(saisie.exclureSalarieId !== undefined ? { id: { not: saisie.exclureSalarieId } } : {}),
-      ...(saisie.numeroPiece !== null &&
-      saisie.numeroPiece !== undefined &&
-      saisie.numeroPiece.trim().length > 0
-        ? { numeroPiece: saisie.numeroPiece }
-        : {
-            nom: saisie.nom ?? undefined,
-            prenom: saisie.prenom ?? undefined,
-            dateNaissance: saisie.dateNaissance ?? undefined,
-          }),
-    },
-    select: { id: true },
-  });
+  const pieceSaisie =
+    saisie.numeroPiece !== null &&
+    saisie.numeroPiece !== undefined &&
+    saisie.numeroPiece.trim().length > 0;
+  const dateConnue = saisie.dateNaissance instanceof Date;
 
-  for (const candidat of candidatsReembauche) {
-    const etat = await deduireEtatSalarie(prisma, candidat.id);
-    if (etat === 'INACTIF') {
-      alertes.push({
-        code: CODES_REPONSE.REEMBAUCHE.code,
-        message: CODES_REPONSE.REEMBAUCHE.message,
-        salarieExistantId: candidat.id,
-      });
-      break;
+  // Sans piece ni date, le rapprochement par identite ne peut pas se faire :
+  // on n emet rien (pas de filtre elargi sur le nom seul).
+  if (pieceSaisie || dateConnue) {
+    const candidatsReembauche = await prisma.salarie.findMany({
+      where: {
+        companyId: saisie.companyId,
+        ...(saisie.exclureSalarieId !== undefined ? { id: { not: saisie.exclureSalarieId } } : {}),
+        ...(pieceSaisie
+          ? { numeroPiece: saisie.numeroPiece }
+          : {
+              nom: saisie.nom ?? undefined,
+              prenom: saisie.prenom ?? undefined,
+              dateNaissance: saisie.dateNaissance ?? undefined,
+            }),
+      },
+      select: { id: true },
+    });
+
+    for (const candidat of candidatsReembauche) {
+      const etat = await deduireEtatSalarie(prisma, candidat.id);
+      if (etat === 'INACTIF') {
+        alertes.push({
+          code: CODES_REPONSE.REEMBAUCHE.code,
+          message: CODES_REPONSE.REEMBAUCHE.message,
+          salarieExistantId: candidat.id,
+        });
+        break;
+      }
     }
   }
 

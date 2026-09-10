@@ -207,7 +207,7 @@ function valeursIdentiteDepuisFiche(
     nom: fiche.nom,
     prenom: fiche.prenom,
     sexe: fiche.sexe,
-    dateNaissance: fiche.dateNaissance,
+    dateNaissance: fiche.dateNaissance ?? '',
     villeNaissance: fiche.villeNaissance ?? '',
     paysNaissanceId: fiche.paysNaissanceId ?? '',
     nationaliteId: fiche.nationaliteId ?? '',

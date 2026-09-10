@@ -649,7 +649,7 @@ model Salarie {
   nom       String
   prenom    String
   sexe      Sexe
-  dateNaissance DateTime @db.Date
+  dateNaissance DateTime? @db.Date
 
   villeNaissance         String?
   paysNaissanceId        String? @db.Uuid
