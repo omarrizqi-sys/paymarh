@@ -26,3 +26,4 @@ Le document de contexte invite à se méfier des décorateurs et des exemptions 
 
 - TB28 prouve le refus HTTP sur la route réelle.
 - TB30 prouve que les personnes à charge ne sont pas affectées.
+- Même principe pour les statuts particuliers propagés : le refus de modification et de suppression d'une ligne `origine: 'PROPAGE_SOCIETE'` est placé dans `TableauxEmploiService.refuserStatutPropage`, au début de `modifierStatutParticulier` et `supprimerStatutParticulier`, avant toute écriture — la propagation TAHFIZ passe par Prisma en transaction et n'y est pas soumise.

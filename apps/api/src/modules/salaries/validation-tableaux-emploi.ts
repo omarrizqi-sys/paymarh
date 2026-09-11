@@ -67,15 +67,6 @@ export function refuserStatutNonSaisissable(statutCode: string | undefined): voi
   }
 }
 
-export function refuserModificationStatutPropage(origine: string): void {
-  if (origine === 'PROPAGE_SOCIETE') {
-    throw new ValidationBloquanteTableauEmploiError(
-      CODES_REPONSE.STATUT_PROPAGE_LECTURE_SEULE.code,
-      CODES_REPONSE.STATUT_PROPAGE_LECTURE_SEULE.message
-    );
-  }
-}
-
 export function refuserChampMoisEffetEmploi(dto: object): void {
   const interdit = ['moisEffet', 'moisEffetDebut', 'moisEffetFin'] as const;
   for (const cle of interdit) {

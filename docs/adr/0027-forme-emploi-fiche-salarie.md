@@ -18,6 +18,8 @@ Les écrans d'emploi arrivent à l'étape suivante. Découvrir la forme au momen
 - l'objet `resolutions`, ajouté par les **trois** chemins qui servent un emploi : `listerEmploisPourFicheSalarie`, `avecResolutions`, `reponseEmploi` ;
 - `operations` ajouté uniquement par `enrichirFicheSalarie` sur le chemin **GET** `/salaries/:id`.
 
+> **Note (2026-09-11, correctif 2.1.c-3 temps 1).** Ce paragraphe décrivait `versEmploiComplet` comme produisant un `EmploiFiche` complet. **Ce qui est vrai :** `versEmploiComplet` retourne `Omit<EmploiFiche, 'resolutions'>` — identité, contrat, rémunération, paiement, affectation et les trois collections, sans `resolutions`. L'`EmploiFiche` renvoyé au client est assemblé par les appelants qui ajoutent `resolutions` ; `operations` n'est ajouté que par `enrichirFicheSalarie` sur GET `/salaries/:id`. **Pourquoi la note :** la signature du mapper était déjà correcte ; seul le libellé de l'ADR prêtait à confusion.
+
 Aucun champ inventé, aucun champ omis, aucun renommage, aucune réorganisation.
 
 Les types annexes atteignables depuis cette forme (`ResolutionChamp`, `NiveauHeritage`, `ResolutionsEmploi`, unions Prisma transcrites : statut cadre, mode de détermination du salaire, mode de paiement, base de saisie de la durée, origine d'un statut particulier) vivent dans `packages/shared-types`. L'API pointe dessus. Pas de seconde définition.
