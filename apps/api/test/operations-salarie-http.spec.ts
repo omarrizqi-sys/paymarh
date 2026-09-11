@@ -1,4 +1,5 @@
 import type { INestApplication } from '@nestjs/common';
+import { Decimal } from 'decimal.js';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HEADER_PERMISSIONS_REFUSEES } from '../src/common/permissions/permissions-refusees.header.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
@@ -115,6 +116,81 @@ describe('API salarié — operations autorisées (2.1.c-1 temps 1.1)', () => {
     expect('comptesBancaires' in corps.donnees).toBe(false);
     expect(corps.donnees.emplois[0]?.operations).not.toContain('salarie.remuneration.lire');
     expect('remuneration' in (corps.donnees.emplois[0] ?? {})).toBe(false);
+  });
+
+  it('GET /salaries/:id — masquage remuneration sur chaque emploi sans salarie.remuneration.lire', async () => {
+    const param = await fetch(
+      urlLocale(app, `/etablissements/${societeA.etablissementPrincipalId}/parametrage`),
+      {
+        method: 'PUT',
+        headers: {
+          ...entetes(utilisateurId, societeA.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({
+          dureeHebdomadaire: '44',
+          jourReposHebdomadaire: 'SAMEDI',
+          indemniteTeletravailVersee: true,
+          montantIndemniteTeletravail: '400.00',
+        }),
+      }
+    );
+    expect(param.status).toBe(200);
+
+    await prisma.primeContractuelle.create({
+      data: { emploiId, primeRef: 'PRIME-TRANSPORT', moisApplication: [6] },
+    });
+    await prisma.avantageEnNature.create({
+      data: {
+        emploiId,
+        natureRef: 'VOITURE',
+        montant: new Decimal('500'),
+        moisApplication: [6],
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+    await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2025-01-01'),
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarieAId}`), {
+      headers: entetes(utilisateurId, societeA.companyId, {
+        [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.lire',
+      }),
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      donnees: {
+        emplois: Record<string, unknown>[];
+      };
+    };
+    expect(corps.donnees.emplois.length).toBeGreaterThan(0);
+
+    for (const emploi of corps.donnees.emplois) {
+      expect('remuneration' in emploi).toBe(false);
+      expect('paiement' in emploi).toBe(false);
+      expect('primesContractuelles' in emploi).toBe(false);
+      expect('avantagesEnNature' in emploi).toBe(false);
+      expect('contrat' in emploi).toBe(true);
+      expect('affectation' in emploi).toBe(true);
+      expect('statutsParticuliers' in emploi).toBe(true);
+
+      const resolutions = emploi.resolutions as Record<string, unknown>;
+      expect('teletravailIndemniteVersee' in resolutions).toBe(false);
+      expect('teletravailMontant' in resolutions).toBe(false);
+      expect(resolutions.dureeContractuelle).toBeDefined();
+      expect(resolutions.reposHebdomadaire).toBeDefined();
+      expect(resolutions.teletravailAutorise).toBeDefined();
+      expect(resolutions.grilleHoraire).toBeDefined();
+      expect(resolutions.joursFeriesTravailles).toBeDefined();
+    }
   });
 
   it('GET /salaries/:id — emplois[].operations expose emploi.modifier', async () => {
