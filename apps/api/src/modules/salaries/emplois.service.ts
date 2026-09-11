@@ -201,6 +201,19 @@ export class EmploisService {
     };
   }
 
+  async impactSuppression(id: string) {
+    await this.trouverEmploi(id);
+    const message =
+      'La suppression effacera l’intégralité du contenu de cet emploi, sans possibilité de retour.';
+    const faits = { id };
+    return {
+      donnees: {
+        message,
+        jetonConfirmation: calculerJetonConfirmation(faits),
+      },
+    };
+  }
+
   async listerVersionsContrat(id: string) {
     const emploi = await this.trouverEmploi(id);
     return { donnees: versVersionsContrat(emploi.contratVersions) };
@@ -485,8 +498,24 @@ export class EmploisService {
     return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
 
-  async supprimer(id: string, versionAttendue: number) {
+  async supprimer(id: string, confirmationJeton: string | undefined, versionAttendue: number) {
     await this.trouverEmploi(id);
+
+    if (confirmationJeton === undefined || confirmationJeton.trim().length === 0) {
+      throw new BadRequestException({
+        code: CODES_REPONSE.CONFIRMATION_REQUISE.code,
+        message: CODES_REPONSE.CONFIRMATION_REQUISE.message,
+      });
+    }
+
+    const jetonAttendu = calculerJetonConfirmation({ id });
+    if (!jetonsIdentiques(jetonAttendu, confirmationJeton)) {
+      throw new ConflictException({
+        code: CODES_REPONSE.CONFIRMATION_OBSOLETE.code,
+        message: CODES_REPONSE.CONFIRMATION_OBSOLETE.message,
+      });
+    }
+
     const bulletins = await this.bulletins.listerBulletinsParEmploi(id);
     if (bulletins.length > 0) {
       throw new ConflictException({

@@ -729,13 +729,27 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
         { contrat: { libellePoste: 'Second', dateDebut: '2025-02-01' } }
       );
 
-      const reponse = await fetch(urlLocale(appBulletin, `/emplois/${emploi2.donnees.id}`), {
-        method: 'DELETE',
-        headers: {
-          ...entetes(utilisateurId, societeA.companyId),
-          'if-match': String(emploi2.donnees.version),
-        },
-      });
+      const impact = await fetch(
+        urlLocale(appBulletin, `/emplois/${emploi2.donnees.id}/impact-suppression`),
+        { headers: entetes(utilisateurId, societeA.companyId) }
+      );
+      const { donnees: impactDonnees } = (await impact.json()) as {
+        donnees: { jetonConfirmation: string };
+      };
+
+      const reponse = await fetch(
+        urlLocale(
+          appBulletin,
+          `/emplois/${emploi2.donnees.id}?confirmationJeton=${impactDonnees.jetonConfirmation}`
+        ),
+        {
+          method: 'DELETE',
+          headers: {
+            ...entetes(utilisateurId, societeA.companyId),
+            'if-match': String(emploi2.donnees.version),
+          },
+        }
+      );
       expect(reponse.status).toBe(200);
 
       const encore = await prisma.emploi.findUnique({ where: { id: emploi1.donnees.id } });
@@ -1263,6 +1277,53 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     expect(donnees.operations).toContain('emploi.supprimer');
   });
 
+  it('16a — la suppression d emploi exige un jeton de confirmation', async () => {
+    const salarie = await creerSalarieMin(prisma, societeA.companyId, {
+      matricule: `${PREFIXE}-EMPLOI-JETON`,
+    });
+    const { donnees: cree } = await creerEmploiViaApi(
+      app,
+      utilisateurId,
+      societeA.companyId,
+      salarie.id,
+      societeA.etablissementPrincipalId
+    );
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${cree.id}`), {
+      method: 'DELETE',
+      headers: {
+        ...entetes(utilisateurId, societeA.companyId),
+        'if-match': String(cree.version),
+      },
+    });
+    expect(reponse.status).toBe(400);
+    expect(((await reponse.json()) as { code: string }).code).toBe('CONFIRMATION_REQUISE');
+  });
+
+  it('16b — l apercu d emploi rend message et jeton sans mode', async () => {
+    const salarie = await creerSalarieMin(prisma, societeA.companyId, {
+      matricule: `${PREFIXE}-EMPLOI-IMPACT`,
+    });
+    const { donnees: cree } = await creerEmploiViaApi(
+      app,
+      utilisateurId,
+      societeA.companyId,
+      salarie.id,
+      societeA.etablissementPrincipalId
+    );
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${cree.id}/impact-suppression`), {
+      headers: entetes(utilisateurId, societeA.companyId),
+    });
+    expect(reponse.status).toBe(200);
+    const { donnees } = (await reponse.json()) as {
+      donnees: { message?: string; jetonConfirmation: string; mode?: string };
+    };
+    expect(donnees.message).toBeDefined();
+    expect(donnees.jetonConfirmation.length).toBeGreaterThan(0);
+    expect('mode' in donnees).toBe(false);
+  });
+
   it('B5 — la suppression d un emploi ayant un bulletin est refusee et l emploi reste en base', async () => {
     const appBulletin = await creerAppAvecPorts({
       bulletins: {
@@ -1283,13 +1344,26 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
         societeA.etablissementPrincipalId
       );
 
-      const suppression = await fetch(urlLocale(appBulletin, `/emplois/${cree.id}`), {
-        method: 'DELETE',
-        headers: {
-          ...entetes(utilisateurId, societeA.companyId),
-          'if-match': String(cree.version),
-        },
+      const impact = await fetch(urlLocale(appBulletin, `/emplois/${cree.id}/impact-suppression`), {
+        headers: entetes(utilisateurId, societeA.companyId),
       });
+      const { donnees: impactDonnees } = (await impact.json()) as {
+        donnees: { jetonConfirmation: string };
+      };
+
+      const suppression = await fetch(
+        urlLocale(
+          appBulletin,
+          `/emplois/${cree.id}?confirmationJeton=${impactDonnees.jetonConfirmation}`
+        ),
+        {
+          method: 'DELETE',
+          headers: {
+            ...entetes(utilisateurId, societeA.companyId),
+            'if-match': String(cree.version),
+          },
+        }
+      );
       expect(suppression.status).toBe(409);
       expect(((await suppression.json()) as { code: string }).code).toBe('SUPPRESSION_INTERDITE');
 

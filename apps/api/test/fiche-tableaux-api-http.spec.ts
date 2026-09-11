@@ -1486,4 +1486,89 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(corps.code).toBe('CARACTERE_NON_CONFORME');
     expect(corps.champ).toBe('rib');
   });
+
+  it('K1 — apercu avantage en nature rend mode et jeton, DELETE exige le jeton', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-K1-AVN`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const avantage = await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploi.id,
+        natureRef: 'VOITURE',
+        montant: new Decimal('400'),
+        moisApplication: [6],
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const apercu = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature/${avantage.id}/impact-suppression`),
+      { headers: entetes(utilisateurId, societe.companyId) }
+    );
+    const { donnees: apercuDonnees } = (await apercu.json()) as {
+      donnees: { mode: string; message: string; jetonConfirmation: string };
+    };
+    expect(apercuDonnees.mode).toBe('supprimer');
+    expect(apercuDonnees.message).toBe('La ligne sera supprimée définitivement.');
+
+    const sansJeton = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature/${avantage.id}`),
+      {
+        method: 'DELETE',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'if-match': String(emploi.version),
+        },
+      }
+    );
+    expect(sansJeton.status).toBe(400);
+    expect(((await sansJeton.json()) as { code: string }).code).toBe('CONFIRMATION_REQUISE');
+
+    const suppression = await fetch(
+      urlLocale(
+        app,
+        `/emplois/${emploi.id}/avantages-en-nature/${avantage.id}?confirmationJeton=${apercuDonnees.jetonConfirmation}`
+      ),
+      {
+        method: 'DELETE',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'if-match': String(emploi.version),
+        },
+      }
+    );
+    expect(suppression.status).toBe(200);
+    const supprime = await prisma.avantageEnNature.findUnique({ where: { id: avantage.id } });
+    expect(supprime).toBeNull();
+  });
+
+  it('K2 — apercu statut saisi manuellement rend mode supprimer sans exiger de version', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-K2-STATUT`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const statut = await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploi.id,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2025-01-01'),
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+
+    const apercu = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers/${statut.id}/impact-suppression`),
+      { headers: entetes(utilisateurId, societe.companyId) }
+    );
+    expect(apercu.status).toBe(200);
+    const { donnees } = (await apercu.json()) as {
+      donnees: { mode: string; message: string; emploiId: string; ligneId: string };
+    };
+    expect(donnees.mode).toBe('supprimer');
+    expect(donnees.emploiId).toBe(emploi.id);
+    expect(donnees.ligneId).toBe(statut.id);
+    expect(donnees.message).toBe('La ligne sera supprimée définitivement.');
+  });
 });

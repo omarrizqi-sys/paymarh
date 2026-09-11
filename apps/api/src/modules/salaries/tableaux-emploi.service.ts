@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
+import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
@@ -20,7 +21,11 @@ import type {
 } from './dto/tableaux-emploi.dto.js';
 import { versDate } from './deductions-emploi.js';
 import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
-import { HistorisationLigneTemporelleService } from './historisation-ligne-temporelle.service.js';
+import {
+  HistorisationLigneTemporelleService,
+  type ModeSuppressionLigne,
+} from './historisation-ligne-temporelle.service.js';
+import { dateFinDepuisMois, ligneStatutVersMois } from './tahfiz/dates-exoneration.js';
 import { INCLUDE_COLLECTIONS_EMPLOI } from './mappers/tableaux.mapper.js';
 import { INCLUDE_EMPLOI_COMPLET, versEmploiComplet } from './mappers/emploi.mapper.js';
 import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
@@ -61,7 +66,7 @@ export class TableauxEmploiService {
     private readonly tenantContext: TenantContextService,
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
-    private readonly historisation: HistorisationLigneTemporelleService,
+    private readonly historisationLigne: HistorisationLigneTemporelleService,
     private readonly heritage: ResolutionHeritageService
   ) {}
 
@@ -158,7 +163,7 @@ export class TableauxEmploiService {
       moisApplication: dto.moisApplication ?? existant.moisApplication,
     };
 
-    const mode = await this.historisation.deciderModification(emploi.salarieId, moisEnCours);
+    const mode = await this.historisationLigne.deciderModification(emploi.salarieId, moisEnCours);
 
     if (mode === 'ecraser') {
       await this.prisma.avantageEnNature.update({
@@ -166,7 +171,7 @@ export class TableauxEmploiService {
         data: fusion,
       });
     } else {
-      const moisFin = this.historisation.moisFinClotureLigneRemplacee(moisEnCours);
+      const moisFin = this.historisationLigne.moisFinClotureLigneRemplacee(moisEnCours);
       await this.prisma.$transaction(async (tx) => {
         await tx.avantageEnNature.update({
           where: { id: ligneId },
@@ -187,11 +192,50 @@ export class TableauxEmploiService {
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
-  async supprimerAvantageEnNature(emploiId: string, ligneId: string, versionAttendue: number) {
-    await this.trouverAvantage(emploiId, ligneId);
+  async impactSuppressionAvantageEnNature(emploiId: string, ligneId: string) {
+    const ligne = await this.trouverAvantage(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
+    const mode = await this.historisationLigne.deciderSuppression(emploi.salarieId, ligne);
+    const faits = faitsConfirmationLigneEmploi(emploiId, ligneId, mode);
+    return {
+      donnees: {
+        ...faits,
+        message: messageConfirmationLigne(mode),
+        jetonConfirmation: calculerJetonConfirmation(faits),
+      },
+    };
+  }
 
-    await this.prisma.avantageEnNature.delete({ where: { id: ligneId } });
+  async supprimerAvantageEnNature(
+    emploiId: string,
+    ligneId: string,
+    confirmationJeton: string | undefined,
+    versionAttendue: number
+  ) {
+    const ligne = await this.trouverAvantage(emploiId, ligneId);
+    const emploi = await this.trouverEmploi(emploiId);
+    await this.exigerJetonSuppressionAvantage(
+      emploi.salarieId,
+      emploiId,
+      ligneId,
+      ligne,
+      confirmationJeton
+    );
+
+    const mode = await this.historisationLigne.deciderSuppression(emploi.salarieId, ligne);
+    const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
+
+    if (mode === 'supprimer') {
+      await this.prisma.avantageEnNature.delete({ where: { id: ligneId } });
+    } else {
+      await this.prisma.avantageEnNature.update({
+        where: { id: ligneId },
+        data: {
+          moisEffetFin: this.historisationLigne.moisFinSuppressionLigneUtilisee(moisEnCours),
+        },
+      });
+    }
+
     await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
@@ -294,14 +338,114 @@ export class TableauxEmploiService {
     return this.reponseEmploi(emploi.salarieId, emploiId, alertes);
   }
 
-  async supprimerStatutParticulier(emploiId: string, ligneId: string, versionAttendue: number) {
+  async impactSuppressionStatutParticulier(emploiId: string, ligneId: string) {
+    const existant = await this.trouverStatut(emploiId, ligneId);
+    this.refuserStatutPropage(existant.origine);
+    const emploi = await this.trouverEmploi(emploiId);
+    const mode = await this.deciderSuppressionStatut(emploi.salarieId, existant);
+    const faits = faitsConfirmationLigneEmploi(emploiId, ligneId, mode);
+    return {
+      donnees: {
+        ...faits,
+        message: messageConfirmationLigne(mode),
+        jetonConfirmation: calculerJetonConfirmation(faits),
+      },
+    };
+  }
+
+  async supprimerStatutParticulier(
+    emploiId: string,
+    ligneId: string,
+    confirmationJeton: string | undefined,
+    versionAttendue: number
+  ) {
     const existant = await this.trouverStatut(emploiId, ligneId);
     this.refuserStatutPropage(existant.origine);
 
     const emploi = await this.trouverEmploi(emploiId);
-    await this.prisma.statutParticulierLigne.delete({ where: { id: ligneId } });
+    await this.exigerJetonSuppressionStatut(
+      emploi.salarieId,
+      emploiId,
+      ligneId,
+      existant,
+      confirmationJeton
+    );
+
+    const mode = await this.deciderSuppressionStatut(emploi.salarieId, existant);
+    const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
+
+    if (mode === 'supprimer') {
+      await this.prisma.statutParticulierLigne.delete({ where: { id: ligneId } });
+    } else {
+      await this.prisma.statutParticulierLigne.update({
+        where: { id: ligneId },
+        data: { dateFin: dateFinDepuisMois(moisEnCours) },
+      });
+    }
+
     await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
+  }
+
+  private async deciderSuppressionStatut(
+    salarieId: string,
+    ligne: { dateDebut: Date; dateFin: Date | null }
+  ): Promise<ModeSuppressionLigne> {
+    return this.historisationLigne.deciderSuppression(salarieId, ligneStatutVersMois(ligne));
+  }
+
+  private async exigerJetonSuppressionAvantage(
+    salarieId: string,
+    emploiId: string,
+    ligneId: string,
+    ligne: { moisEffetDebut: string; moisEffetFin: string | null },
+    confirmationJeton: string | undefined
+  ) {
+    if (confirmationJeton === undefined || confirmationJeton.trim().length === 0) {
+      throw new BadRequestException({
+        code: CODES_REPONSE.CONFIRMATION_REQUISE.code,
+        message: CODES_REPONSE.CONFIRMATION_REQUISE.message,
+      });
+    }
+
+    const mode = await this.historisationLigne.deciderSuppression(salarieId, ligne);
+    const attendu = calculerJetonConfirmation(
+      faitsConfirmationLigneEmploi(emploiId, ligneId, mode)
+    );
+
+    if (!jetonsIdentiques(attendu, confirmationJeton)) {
+      throw new ConflictException({
+        code: CODES_REPONSE.CONFIRMATION_OBSOLETE.code,
+        message: CODES_REPONSE.CONFIRMATION_OBSOLETE.message,
+      });
+    }
+  }
+
+  private async exigerJetonSuppressionStatut(
+    salarieId: string,
+    emploiId: string,
+    ligneId: string,
+    ligne: { dateDebut: Date; dateFin: Date | null },
+    confirmationJeton: string | undefined
+  ) {
+    if (confirmationJeton === undefined || confirmationJeton.trim().length === 0) {
+      throw new BadRequestException({
+        code: CODES_REPONSE.CONFIRMATION_REQUISE.code,
+        message: CODES_REPONSE.CONFIRMATION_REQUISE.message,
+      });
+    }
+
+    const mode = await this.deciderSuppressionStatut(salarieId, ligne);
+    const attendu = calculerJetonConfirmation(
+      faitsConfirmationLigneEmploi(emploiId, ligneId, mode)
+    );
+
+    if (!jetonsIdentiques(attendu, confirmationJeton)) {
+      throw new ConflictException({
+        code: CODES_REPONSE.CONFIRMATION_OBSOLETE.code,
+        message: CODES_REPONSE.CONFIRMATION_OBSOLETE.message,
+      });
+    }
   }
 
   private refuserStatutPropage(origine: string): void {
@@ -370,4 +514,18 @@ export class TableauxEmploiService {
     if (ligne === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return ligne;
   }
+}
+
+function faitsConfirmationLigneEmploi(
+  emploiId: string,
+  ligneId: string,
+  mode: ModeSuppressionLigne
+): { emploiId: string; ligneId: string; mode: ModeSuppressionLigne } {
+  return { emploiId, ligneId, mode };
+}
+
+function messageConfirmationLigne(mode: ModeSuppressionLigne): string {
+  return mode === 'inactiver'
+    ? 'La ligne sera close et restera visible en état inactive pour justifier les bulletins passés.'
+    : 'La ligne sera supprimée définitivement.';
 }

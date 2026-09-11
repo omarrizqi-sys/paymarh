@@ -47,6 +47,33 @@ export class EmploisController {
     private readonly verrouillage: VerrouillageOptimisteService
   ) {}
 
+  @Get(':id/impact-suppression')
+  @RequiertPermission('salarie.lire')
+  @PerimetreEmploi('id')
+  impactSuppressionEmploi(@Param('id', ParseUUIDPipe) id: string) {
+    return this.emplois.impactSuppression(id);
+  }
+
+  @Get(':id/avantages-en-nature/:ligneId/impact-suppression')
+  @RequiertPermission('salarie.lire')
+  @PerimetreEmploi('id')
+  impactSuppressionAvantageEnNature(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string
+  ) {
+    return this.tableaux.impactSuppressionAvantageEnNature(id, ligneId);
+  }
+
+  @Get(':id/statuts-particuliers/:ligneId/impact-suppression')
+  @RequiertPermission('salarie.lire')
+  @PerimetreEmploi('id')
+  impactSuppressionStatutParticulier(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('ligneId', ParseUUIDPipe) ligneId: string
+  ) {
+    return this.tableaux.impactSuppressionStatutParticulier(id, ligneId);
+  }
+
   @Get(':id')
   @RequiertPermission('salarie.lire')
   @PerimetreEmploi('id')
@@ -198,10 +225,11 @@ export class EmploisController {
   supprimerAvantageEnNature(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('ligneId', ParseUUIDPipe) ligneId: string,
-    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined,
+    @Query('confirmationJeton') confirmationJeton: string | undefined
   ) {
     const version = this.verrouillage.exigerVersion(ifMatch);
-    return this.tableaux.supprimerAvantageEnNature(id, ligneId, version);
+    return this.tableaux.supprimerAvantageEnNature(id, ligneId, confirmationJeton, version);
   }
 
   @Post(':id/statuts-particuliers')
@@ -241,10 +269,11 @@ export class EmploisController {
   supprimerStatutParticulier(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('ligneId', ParseUUIDPipe) ligneId: string,
-    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined,
+    @Query('confirmationJeton') confirmationJeton: string | undefined
   ) {
     const version = this.verrouillage.exigerVersion(ifMatch);
-    return this.tableaux.supprimerStatutParticulier(id, ligneId, version);
+    return this.tableaux.supprimerStatutParticulier(id, ligneId, confirmationJeton, version);
   }
 
   @Delete(':id')
@@ -254,9 +283,10 @@ export class EmploisController {
   @ExigeIfMatch()
   supprimer(
     @Param('id', ParseUUIDPipe) id: string,
-    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined
+    @Headers(EN_TETE_IF_MATCH) ifMatch: string | undefined,
+    @Query('confirmationJeton') confirmationJeton: string | undefined
   ) {
     const version = this.verrouillage.exigerVersion(ifMatch);
-    return this.emplois.supprimer(id, version);
+    return this.emplois.supprimer(id, confirmationJeton, version);
   }
 }
