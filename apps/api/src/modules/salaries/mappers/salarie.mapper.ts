@@ -1,10 +1,6 @@
 import type { EmploiFiche, FicheSalarie } from '@paymarh/shared-types';
 import type { Prisma, Salarie } from '../../../generated/prisma/client.js';
 import {
-  declarerCleRubrique,
-  RUBRIQUES_REMUNERATION,
-} from '../../../common/remuneration/rubriques-remuneration.js';
-import {
   deduireLibelleSituationFamiliale,
   deduireLigneSalarie,
   deduireTypePieceIdentite,
@@ -13,8 +9,6 @@ import type { PrismaService } from '../../../common/prisma/prisma.service.js';
 import { trierEmploisPourFiche } from './emploi.mapper.js';
 import { mapperCollectionsSalarie } from './tableaux.mapper.js';
 import type { MoisBulletin } from '../bulletin/bulletin.port.js';
-
-declarerCleRubrique('comptesBancaires', RUBRIQUES_REMUNERATION.COMPTES_BANCAIRES);
 
 type SalarieAvecRelations = Prisma.SalarieGetPayload<{
   include: {

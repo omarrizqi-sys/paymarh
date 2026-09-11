@@ -1,9 +1,5 @@
 import type { EmploiFiche } from '@paymarh/shared-types';
 import type { Prisma } from '../../../generated/prisma/client.js';
-import {
-  declarerCleRubrique,
-  RUBRIQUES_REMUNERATION,
-} from '../../../common/remuneration/rubriques-remuneration.js';
 import { resoudreLigneHistorique } from '../../companies/historisation.js';
 import {
   convertirDureeAutreBase,
@@ -12,11 +8,6 @@ import {
 } from '../deductions-emploi.js';
 import { emploiEstOuvert } from '../deductions-salarie.js';
 import { mapperCollectionsEmploi } from './tableaux.mapper.js';
-
-declarerCleRubrique('remuneration', RUBRIQUES_REMUNERATION.REMUNERATION);
-declarerCleRubrique('paiement', RUBRIQUES_REMUNERATION.PAIEMENT);
-declarerCleRubrique('primesContractuelles', RUBRIQUES_REMUNERATION.PRIMES_CONTRACTUELLES);
-declarerCleRubrique('avantagesEnNature', RUBRIQUES_REMUNERATION.AVANTAGES_EN_NATURE);
 
 type EmploiCharge = Prisma.EmploiGetPayload<{
   include: {
