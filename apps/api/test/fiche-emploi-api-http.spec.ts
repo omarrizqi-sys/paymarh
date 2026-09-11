@@ -844,6 +844,29 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
       montant: '9999',
     });
 
+    await prisma.primeContractuelle.create({
+      data: { emploiId: cree.id, primeRef: 'PRIME-TRANSPORT', moisApplication: [12] },
+    });
+    await prisma.avantageEnNature.create({
+      data: {
+        emploiId: cree.id,
+        natureRef: 'VOITURE',
+        montant: new Decimal('500'),
+        moisApplication: [1, 2, 3],
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const luComplet = await fetch(urlLocale(app, `/emplois/${cree.id}`), {
+      headers: entetes(utilisateurId, societeA.companyId),
+    });
+    const { donnees: complet } = (await luComplet.json()) as {
+      donnees: Record<string, unknown>;
+    };
+    expect('primesContractuelles' in complet).toBe(true);
+    expect('avantagesEnNature' in complet).toBe(true);
+
     const entetesMasque = entetes(utilisateurId, societeA.companyId, {
       [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.lire',
     });
@@ -854,6 +877,8 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     const corpsEmploi = (await emploi.json()) as { donnees: Record<string, unknown> };
     expect('remuneration' in corpsEmploi.donnees).toBe(false);
     expect('paiement' in corpsEmploi.donnees).toBe(false);
+    expect('primesContractuelles' in corpsEmploi.donnees).toBe(false);
+    expect('avantagesEnNature' in corpsEmploi.donnees).toBe(false);
 
     const versions = await fetch(urlLocale(app, `/emplois/${cree.id}/versions/remuneration`), {
       headers: entetesMasque,
