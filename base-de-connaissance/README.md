@@ -1,10 +1,10 @@
-# Base de connaissance PaymaRH
+# Base de connaissance VECTA
 
-Ce dossier est la **source unique** des articles du futur blog en dur de PaymaRH.
+Ce dossier est la **source unique** des articles du futur blog en dur de VECTA.
 
 Il n'y a pas d'autre endroit où rédiger de la documentation utilisateur : pas de Notion, pas de Google Docs, pas de wiki. Les articles vivent ici, dans le dépôt, versionnés avec le code qu'ils décrivent.
 
-> **État au module 0 :** ce dossier ne contient que ce README et le gabarit. **Aucun article métier**, puisqu'aucune fonctionnalité utilisateur n'existe encore. Le site PaymaRH n'existe pas non plus : rien n'est publié.
+> **État au module 0 :** ce dossier ne contient que ce README et le gabarit. **Aucun article métier**, puisqu'aucune fonctionnalité utilisateur n'existe encore. Le site VECTA n'existe pas non plus : rien n'est publié.
 
 ---
 
@@ -62,7 +62,7 @@ INCORRECT    Créer une fiche salarié.md
              CreerFicheSalarie.md
 ```
 
-Le nom du fichier **doit être identique au `slug`** du front-matter, puisque c'est lui qui deviendra l'URL de l'article : `paymarh.ma/blog/creer-une-fiche-salarie`.
+Le nom du fichier **doit être identique au `slug`** du front-matter, puisque c'est lui qui deviendra l'URL de l'article : `vecta.ma/blog/creer-une-fiche-salarie`.
 
 Pourquoi sans accent ni majuscule : les accents posent des problèmes d'encodage dans les URL, et la casse se comporte différemment selon les systèmes de fichiers. Une URL propre est aussi meilleure pour le référencement.
 
@@ -93,7 +93,7 @@ Puis remplir le front-matter — le bloc `---` en tête de fichier — et le cor
 | `description` | Méta-description affichée par Google  | ~155 caractères, doit donner envie de cliquer                                        |
 | `keywords`    | Mots-clés                             | Les termes réels que cherchent les gestionnaires de paie marocains                   |
 | `category`    | Regroupement thématique               | Réutiliser une catégorie existante plutôt qu'en inventer une                         |
-| `module`      | Module PaymaRH concerné               | Permet de retrouver les articles à mettre à jour quand un module change              |
+| `module`      | Module VECTA concerné                 | Permet de retrouver les articles à mettre à jour quand un module change              |
 | `status`      | `draft` ou `published`                | Rien ne se publie sans passer par le temps 2                                         |
 | `order`       | Ordre d'affichage dans la catégorie   |                                                                                      |
 | `date`        | Date de rédaction, `AAAA-MM-JJ`       |                                                                                      |
@@ -117,11 +117,11 @@ Cette régularité aide autant le lecteur (il sait où chercher) que le référe
 
 ## Écrire pour un gestionnaire de paie
 
-Le lecteur type est un professionnel de la paie marocaine. Il connaît son métier — souvent mieux que nous — mais découvre PaymaRH.
+Le lecteur type est un professionnel de la paie marocaine. Il connaît son métier — souvent mieux que nous — mais découvre VECTA.
 
 - **Employer son vocabulaire.** On écrit « bulletin », « salarié », « cotisation CNSS », « AMO », « IR », « déclaration ». Jamais de traduction anglaise, jamais de jargon technique.
 - **Décrire ce qu'il voit à l'écran.** « Cliquez sur _Ajouter un salarié_ », avec le libellé exact du bouton.
-- **Ne pas expliquer la paie**, sauf lorsque PaymaRH fait un choix particulier qu'il faut justifier.
+- **Ne pas expliquer la paie**, sauf lorsque VECTA fait un choix particulier qu'il faut justifier.
 - **Traiter les cas d'erreur sérieusement.** C'est la section la plus consultée : on y arrive quand on est bloqué.
 
 ---

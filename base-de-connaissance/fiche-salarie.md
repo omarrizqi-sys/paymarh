@@ -1,7 +1,7 @@
 ---
-title: 'Comprendre la fiche salarié dans PaymaRH'
+title: 'Comprendre la fiche salarié dans VECTA'
 slug: 'fiche-salarie'
-description: 'Structure identité et emplois, matricule, état actif ou inactif, héritage du paramétrage établissement, historisation des modifications et règles de suppression dans PaymaRH.'
+description: 'Structure identité et emplois, matricule, état actif ou inactif, héritage du paramétrage établissement, historisation des modifications et règles de suppression dans VECTA.'
 keywords:
   - fiche salarié
   - paie Maroc
@@ -17,7 +17,7 @@ module: 'Module 2 — Fiches'
 status: 'brouillon'
 order: 2
 date: '2026-09-03'
-author: 'PaymaRH'
+author: 'VECTA'
 cover: ''
 ---
 
@@ -25,15 +25,15 @@ cover: ''
 
 ## À quoi ça sert
 
-La fiche salarié est le dossier d'une personne au sein d'une société dans PaymaRH. Elle regroupe son identité, ses coordonnées, ses personnes à charge, ses comptes bancaires et ses retenues — autant d'informations qui suivent la personne quels que soient ses postes.
+La fiche salarié est le dossier d'une personne au sein d'une société dans VECTA. Elle regroupe son identité, ses coordonnées, ses personnes à charge, ses comptes bancaires et ses retenues — autant d'informations qui suivent la personne quels que soient ses postes.
 
 Elle porte aussi un ou plusieurs **emplois**. Chaque emploi correspond à une relation de travail distincte : un contrat, une rémunération, une affectation à un établissement. C'est sur cette base que seront produits les bulletins de paie, une fois le traitement du mois livré.
 
-Comprendre cette structure — ce qui appartient à la personne, ce qui appartient à l'emploi, et comment PaymaRH enregistre les changements dans le temps — évite les fausses manipulations et les signalements de bugs.
+Comprendre cette structure — ce qui appartient à la personne, ce qui appartient à l'emploi, et comment VECTA enregistre les changements dans le temps — évite les fausses manipulations et les signalements de bugs.
 
 ## Comprendre la structure : identité et emplois
 
-PaymaRH ne possède pas d'objet « contrat » séparé. Le type de contrat, les dates, le poste, la période d'essai et la sortie font partie de l'**emploi**, versionnés dans le temps. Transformer un CDD en CDI sur le même poste, c'est modifier le type de contrat **du même emploi** — le logiciel ne crée pas un second emploi.
+VECTA ne possède pas d'objet « contrat » séparé. Le type de contrat, les dates, le poste, la période d'essai et la sortie font partie de l'**emploi**, versionnés dans le temps. Transformer un CDD en CDI sur le même poste, c'est modifier le type de contrat **du même emploi** — le logiciel ne crée pas un second emploi.
 
 ### Ce qui appartient à la personne
 
@@ -58,7 +58,7 @@ Un salarié peut cumuler **plusieurs emplois** en parallèle, y compris dans des
 
 ## Deux emplois simultanés
 
-Lorsqu'une même personne occupe deux postes en même temps, PaymaRH conserve **une seule fiche** et **deux emplois distincts**. Le matricule, l'identité, les personnes à charge et les comptes bancaires restent communs.
+Lorsqu'une même personne occupe deux postes en même temps, VECTA conserve **une seule fiche** et **deux emplois distincts**. Le matricule, l'identité, les personnes à charge et les comptes bancaires restent communs.
 
 **Ce que cela produit :**
 
@@ -78,7 +78,7 @@ La production des bulletins pour chaque emploi sera traitée avec le module de t
 
 ### Attribution automatique
 
-Lors de la création d'une fiche, si le matricule n'est pas renseigné, PaymaRH en attribue un automatiquement selon les règles de numérotation de la société (préfixe et longueur définis sur la fiche société).
+Lors de la création d'une fiche, si le matricule n'est pas renseigné, VECTA en attribue un automatiquement selon les règles de numérotation de la société (préfixe et longueur définis sur la fiche société).
 
 ### Saisie libre
 
@@ -86,7 +86,7 @@ Si vous saisissez un matricule vous-même — par exemple lors d'une reprise de 
 
 ### Pourquoi une valeur peut être refusée
 
-PaymaRH peut refuser un matricule que vous venez de saisir, avec le message **« Cette valeur n'est pas disponible »**, alors qu'aucune fiche visible ne le porte.
+VECTA peut refuser un matricule que vous venez de saisir, avec le message **« Cette valeur n'est pas disponible »**, alors qu'aucune fiche visible ne le porte.
 
 Cela arrive lorsqu'une valeur a **déjà été attribuée** dans cette société, y compris à une fiche depuis supprimée. Un matricule identifie une personne dans les déclarations et les dossiers : il n'est jamais réattribué, même après suppression.
 
@@ -94,7 +94,7 @@ Le message est volontairement neutre : il ne dit pas si une fiche a existé, ni 
 
 La même valeur peut en revanche être utilisée dans **une autre société**, y compris du même compte.
 
-Lors d'une **reprise de dossier**, seuls les matricules présents dans le dossier repris sont connus. Une valeur utilisée dans l'ancien logiciel puis retirée avant l'import n'est pas mémorisée : PaymaRH ne peut pas la reconstituer.
+Lors d'une **reprise de dossier**, seuls les matricules présents dans le dossier repris sont connus. Une valeur utilisée dans l'ancien logiciel puis retirée avant l'import n'est pas mémorisée : VECTA ne peut pas la reconstituer.
 
 ## L'état du salarié
 
@@ -112,7 +112,7 @@ Le logiciel expose, pour chaque champ héritable, **la valeur effective** et **s
 
 Si vous saisissez une valeur dans le champ, c'est cette valeur qui s'applique, et l'origine indique alors le niveau salarié.
 
-Si aucun niveau ne fournit de valeur, PaymaRH n'en invente aucune.
+Si aucun niveau ne fournit de valeur, VECTA n'en invente aucune.
 
 Il n'existe pas d'action « tout hériter » : chaque champ vide hérite indépendamment.
 
@@ -122,7 +122,7 @@ Tant que l'option de suivi de l'établissement est active, la grille de l'établ
 
 ## L'historisation des modifications
 
-Certaines rubriques de la fiche — contrat, rémunération, affectation, personnes à charge, prêts, saisies — sont **historisées**. PaymaRH conserve les valeurs passées pour permettre, plus tard, le recalcul fidèle des bulletins déjà produits.
+Certaines rubriques de la fiche — contrat, rémunération, affectation, personnes à charge, prêts, saisies — sont **historisées**. VECTA conserve les valeurs passées pour permettre, plus tard, le recalcul fidèle des bulletins déjà produits.
 
 Vous ne saisissez jamais de « date d'effet ». Le logiciel déduit seul le mois concerné à partir du **mois en cours** du salarié.
 
@@ -159,7 +159,7 @@ La suppression d'un emploi n'est possible que si aucun bulletin n'a été produi
 
 ### Personnes à charge, prêts et saisies
 
-Quand une ligne a déjà servi à calculer un bulletin, la supprimer entièrement fausserait l'historique de paie. PaymaRH la **clôt** alors : elle reste visible avec l'état « inactive » et une date de fin.
+Quand une ligne a déjà servi à calculer un bulletin, la supprimer entièrement fausserait l'historique de paie. VECTA la **clôt** alors : elle reste visible avec l'état « inactive » et une date de fin.
 
 **Point déroutant mais correct :** une personne à charge supprimée alors qu'un bulletin existe s'affiche inactive, mais **reste comptée** dans le nombre de personnes à charge du mois en cours. C'est voulu : le bulletin de ce mois a été produit avec cette personne à charge, et le recalcul doit retrouver la même situation. À partir du mois suivant, elle ne sera plus prise en compte.
 
@@ -171,13 +171,13 @@ Certaines suppressions sensibles — notamment l'apparition d'une date de sortie
 
 ## Alertes et blocages
 
-PaymaRH distingue deux niveaux de réaction.
+VECTA distingue deux niveaux de réaction.
 
 **Un blocage** refuse l'enregistrement. Rien n'est modifié. Exemples : matricule ou numéro CNSS déjà pris, date de fin antérieure à la date de début, somme des pourcentages de virement différente de 100 % lorsque plusieurs comptes sont renseignés, chevauchement de deux statuts particuliers sur le même emploi, tentative de modifier ou supprimer un statut propagé par la société, suppression d'une fiche ou d'un emploi alors qu'un bulletin existe.
 
 **Une alerte** laisse passer l'enregistrement, mais signale une incohérence ou un risque. Exemples : homonymie avec un salarié actif, correspondance avec un salarié inactif (réembauche possible), date de sortie ou fin d'essai hors intervalle de l'emploi, salaire inférieur au SMIG, durée contractuelle totale excessive entre plusieurs emplois actifs, mensualité de prêt incohérente avec le montant et les échéances.
 
-Certaines alertes — SMIG, durée légale, âge maximal d'un enfant à charge — ne s'affichent que lorsque le référentiel national est disponible. En leur absence, PaymaRH ne signale rien plutôt que d'émettre un avertissement faux.
+Certaines alertes — SMIG, durée légale, âge maximal d'un enfant à charge — ne s'affichent que lorsque le référentiel national est disponible. En leur absence, VECTA ne signale rien plutôt que d'émettre un avertissement faux.
 
 Pourquoi certaines incohérences ne sont que signalées : une date de fin d'essai légèrement décalée ou un contact mal formé ne bloquent pas la saisie du dossier. C'est au gestionnaire de paie de juger s'il corrige ou s'il poursuit.
 
@@ -214,7 +214,7 @@ Si la société retire ensuite l'exonération :
 
 ## Questions liées
 
-- Comment créer et paramétrer une fiche société dans PaymaRH
+- Comment créer et paramétrer une fiche société dans VECTA
 - Comment fonctionne l'héritage du paramétrage société vers les fiches salariés
 - Comprendre la différence entre alerte et blocage lors de la saisie
 - Que faire en cas de réembauche d'un salarié inactif

@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'PaymaRH — Back-office',
-  description: 'Back-office de PaymaRH, logiciel de paie marocain pour le secteur privé.',
+  title: 'VECTA — Back-office',
+  description: 'Back-office de VECTA, logiciel de paie marocain pour le secteur privé.',
 };
 
 import Link from 'next/link';
@@ -21,7 +21,7 @@ export default function RootLayout({
           <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
             <nav className="flex items-center gap-6">
               <Link href="/" className="font-semibold tracking-tight">
-                PaymaRH
+                VECTA
               </Link>
               <Link
                 href="/societes"

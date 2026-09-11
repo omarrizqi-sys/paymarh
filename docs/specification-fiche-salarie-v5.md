@@ -1,4 +1,6 @@
-# PaymaRH — Spécification de la fiche salarié (v5, figée)
+VECTA est le nom du produit. Le projet de développement, le dépôt et le code portent le nom PaymaRH.
+
+# VECTA — Spécification de la fiche salarié (v5, figée)
 
 > Version Markdown de `PaymaRH_Fiche_salarie_v5.xlsx`, traduction technique du prompt Cursor 2.1.a.
 > **Ce document fait foi en cas de divergence avec toute autre source.**

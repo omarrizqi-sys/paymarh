@@ -4,7 +4,7 @@ slug: '' # Identifiant URL : minuscules, tirets, sans accent. DOIT etre identiqu
 description: '' # Meta-description SEO affichee par Google. Viser ~155 caracteres.
 keywords: [] # Mots-cles SEO. Ex. ["fiche salarie", "CNSS", "paie Maroc"]
 category: '' # Ex. "Fiches", "Traitement du mois", "Parametrage", "Declarations"
-module: '' # Module PaymaRH concerne. Ex. "Module 2 - Fiches salaries"
+module: '' # Module VECTA concerne. Ex. "Module 2 - Fiches salaries"
 status: 'draft' # draft | published — ne passer a "published" qu'apres la finition (temps 2)
 order: 0 # Ordre d'affichage au sein de la categorie
 date: '' # Date de redaction, format AAAA-MM-JJ
@@ -13,7 +13,7 @@ cover: '' # Image de couverture (optionnel)
 ---
 
 <!--
-  GABARIT D'ARTICLE — base de connaissance PaymaRH
+  GABARIT D'ARTICLE — base de connaissance VECTA
 
   Mode d'emploi :
     1. Copier ce fichier sous le nom du slug : cp _gabarit-article.md mon-article.md
@@ -61,7 +61,7 @@ Reprendre les libellés exacts des boutons et des champs, en gras.]
 
 4. [Ce que l'utilisateur doit voir pour savoir que ça a fonctionné.]
 
-> **À savoir :** [une précision utile, un choix propre à PaymaRH, une limite à connaître.]
+> **À savoir :** [une précision utile, un choix propre à VECTA, une limite à connaître.]
 
 ---
 

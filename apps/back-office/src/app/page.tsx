@@ -7,7 +7,7 @@ export default function PageAccueil() {
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">PaymaRH — Back-office</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">VECTA — Back-office</h1>
         <p className="text-muted-foreground text-sm">
           Logiciel de paie marocain pour le secteur privé.
         </p>

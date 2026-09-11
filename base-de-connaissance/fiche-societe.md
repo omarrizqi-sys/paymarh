@@ -1,7 +1,7 @@
 ---
-title: 'Créer et paramétrer une fiche société dans PaymaRH'
+title: 'Créer et paramétrer une fiche société dans VECTA'
 slug: 'fiche-societe'
-description: 'Comment créer une société dans PaymaRH, renseigner ses identifiants légaux, déclarer ses établissements, paramétrer la durée du travail et les informations bancaires.'
+description: 'Comment créer une société dans VECTA, renseigner ses identifiants légaux, déclarer ses établissements, paramétrer la durée du travail et les informations bancaires.'
 keywords:
   - fiche société
   - paie Maroc
@@ -16,7 +16,7 @@ module: 'Module 1 — Fiches'
 status: 'brouillon'
 order: 1
 date: '2026-08-29'
-author: 'PaymaRH'
+author: 'VECTA'
 cover: ''
 ---
 
@@ -24,7 +24,7 @@ cover: ''
 
 ## À quoi ça sert
 
-La fiche société est le point de départ de tout dossier de paie dans PaymaRH. Elle contient l'identité légale de l'entreprise, ses lieux d'exploitation, ses règles de temps de travail et ses coordonnées bancaires.
+La fiche société est le point de départ de tout dossier de paie dans VECTA. Elle contient l'identité légale de l'entreprise, ses lieux d'exploitation, ses règles de temps de travail et ses coordonnées bancaires.
 
 Elle joue aussi un second rôle, moins visible mais important : elle **sert de modèle aux fiches salariés**. Plusieurs paramètres — durée hebdomadaire, horaires, jour de repos, jours fériés travaillés, télétravail — descendent automatiquement sur les salariés qui choisissent de suivre le paramétrage de leur établissement. Vous ne saisissez donc l'information qu'une fois.
 
@@ -32,7 +32,7 @@ Une fiche société bien remplie évite de reprendre chaque salarié un par un.
 
 ## Comprendre la structure : société et établissement
 
-PaymaRH distingue deux niveaux, et cette distinction gouverne toute la fiche.
+VECTA distingue deux niveaux, et cette distinction gouverne toute la fiche.
 
 La **société** est la personne morale. Elle porte ce qui est unique : la raison sociale, la forme juridique, l'identifiant fiscal, le registre de commerce, l'employeur signataire, les coordonnées bancaires.
 
@@ -42,7 +42,7 @@ Un établissement principal est créé automatiquement avec la société. Vous p
 
 ## Pas-à-pas
 
-Les écrans correspondants sont dans le back-office PaymaRH (`/societes`, `/societes/nouveau`, `/societes/:id`). Chaque rubrique de la fiche appelle l’API REST décrite dans la documentation technique du module 1.
+Les écrans correspondants sont dans le back-office VECTA (`/societes`, `/societes/nouveau`, `/societes/:id`). Chaque rubrique de la fiche appelle l’API REST décrite dans la documentation technique du module 1.
 
 ### 1. Renseigner l'état du dossier
 
@@ -50,14 +50,14 @@ Trois états sont possibles.
 
 **En montage** : vous ressaisissez l'historique pour reconstituer les cumuls. Aucun bulletin définitif ne peut être produit.
 
-**En production** : PaymaRH produit les bulletins.
+**En production** : VECTA produit les bulletins.
 
 **Inactive** : la société existe toujours et reste consultable et modifiable, mais aucun bulletin postérieur à la date d'inactivité ne peut être produit.
 
 Deux mois sont demandés :
 
 - le **mois de début de montage**, à partir duquel vous ressaisissez l'historique ;
-- le **mois de début de production**, premier mois réellement traité par PaymaRH.
+- le **mois de début de production**, premier mois réellement traité par VECTA.
 
 Si vous démarrez sans reprise d'historique, indiquez le même mois dans les deux champs. Le mois de montage ne peut jamais être postérieur au mois de production.
 
@@ -77,7 +77,7 @@ Le **régime de base** est le régime général, non agricole. Attention : une f
 
 **Écran :** fiche société, rubrique _Établissements_ (liste, création, désignation du principal).
 
-L'établissement principal est créé automatiquement avec la société. Son **adresse** et sa **ville** sont obligatoires dès cette création : PaymaRH n'accepte aucune valeur de remplacement du type « À compléter ». Le nom peut être pré-rempli avec la ville (ou la raison sociale à défaut) ; vous pouvez le modifier.
+L'établissement principal est créé automatiquement avec la société. Son **adresse** et sa **ville** sont obligatoires dès cette création : VECTA n'accepte aucune valeur de remplacement du type « À compléter ». Le nom peut être pré-rempli avec la ville (ou la raison sociale à défaut) ; vous pouvez le modifier.
 
 Complétez ensuite l'ICE et la taxe professionnelle.
 
@@ -105,7 +105,7 @@ La **grille horaire** répartit les heures sur la semaine, en distinguant heures
 
 La liste présente les onze fêtes civiles à date fixe et les sept journées religieuses. Cochez uniquement ceux que votre établissement travaille.
 
-Les fêtes religieuses suivent le calendrier lunaire. Vous n'avez pas de date à saisir : PaymaRH s'en charge.
+Les fêtes religieuses suivent le calendrier lunaire. Vous n'avez pas de date à saisir : VECTA s'en charge.
 
 ### 6. Saisir les informations bancaires
 
@@ -131,11 +131,11 @@ Un matricule n'est jamais réutilisé, même après la suppression d'un salarié
 
 ## Cas d'erreur
 
-**« Cette valeur n'est pas disponible »** en saisissant un code dossier, un identifiant fiscal ou un ICE. Cette valeur existe déjà ailleurs. Pour des raisons de confidentialité, PaymaRH n'indique pas où. Vérifiez votre saisie ; si elle est correcte, rapprochez-vous de l'administrateur de votre compte.
+**« Cette valeur n'est pas disponible »** en saisissant un code dossier, un identifiant fiscal ou un ICE. Cette valeur existe déjà ailleurs. Pour des raisons de confidentialité, VECTA n'indique pas où. Vérifiez votre saisie ; si elle est correcte, rapprochez-vous de l'administrateur de votre compte.
 
 **Le mois de montage est refusé.** Il ne peut pas être postérieur au mois de début de production. Si vous ne reprenez pas d'historique, indiquez le même mois dans les deux champs.
 
-**Le régime de base ne peut plus être modifié.** Des salariés existent déjà. Contactez l'assistance PaymaRH.
+**Le régime de base ne peut plus être modifié.** Des salariés existent déjà. Contactez l'assistance VECTA.
 
 **Un chiffre est refusé dans un champ de nom.** Les champs alphabétiques n'acceptent que des lettres, avec les tirets et apostrophes.
 
