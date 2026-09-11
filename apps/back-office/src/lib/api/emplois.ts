@@ -1,9 +1,5 @@
-import type { EmploiFiche, Permission, ReponseEcriture } from '@paymarh/shared-types';
+import type { EmploiFiche, ReponseEcriture } from '@paymarh/shared-types';
 import { appelerSalarieDelete, appelerSalarieGet } from './client-salarie';
-
-export interface EmploiFicheAvecOperations extends EmploiFiche {
-  readonly operations: readonly Permission[];
-}
 
 export interface ImpactSuppressionEmploi {
   readonly message: string;

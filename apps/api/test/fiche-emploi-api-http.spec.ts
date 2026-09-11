@@ -1256,27 +1256,6 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     );
   });
 
-  it('15 — GET /emplois/:id expose operations au meme titre que emplois[] sur la fiche', async () => {
-    const salarie = await creerSalarieMin(prisma, societeA.companyId, {
-      matricule: `${PREFIXE}-OPS-EMPLOI`,
-    });
-    const { donnees: cree } = await creerEmploiViaApi(
-      app,
-      utilisateurId,
-      societeA.companyId,
-      salarie.id,
-      societeA.etablissementPrincipalId
-    );
-
-    const reponse = await fetch(urlLocale(app, `/emplois/${cree.id}`), {
-      headers: entetes(utilisateurId, societeA.companyId),
-    });
-    expect(reponse.status).toBe(200);
-    const { donnees } = (await reponse.json()) as { donnees: { operations: string[] } };
-    expect(donnees.operations).toContain('emploi.modifier');
-    expect(donnees.operations).toContain('emploi.supprimer');
-  });
-
   it('16a — la suppression d emploi exige un jeton de confirmation', async () => {
     const salarie = await creerSalarieMin(prisma, societeA.companyId, {
       matricule: `${PREFIXE}-EMPLOI-JETON`,

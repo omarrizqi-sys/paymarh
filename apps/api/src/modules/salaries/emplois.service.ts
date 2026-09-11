@@ -5,15 +5,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import type { AlerteApi, EmploiFiche, Permission } from '@paymarh/shared-types';
+import type { AlerteApi, EmploiFiche } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
-import { operationsEmploi } from '../../common/permissions/operations-ressource.js';
-import {
-  PERMISSION_SERVICE,
-  type PermissionService,
-} from '../../common/permissions/permission.service.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { accountScope, companyScope } from '../../common/tenancy/tenant-scope.js';
@@ -90,8 +85,7 @@ export class EmploisService {
     private readonly heritage: ResolutionHeritageService,
     private readonly tahfiz: PropagationTahfizService,
     @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort,
-    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort,
-    @Inject(PERMISSION_SERVICE) private readonly permissionService: PermissionService
+    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort
   ) {}
 
   async creer(salarieId: string, dto: CreerEmploiDto) {
@@ -190,15 +184,7 @@ export class EmploisService {
   async lire(id: string) {
     const emploi = await this.trouverEmploi(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
-    const ctx = this.tenantContext.getOrThrow();
-    const possede = (permission: Permission) =>
-      this.permissionService.possedePermission(ctx, permission);
-    return {
-      donnees: {
-        ...(await this.avecResolutions(emploi, moisEnCours)),
-        operations: operationsEmploi(possede),
-      },
-    };
+    return { donnees: await this.avecResolutions(emploi, moisEnCours) };
   }
 
   async impactSuppression(id: string) {
