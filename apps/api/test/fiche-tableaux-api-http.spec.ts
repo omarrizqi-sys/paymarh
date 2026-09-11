@@ -634,6 +634,9 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       }
     );
     expect(modification.status).toBe(409);
+    expect(((await modification.json()) as { code: string }).code).toBe(
+      'STATUT_PROPAGE_LECTURE_SEULE'
+    );
 
     const suppression = await fetch(
       urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers/${statut.id}`),
@@ -646,6 +649,9 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       }
     );
     expect(suppression.status).toBe(409);
+    expect(((await suppression.json()) as { code: string }).code).toBe(
+      'STATUT_PROPAGE_LECTURE_SEULE'
+    );
   });
 
   it('12 — pret incoherent mensualite x echeances est enregistre avec alerte', async () => {
