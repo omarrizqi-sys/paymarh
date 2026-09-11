@@ -18,8 +18,16 @@ export interface ResolutionsEmploi {
   readonly dureeContractuelle: ResolutionChamp<string> | null;
   readonly reposHebdomadaire: ResolutionChamp<string> | null;
   readonly teletravailAutorise: ResolutionChamp<boolean> | null;
-  readonly teletravailIndemniteVersee: ResolutionChamp<boolean> | null;
-  readonly teletravailMontant: ResolutionChamp<string> | null;
+  /**
+   * Optionalité = masqué sans la permission `salarie.remuneration.lire` :
+   * la clé est absente, jamais `null`. `| null` signifie « aucune valeur héritée trouvée ».
+   */
+  readonly teletravailIndemniteVersee?: ResolutionChamp<boolean> | null;
+  /**
+   * Optionalité = masqué sans la permission `salarie.remuneration.lire` :
+   * la clé est absente, jamais `null`. `| null` signifie « aucune valeur héritée trouvée ».
+   */
+  readonly teletravailMontant?: ResolutionChamp<string> | null;
   readonly grilleHoraire: ResolutionChamp<readonly LigneGrilleHoraireResolue[]> | null;
   readonly joursFeriesTravailles: ResolutionChamp<readonly string[]> | null;
 }

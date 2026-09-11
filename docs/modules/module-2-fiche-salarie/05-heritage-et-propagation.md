@@ -30,7 +30,7 @@ Aucun autre champ n'a été ajouté. Les congés payés société ne sont pas h�
 - les champs propres (null = hérité) ;
 - `resolutions` : pour chaque champ ci-dessus, `{ valeur, origine, libelleEntite }` ou `null`.
 
-Sans `salarie.remuneration.lire`, les clés `teletravailIndemniteVersee` et `teletravailMontant` disparaissent des résolutions comme de la rémunération.
+Sans `salarie.remuneration.lire`, les clés `teletravailIndemniteVersee` et `teletravailMontant` sont **retirées** des résolutions (clé absente, jamais `null`) ; la rubrique `remuneration` de l'emploi l'est aussi. Les cinq autres champs de `resolutions` restent présents.
 
 ---
 

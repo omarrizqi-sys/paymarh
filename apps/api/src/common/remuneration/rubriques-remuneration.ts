@@ -20,6 +20,8 @@ export const REGISTRE_CLE_RUBRIQUE: Readonly<Record<string, RubriqueRemuneration
   primesContractuelles: RUBRIQUES_REMUNERATION.PRIMES_CONTRACTUELLES,
   avantagesEnNature: RUBRIQUES_REMUNERATION.AVANTAGES_EN_NATURE,
   comptesBancaires: RUBRIQUES_REMUNERATION.COMPTES_BANCAIRES,
+  teletravailIndemniteVersee: RUBRIQUES_REMUNERATION.REMUNERATION,
+  teletravailMontant: RUBRIQUES_REMUNERATION.REMUNERATION,
 };
 
 /** Toutes les rubriques masquees sans salarie.remuneration.lire. */

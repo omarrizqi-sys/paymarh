@@ -495,7 +495,7 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     expect(restantes).toBe(0);
   });
 
-  it('15 — sans droit de lecture remuneration, le teletravail reste visible et la remuneration disparait', async () => {
+  it('15 — sans droit de lecture remuneration, les resolutions teletravail sont masquees et la remuneration disparait', async () => {
     const param = await appelerApi(app, {
       method: 'PUT',
       chemin: `/etablissements/${societe.etablissementPrincipalId}/parametrage`,
@@ -531,17 +531,11 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
         resolutions: Record<string, { valeur: unknown; origine: string } | undefined>;
       };
     };
-    expect(donnees.resolutions.teletravailIndemniteVersee).toEqual({
-      valeur: true,
-      origine: 'ETABLISSEMENT',
-      libelleEntite: 'Casablanca',
-    });
-    expect(donnees.resolutions.teletravailMontant).toEqual({
-      valeur: '400',
-      origine: 'ETABLISSEMENT',
-      libelleEntite: 'Casablanca',
-    });
+    expect('teletravailIndemniteVersee' in donnees.resolutions).toBe(false);
+    expect('teletravailMontant' in donnees.resolutions).toBe(false);
     expect(donnees.resolutions.dureeContractuelle).toBeDefined();
+    expect(donnees.resolutions.reposHebdomadaire).toBeDefined();
+    expect(donnees.resolutions.teletravailAutorise).toBeDefined();
     expect('remuneration' in donnees).toBe(false);
   });
 
