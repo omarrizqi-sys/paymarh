@@ -780,9 +780,13 @@ async function seedSalariesDemo(
         moisEffet: '2022-03',
         etablissementId: etablissementPrincipalId,
         baseSaisieDuree: 'HEBDOMADAIRE',
+        dureeContractuelle: null,
+        reposHebdomadaire: null,
       },
     });
   }
+
+  await seedTableauxEtSecondEmploiDemo(complet.id, etablissementPrincipalId);
 
   const minimal = await trouverOuCreerSalarieDemo(
     companyId,
@@ -854,6 +858,134 @@ async function seedSalariesDemo(
   console.log(
     `Salaries de demonstration : ${complet.matricule} ${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM} (complet), ${minimal.matricule} ${SALARIE_MINIMAL_PRENOM} ${SALARIE_MINIMAL_NOM} (minimal), ${sortie.matricule} ${SALARIE_SORTIE_PRENOM} ${SALARIE_SORTIE_NOM} (sortie).`
   );
+}
+
+async function seedTableauxEtSecondEmploiDemo(
+  salarieId: string,
+  etablissementPrincipalId: string
+): Promise<void> {
+  const emploiOuvert = await prisma.emploi.findFirstOrThrow({
+    where: { salarieId, numeroOrdre: 1 },
+  });
+
+  const primeExistante = await prisma.primeContractuelle.findFirst({
+    where: { emploiId: emploiOuvert.id, primeRef: 'PRIME-TRANSPORT' },
+  });
+  if (primeExistante === null) {
+    await prisma.primeContractuelle.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [6, 12],
+      },
+    });
+  }
+
+  const avantageActif = await prisma.avantageEnNature.findFirst({
+    where: { emploiId: emploiOuvert.id, natureRef: 'VOITURE' },
+  });
+  if (avantageActif === null) {
+    await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        natureRef: 'VOITURE',
+        montant: new Decimal('1200.00'),
+        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        moisEffetDebut: '2022-03',
+        moisEffetFin: null,
+      },
+    });
+  }
+
+  const avantageClos = await prisma.avantageEnNature.findFirst({
+    where: { emploiId: emploiOuvert.id, natureRef: 'LOGEMENT' },
+  });
+  if (avantageClos === null) {
+    await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        natureRef: 'LOGEMENT',
+        montant: new Decimal('2500.00'),
+        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        moisEffetDebut: '2022-03',
+        moisEffetFin: '2024-12',
+      },
+    });
+  }
+
+  const statutManuel = await prisma.statutParticulierLigne.findFirst({
+    where: {
+      emploiId: emploiOuvert.id,
+      statutCode: 'IDMAJ',
+      origine: 'SAISIE_MANUELLE',
+    },
+  });
+  if (statutManuel === null) {
+    await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2023-01-01'),
+        dateFin: null,
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+  }
+
+  const statutPropage = await prisma.statutParticulierLigne.findFirst({
+    where: {
+      emploiId: emploiOuvert.id,
+      statutCode: 'TAHFIZ',
+      origine: 'PROPAGE_SOCIETE',
+    },
+  });
+  if (statutPropage === null) {
+    await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        statutCode: 'TAHFIZ',
+        dateDebut: new Date('2025-07-01'),
+        dateFin: null,
+        origine: 'PROPAGE_SOCIETE',
+      },
+    });
+  }
+
+  const emploiTermine = await prisma.emploi.findFirst({
+    where: { salarieId, numeroOrdre: 2 },
+  });
+  if (emploiTermine === null) {
+    const emploi = await prisma.emploi.create({
+      data: { salarieId, numeroOrdre: 2 },
+    });
+    await prisma.emploiContratVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2018-01',
+        libellePoste: 'Gestionnaire paie junior',
+        dateDebut: new Date('2018-01-01'),
+        dateSortie: new Date('2022-02-28'),
+        motifSortieCode: 'COMMUN_ACCORD',
+        typeContratCode: 'CDI',
+      },
+    });
+    await prisma.emploiRemunerationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2018-01',
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: new Decimal('12000.00'),
+      },
+    });
+    await prisma.emploiAffectationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2018-01',
+        etablissementId: etablissementPrincipalId,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+      },
+    });
+  }
 }
 
 async function upsertParamEtablissement(
