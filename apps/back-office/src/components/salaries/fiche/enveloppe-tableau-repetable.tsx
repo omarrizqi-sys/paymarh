@@ -10,8 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DialogueConfirmationSuppressionTableau } from './dialogue-confirmation-suppression-tableau';
-import type { TextesConfirmationSuppression } from './textes-suppression-tableau-historise';
+import { DialogueConfirmationSuppressionTableau } from '@/components/navigation/dialogue-confirmation-suppression-tableau';
+import type { TextesConfirmationSuppression } from '@/components/navigation/textes-suppression-tableau-historise';
 
 export interface ColonneTableauRepetable<T> {
   readonly id: string;

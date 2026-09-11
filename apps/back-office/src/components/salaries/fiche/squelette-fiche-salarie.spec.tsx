@@ -1,14 +1,21 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { createElement, useEffect, useState } from 'react';
+import { createElement, useEffect, useState, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rubriques';
 import { SqueletteFicheSalarie } from './squelette-fiche-salarie';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 function EnregistrerRubriquesSommaire() {
@@ -45,6 +52,14 @@ function SommaireAvecDefilement() {
   });
 }
 
+function HarnessSquelette({ children }: { readonly children?: ReactNode }) {
+  return createElement(
+    RegistreFicheProvider,
+    { versionInitiale: 1, onRechargerServeur: vi.fn() },
+    createElement(NavigationGardeeTestProvider, null, children)
+  );
+}
+
 describe('SqueletteFicheSalarie et sommaire', () => {
   afterEach(() => cleanup());
 
@@ -57,8 +72,8 @@ describe('SqueletteFicheSalarie et sommaire', () => {
 
     render(
       createElement(
-        RegistreFicheProvider,
-        { versionInitiale: 1, onRechargerServeur: vi.fn() },
+        HarnessSquelette,
+        null,
         createElement(EnregistrerRubriquesSommaire),
         createElement(SqueletteFicheSalarie, {
           sommaire: createElement(SommaireAvecDefilement),
@@ -88,8 +103,8 @@ describe('SqueletteFicheSalarie et sommaire', () => {
   it('le rail replie conserve ses icones cliquables', () => {
     render(
       createElement(
-        RegistreFicheProvider,
-        { versionInitiale: 1, onRechargerServeur: vi.fn() },
+        HarnessSquelette,
+        null,
         createElement(SqueletteFicheSalarie, {
           rubriques: createElement('p', null, 'Contenu'),
           renderRail: (compact) =>

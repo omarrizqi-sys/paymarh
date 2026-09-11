@@ -35,6 +35,8 @@ interface RegistreFicheContexte {
   readonly alertesGlobales: readonly AlerteApi[];
   readonly rubriquesSommaire: readonly EntreeSommaireRubrique[];
   readonly nombreModifiees: number;
+  aModificationsNonEnregistrees(): boolean;
+  libellesRubriquesModifiees(): readonly string[];
   enregistrer(): Promise<void>;
   annuler(): void;
   rechargerDepuisServeur(): void;
@@ -115,6 +117,14 @@ export function RegistreFicheProvider({
     void revisionSommaire;
     return compterRubriquesModifiees(rubriquesOrdonnees());
   }, [revisionSommaire, rubriquesOrdonnees]);
+
+  const aModificationsNonEnregistrees = useCallback((): boolean => {
+    return compterRubriquesModifiees(rubriquesOrdonnees()) > 0;
+  }, [rubriquesOrdonnees]);
+
+  const libellesRubriquesModifieesDepuisRegistre = useCallback((): readonly string[] => {
+    return libellesRubriquesModifiees(rubriquesOrdonnees());
+  }, [rubriquesOrdonnees]);
 
   const enregistrerRubrique = useCallback(
     (rubrique: RubriqueEnregistrable) => {
@@ -224,6 +234,8 @@ export function RegistreFicheProvider({
       alertesGlobales,
       rubriquesSommaire,
       nombreModifiees,
+      aModificationsNonEnregistrees,
+      libellesRubriquesModifiees: libellesRubriquesModifieesDepuisRegistre,
       enregistrer,
       annuler,
       rechargerDepuisServeur,
@@ -249,6 +261,8 @@ export function RegistreFicheProvider({
       alertesGlobales,
       rubriquesSommaire,
       nombreModifiees,
+      aModificationsNonEnregistrees,
+      libellesRubriquesModifieesDepuisRegistre,
       enregistrer,
       annuler,
       rechargerDepuisServeur,

@@ -10,6 +10,7 @@ import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { reinitialiserCompteurIdLocal } from '@/lib/fiche/personnes-a-charge-lignes';
 
 const PAYS: readonly Pays[] = [
@@ -66,7 +67,13 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
 });
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 function personne(surcharges: Partial<PersonneACharge> = {}): PersonneACharge {
@@ -149,16 +156,18 @@ function reponseEcritureIdentite(
 
 function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBase()) {
   return render(
-    <FicheSalarieClient
-      companyId="soc-1"
-      salarieId="sal-1"
-      initial={fiche}
-      pays={PAYS}
-      situationsFamiliales={SITUATIONS}
-      liensParente={LIENS}
-      banques={[]}
-      typesSaisie={TYPES_SAISIE}
-    />
+    <NavigationGardeeTestProvider>
+      <FicheSalarieClient
+        companyId="soc-1"
+        salarieId="sal-1"
+        initial={fiche}
+        pays={PAYS}
+        situationsFamiliales={SITUATIONS}
+        liensParente={LIENS}
+        banques={[]}
+        typesSaisie={TYPES_SAISIE}
+      />
+    </NavigationGardeeTestProvider>
   );
 }
 
@@ -183,21 +192,23 @@ function Harness({
 }) {
   return (
     <RegistreFicheProvider versionInitiale={versionInitiale} onRechargerServeur={vi.fn()}>
-      <FormulaireTableauProvider>
-        {extra}
-        <RubriquePersonnesACharge
-          companyId="soc-1"
-          salarieId="sal-1"
-          lignesServeur={lignes}
-          liensParente={LIENS}
-          onVersionChange={onVersionChange}
-        />
-        <RailActionsFiche
-          operations={['salarie.modifier']}
-          companyId="soc-test"
-          salarieId="sal-test"
-        />
-      </FormulaireTableauProvider>
+      <NavigationGardeeTestProvider>
+        <FormulaireTableauProvider>
+          {extra}
+          <RubriquePersonnesACharge
+            companyId="soc-1"
+            salarieId="sal-1"
+            lignesServeur={lignes}
+            liensParente={LIENS}
+            onVersionChange={onVersionChange}
+          />
+          <RailActionsFiche
+            operations={['salarie.modifier']}
+            companyId="soc-test"
+            salarieId="sal-test"
+          />
+        </FormulaireTableauProvider>
+      </NavigationGardeeTestProvider>
     </RegistreFicheProvider>
   );
 }

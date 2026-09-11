@@ -44,7 +44,7 @@ import { TeteRubriqueFiche } from './tete-rubrique-fiche';
 import {
   PREAMBULE_SITUATION_CHANGEE,
   textesSuppressionHistorisee,
-} from './textes-suppression-tableau-historise';
+} from '@/components/navigation/textes-suppression-tableau-historise';
 
 interface Props {
   readonly companyId: string;

@@ -297,3 +297,70 @@ La création d'un salarié n'est **pas une fiche**. Route : `/societes/[id]/sala
 La fiche envoie chaque rubrique séparément (`RubriqueEnregistrable`). La création livre les valeurs sans les envoyer (`RubriqueCreable`, quatre implémenteurs) et émet **un seul** `POST /salaries`. Voir [`adr/0028-registre-creation-salarie.md`](./adr/0028-registre-creation-salarie.md).
 
 À la création : le matricule reste saisi (facultatif, phrase d'aide sous le champ) ; la date de sortie et l'état actif/inactif sont absents du DOM. Un champ facultatif vide après trim est omis du corps, pas envoyé vide. `dateNaissance` est facultative (reprise de dossier). `nom`, `prenom` et `dateEntree` ne peuvent pas être vides — voir [`adr/0030-champs-jamais-vides-date-naissance.md`](./adr/0030-champs-jamais-vides-date-naissance.md).
+
+---
+
+## 16. Navigation gardée et saisie perdable — CRITIQUE
+
+Certains écrans portent de la saisie locale (fiche salarié, création salarié ; plus tard fiche / création société). Si l'utilisateur quitte l'écran — lien interne, en-tête global, fermeture d'onglet — sans enregistrer, la saisie serait perdue **sans message**. Next.js 16 ne propose aucun garde routeur central.
+
+### Deux modules, deux rôles
+
+| Module                                             | Rôle                                                                                               |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `components/navigation/saisie-perdable-racine.tsx` | Fournisseur **racine** : l'écran à saisie **se déclare** au montage et **se retire** au démontage. |
+| `components/navigation/navigation-gardee.tsx`      | **Seule** porte de sortie navigation (`LienGarde`, `useNavigationGardee`).                         |
+
+La coquille (`EnveloppeNavigationRacine` dans `layout.tsx`) monte les deux **au-dessus** de l'en-tête et du contenu.
+
+### Ajouter un écran à saisie (3 lignes utiles)
+
+Dans le composant client, **à l'intérieur** du registre ou état qui sait si la saisie a changé :
+
+```tsx
+import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdable-racine';
+
+function DeclarerMonEcran() {
+  const { aModifications, libellesModifies } = useMonRegistre();
+  useDeclarerSaisiePerdable(aModifications, libellesModifies);
+  return null;
+}
+```
+
+Montez `<DeclarerMonEcran />` une fois dans l'écran. Au démontage, la déclaration est retirée automatiquement — **obligatoire** pour que l'en-tête ne demande plus confirmation sur un écran sans saisie.
+
+Ajoutez aussi `AvertissementNavigation…` (`beforeunload`) si l'écran peut perdre de la saisie à la fermeture d'onglet (voir `avertissement-navigation.ts`).
+
+### Ajouter un lien dans l'en-tête
+
+**Ne pas** importer `next/link` dans `navigation-en-tete.tsx`. Utilisez `LienGarde` — la rècle ESLint couvre ce fichier.
+
+### Navigation dans la zone fiche / création salarié
+
+| Besoin                                                   | Utiliser                          | Ne jamais importer               |
+| -------------------------------------------------------- | --------------------------------- | -------------------------------- |
+| Lien vers une autre page                                 | `LienGarde`                       | `Link` de `next/link`            |
+| Navigation depuis du code (`push`, retour, remplacement) | `useNavigationGardee()`           | `useRouter` de `next/navigation` |
+| Recharger la page courante (même URL, données serveur)   | `useNavigationGardee().refresh()` | —                                |
+
+**Comportement :** s'il y a des modifications non enregistrées, une fenêtre s'ouvre (« Quitter cette page ? » / « Rester »). Sinon, la navigation part immédiatement. Après une création ou une suppression réussie, le registre est remis propre avant la navigation : la fenêtre ne s'ouvre pas.
+
+**Périmètre ESLint :** composants `fiche/`, `creation/`, routes `…/salaries/[salarieId]` et `…/salaries/nouveau`, plus `navigation/navigation-en-tete.tsx`. La **liste** des salariés est exclue (pas de saisie). Voir [`adr/0031-garde-navigation-fiche-creation.md`](./adr/0031-garde-navigation-fiche-creation.md).
+
+**Exemple — bouton « Retour à la liste » :**
+
+```tsx
+import { LienGarde } from '@/components/navigation/navigation-gardee';
+
+<LienGarde href={`/societes/${companyId}/salaries`}>← Retour à la liste</LienGarde>;
+```
+
+**Exemple — redirection après une action réussie :**
+
+```tsx
+const { push } = useNavigationGardee();
+// … action réussie, registre remis propre …
+push(`/societes/${companyId}/salaries/${salarieId}`);
+```
+
+Un import direct de `next/link` ou `useRouter` dans la zone protégée **échoue au lint** avec un message indiquant le module et la fonction de remplacement.

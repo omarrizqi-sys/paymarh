@@ -7,6 +7,8 @@ import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
 import type { RubriqueEnregistrable } from '@/lib/fiche/orchestrateur-enregistrement';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
+import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdable-racine';
 
 const routerPush = vi.fn();
 const { impactSuppressionSalarie, supprimerSalarie } = vi.hoisted(() => ({
@@ -15,7 +17,13 @@ const { impactSuppressionSalarie, supprimerSalarie } = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: routerPush, refresh: vi.fn() }),
+  useRouter: () => ({
+    push: routerPush,
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 vi.mock('@/lib/api/salaries', async (importOriginal) => {
@@ -26,6 +34,12 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
     supprimerSalarie: (...args: unknown[]) => supprimerSalarie(...args),
   };
 });
+
+function DeclarerRegistreFichePourGarde() {
+  const { aModificationsNonEnregistrees, libellesRubriquesModifiees } = useRegistreFiche();
+  useDeclarerSaisiePerdable(aModificationsNonEnregistrees, libellesRubriquesModifiees);
+  return null;
+}
 
 function RubriqueTest({ rubrique }: { readonly rubrique: RubriqueEnregistrable }) {
   const { enregistrerRubrique } = useRegistreFiche();
@@ -51,7 +65,10 @@ function RubriqueModifiable({
       libelle,
       estModifiee: () => modifiee,
       envoyer,
-      reinitialiser: () => undefined,
+      reinitialiser: () => {
+        setModifiee(false);
+        notifierSommaire();
+      },
     });
   }, [enregistrerRubrique, envoyer, id, libelle, modifiee]);
 
@@ -81,15 +98,20 @@ function Harness({
   readonly children?: ReactNode;
 }) {
   return createElement(
-    RegistreFicheProvider,
-    { versionInitiale, onRechargerServeur: onRecharger },
-    rubriques?.map((rubrique) => createElement(RubriqueTest, { key: rubrique.id, rubrique })),
-    children,
-    createElement(RailActionsFiche, {
-      operations: ['salarie.modifier', 'salarie.supprimer'],
-      companyId: 'soc-test',
-      salarieId: 'sal-test',
-    })
+    NavigationGardeeTestProvider,
+    null,
+    createElement(
+      RegistreFicheProvider,
+      { versionInitiale, onRechargerServeur: onRecharger },
+      createElement(DeclarerRegistreFichePourGarde),
+      rubriques?.map((rubrique) => createElement(RubriqueTest, { key: rubrique.id, rubrique })),
+      children,
+      createElement(RailActionsFiche, {
+        operations: ['salarie.modifier', 'salarie.supprimer'],
+        companyId: 'soc-test',
+        salarieId: 'sal-test',
+      })
+    )
   );
 }
 
@@ -328,13 +350,18 @@ describe('RailActionsFiche', () => {
   it('sans droit de suppression, l action correspondante est absente du rail', () => {
     render(
       createElement(
-        RegistreFicheProvider,
-        { versionInitiale: 1, onRechargerServeur: vi.fn() },
-        createElement(RailActionsFiche, {
-          operations: ['salarie.modifier'],
-          companyId: 'soc-test',
-          salarieId: 'sal-test',
-        })
+        NavigationGardeeTestProvider,
+        null,
+        createElement(
+          RegistreFicheProvider,
+          { versionInitiale: 1, onRechargerServeur: vi.fn() },
+          createElement(DeclarerRegistreFichePourGarde),
+          createElement(RailActionsFiche, {
+            operations: ['salarie.modifier'],
+            companyId: 'soc-test',
+            salarieId: 'sal-test',
+          })
+        )
       )
     );
 
@@ -375,7 +402,7 @@ describe('RailActionsFiche — suppression fiche', () => {
     );
   });
 
-  it('SF02 — confirmation envoie DELETE avec jeton et version puis navigue vers la liste', async () => {
+  it('SF02 — confirmation envoie DELETE avec jeton et version puis navigue vers la liste sans garde de navigation', async () => {
     impactSuppressionSalarie.mockResolvedValue({
       donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
     });
@@ -391,6 +418,32 @@ describe('RailActionsFiche — suppression fiche', () => {
       expect(supprimerSalarie).toHaveBeenCalledWith('soc-test', 'sal-test', 7, 'jeton-apercu')
     );
     expect(routerPush).toHaveBeenCalledWith('/societes/soc-test/salaries');
+    expect(screen.queryByTestId('dialogue-suppression-differee')).toBeNull();
+  });
+
+  it('SF09 — suppression reussie avec modifications locales : pas de seconde fenetre de navigation', async () => {
+    impactSuppressionSalarie.mockResolvedValue({
+      donnees: { message: 'Msg', jetonConfirmation: 'jeton-apercu' },
+    });
+    supprimerSalarie.mockResolvedValue({ donnees: { id: 'sal-test' }, alertes: [] });
+
+    render(
+      createElement(Harness, {
+        children: createElement(RubriqueModifiable, {
+          id: 'identite',
+          libelle: 'Identite',
+          envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
+        }),
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('marquer-identite'));
+    fireEvent.click(screen.getByRole('button', { name: 'Supprimer' }));
+    await waitFor(() => expect(screen.getByTestId('confirmer-suppression-fiche')).toBeTruthy());
+    fireEvent.click(screen.getByTestId('confirmer-suppression-fiche'));
+
+    await waitFor(() => expect(routerPush).toHaveBeenCalledWith('/societes/soc-test/salaries'));
+    expect(screen.queryByTestId('dialogue-suppression-differee')).toBeNull();
   });
 
   it('SF03 — Garder le salarie ferme la fenetre sans appel DELETE', async () => {

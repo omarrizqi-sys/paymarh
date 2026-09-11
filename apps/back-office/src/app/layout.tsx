@@ -6,8 +6,7 @@ export const metadata: Metadata = {
   description: 'Back-office de VECTA, logiciel de paie marocain pour le secteur privé.',
 };
 
-import Link from 'next/link';
-import { EtatApi } from '@/components/etat-api';
+import { EnveloppeNavigationRacine } from '@/components/navigation/enveloppe-navigation-racine';
 
 export default function RootLayout({
   children,
@@ -17,23 +16,9 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen bg-background text-foreground antialiased">
-        <header className="border-b">
-          <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-            <nav className="flex items-center gap-6">
-              <Link href="/" className="font-semibold tracking-tight">
-                VECTA
-              </Link>
-              <Link
-                href="/societes"
-                className="text-muted-foreground hover:text-foreground text-sm"
-              >
-                Sociétés
-              </Link>
-            </nav>
-            <EtatApi />
-          </div>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        <EnveloppeNavigationRacine>
+          <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+        </EnveloppeNavigationRacine>
       </body>
     </html>
   );

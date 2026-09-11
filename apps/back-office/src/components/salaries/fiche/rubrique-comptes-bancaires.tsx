@@ -35,7 +35,7 @@ import { useFormulaireTableau } from './contexte-formulaire-tableau';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
 import { useRegistreFiche } from './registre-fiche-provider';
 import { TeteRubriqueFiche } from './tete-rubrique-fiche';
-import { textesSuppressionDiffereeCompteBancaire } from './textes-suppression-tableau-historise';
+import { textesSuppressionDiffereeCompteBancaire } from '@/components/navigation/textes-suppression-tableau-historise';
 
 interface Props {
   readonly companyId: string;

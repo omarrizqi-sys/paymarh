@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Pays, SituationFamiliale } from '@paymarh/shared-types';
 import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
 import { EcranCreationSalarie } from './ecran-creation-salarie';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 
 const { routerPush } = vi.hoisted(() => ({
   routerPush: vi.fn(),
@@ -58,7 +59,9 @@ describe('Creation — forme reelle ValidationPipe', () => {
 
   it('refus ValidationPipe (dates vides) : le message s affiche sous dateNaissance, pas le generique', async () => {
     render(
-      <EcranCreationSalarie companyId="soc-1" pays={PAYS} situationsFamiliales={SITUATIONS} />
+      <NavigationGardeeTestProvider>
+        <EcranCreationSalarie companyId="soc-1" pays={PAYS} situationsFamiliales={SITUATIONS} />
+      </NavigationGardeeTestProvider>
     );
     fireEvent.change(document.getElementById('nom')!, { target: { value: 'Benali' } });
     fireEvent.change(document.getElementById('prenom')!, { target: { value: 'Sara' } });

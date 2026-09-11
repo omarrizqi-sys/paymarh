@@ -67,9 +67,40 @@ export function RegistreCreationProvider({ companyId, children }: Props) {
     void revisionSommaire;
     return ORDRE_RUBRIQUES_CREATION_SALARIE.flatMap((id) => {
       const rubrique = rubriquesRef.current.get(id);
-      return rubrique === undefined ? [] : [{ id: rubrique.id, libelle: rubrique.libelle }];
+      return rubrique === undefined
+        ? []
+        : [{ id: rubrique.id, libelle: rubrique.libelle, modifiee: rubrique.estModifiee() }];
     });
   }, [revisionSommaire]);
+
+  const nombreModifiees = useMemo(() => {
+    void revisionSommaire;
+    let total = 0;
+    for (const id of ORDRE_RUBRIQUES_CREATION_SALARIE) {
+      const rubrique = rubriquesRef.current.get(id);
+      if (rubrique !== undefined && rubrique.estModifiee()) {
+        total += 1;
+      }
+    }
+    return total;
+  }, [revisionSommaire]);
+
+  const aModificationsNonEnregistrees = useCallback((): boolean => {
+    for (const id of ORDRE_RUBRIQUES_CREATION_SALARIE) {
+      const rubrique = rubriquesRef.current.get(id);
+      if (rubrique !== undefined && rubrique.estModifiee()) {
+        return true;
+      }
+    }
+    return false;
+  }, []);
+
+  const libellesRubriquesModifieesDepuisRegistre = useCallback((): readonly string[] => {
+    return ORDRE_RUBRIQUES_CREATION_SALARIE.flatMap((id) => {
+      const rubrique = rubriquesRef.current.get(id);
+      return rubrique !== undefined && rubrique.estModifiee() ? [rubrique.libelle] : [];
+    });
+  }, []);
 
   const creer = useCallback(async (): Promise<ResultatCreationSalarie> => {
     setEnregistrementEnCours(true);
@@ -110,6 +141,9 @@ export function RegistreCreationProvider({ companyId, children }: Props) {
     () => ({
       enregistrementEnCours,
       rubriquesSommaire,
+      nombreModifiees,
+      aModificationsNonEnregistrees,
+      libellesRubriquesModifiees: libellesRubriquesModifieesDepuisRegistre,
       enregistrerRubrique,
       lireValeurs,
       notifierSommaire,
@@ -119,6 +153,9 @@ export function RegistreCreationProvider({ companyId, children }: Props) {
     [
       enregistrementEnCours,
       rubriquesSommaire,
+      nombreModifiees,
+      aModificationsNonEnregistrees,
+      libellesRubriquesModifieesDepuisRegistre,
       enregistrerRubrique,
       lireValeurs,
       notifierSommaire,

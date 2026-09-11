@@ -8,6 +8,7 @@
 export interface RubriqueCreable<T = unknown> {
   readonly id: string;
   readonly libelle: string;
+  estModifiee(): boolean;
   valeurs(): T;
   reinitialiser(): void;
 }

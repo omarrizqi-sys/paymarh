@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { EnveloppeTableauRepetable } from './enveloppe-tableau-repetable';
-import { textesSuppressionDiffereeCompteBancaire } from './textes-suppression-tableau-historise';
+import { textesSuppressionDiffereeCompteBancaire } from '@/components/navigation/textes-suppression-tableau-historise';
 
 interface LigneTest {
   readonly id: string;

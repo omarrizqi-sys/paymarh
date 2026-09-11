@@ -8,6 +8,7 @@ import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider } from './registre-fiche-provider';
 import { RubriqueSaisiesSurSalaire } from './rubrique-saisies-sur-salaire';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { reinitialiserCompteurIdLocal } from '@/lib/fiche/saisies-sur-salaire-lignes';
 
 const TYPES_SAISIE: readonly TypeSaisieSurSalaire[] = [
@@ -35,7 +36,13 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
 });
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 function saisie(surcharges: Partial<SaisieSurSalaire> = {}): SaisieSurSalaire {
@@ -65,21 +72,23 @@ function Harness({
 }) {
   return (
     <RegistreFicheProvider versionInitiale={3} onRechargerServeur={vi.fn()}>
-      <FormulaireTableauProvider>
-        {extra}
-        <RubriqueSaisiesSurSalaire
-          companyId="soc-1"
-          salarieId="sal-1"
-          lignesServeur={lignes}
-          typesSaisie={TYPES_SAISIE}
-          onVersionChange={vi.fn()}
-        />
-        <RailActionsFiche
-          operations={['salarie.modifier']}
-          companyId="soc-test"
-          salarieId="sal-test"
-        />
-      </FormulaireTableauProvider>
+      <NavigationGardeeTestProvider>
+        <FormulaireTableauProvider>
+          {extra}
+          <RubriqueSaisiesSurSalaire
+            companyId="soc-1"
+            salarieId="sal-1"
+            lignesServeur={lignes}
+            typesSaisie={TYPES_SAISIE}
+            onVersionChange={vi.fn()}
+          />
+          <RailActionsFiche
+            operations={['salarie.modifier']}
+            companyId="soc-test"
+            salarieId="sal-test"
+          />
+        </FormulaireTableauProvider>
+      </NavigationGardeeTestProvider>
     </RegistreFicheProvider>
   );
 }
@@ -156,56 +165,58 @@ describe('RubriqueSaisiesSurSalaire — sommaire', () => {
 
   it('T59 — saisies apparait apres prets dans le sommaire', () => {
     render(
-      <FicheSalarieClient
-        companyId="soc-1"
-        salarieId="sal-1"
-        initial={{
-          id: 'sal-1',
-          version: 1,
-          etat: 'ACTIF',
-          moisEnCours: '2026-09',
-          dateSortie: null,
-          matricule: 'EMP001',
-          nom: 'Benali',
-          prenom: 'Sara',
-          sexe: 'FEMME',
-          dateNaissance: '1990-05-12',
-          villeNaissance: null,
-          paysNaissanceId: null,
-          nationaliteId: null,
-          typePieceIdentite: 'CIN',
-          situationFamiliale: { code: null, libelle: null },
-          numeroPiece: null,
-          numeroCnss: null,
-          numeroCimr: null,
-          adresse: null,
-          complementAdresse: null,
-          ville: null,
-          codePostal: null,
-          paysId: null,
-          telephonePersonnel: null,
-          telephoneProfessionnel: null,
-          emailPersonnel: null,
-          emailProfessionnel: null,
-          urgencePrenom: null,
-          urgenceNom: null,
-          urgenceTelephone: null,
-          urgenceEmail: null,
-          dateEntree: '2020-01-15',
-          dateAnciennete: '2020-01-15',
-          emplois: [],
-          nombrePersonnesACharge: 0,
-          personnesACharge: [],
-          prets: [],
-          saisiesSurSalaire: [],
-          operations: ['salarie.lire', 'salarie.modifier'],
-        }}
-        pays={[]}
-        situationsFamiliales={[]}
-        liensParente={[]}
-        banques={[]}
-        typesSaisie={TYPES_SAISIE}
-      />
+      <NavigationGardeeTestProvider>
+        <FicheSalarieClient
+          companyId="soc-1"
+          salarieId="sal-1"
+          initial={{
+            id: 'sal-1',
+            version: 1,
+            etat: 'ACTIF',
+            moisEnCours: '2026-09',
+            dateSortie: null,
+            matricule: 'EMP001',
+            nom: 'Benali',
+            prenom: 'Sara',
+            sexe: 'FEMME',
+            dateNaissance: '1990-05-12',
+            villeNaissance: null,
+            paysNaissanceId: null,
+            nationaliteId: null,
+            typePieceIdentite: 'CIN',
+            situationFamiliale: { code: null, libelle: null },
+            numeroPiece: null,
+            numeroCnss: null,
+            numeroCimr: null,
+            adresse: null,
+            complementAdresse: null,
+            ville: null,
+            codePostal: null,
+            paysId: null,
+            telephonePersonnel: null,
+            telephoneProfessionnel: null,
+            emailPersonnel: null,
+            emailProfessionnel: null,
+            urgencePrenom: null,
+            urgenceNom: null,
+            urgenceTelephone: null,
+            urgenceEmail: null,
+            dateEntree: '2020-01-15',
+            dateAnciennete: '2020-01-15',
+            emplois: [],
+            nombrePersonnesACharge: 0,
+            personnesACharge: [],
+            prets: [],
+            saisiesSurSalaire: [],
+            operations: ['salarie.lire', 'salarie.modifier'],
+          }}
+          pays={[]}
+          situationsFamiliales={[]}
+          liensParente={[]}
+          banques={[]}
+          typesSaisie={TYPES_SAISIE}
+        />
+      </NavigationGardeeTestProvider>
     );
     const boutons = screen.getAllByRole('button');
     const ids = boutons

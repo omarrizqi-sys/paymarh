@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import type { Permission } from '@paymarh/shared-types';
 import { libelleStatutEnregistrement } from '@/lib/affichage/libelles';
 import { AppelApiEchoue } from '@/lib/api/client';
@@ -15,12 +14,13 @@ import {
   messageConfirmationAnnuler,
   messageConfirmationRechargement,
 } from './avertissement-navigation';
-import { DialogueConfirmationSuppressionTableau } from './dialogue-confirmation-suppression-tableau';
+import { DialogueConfirmationSuppressionTableau } from '@/components/navigation/dialogue-confirmation-suppression-tableau';
 import { useRegistreFiche } from './registre-fiche-provider';
 import {
   textesSuppressionFiche,
   type TextesConfirmationSuppression,
-} from './textes-suppression-tableau-historise';
+} from '@/components/navigation/textes-suppression-tableau-historise';
+import { useNavigationGardee } from '@/components/navigation/navigation-gardee';
 
 interface Props {
   readonly operations: readonly Permission[];
@@ -30,7 +30,7 @@ interface Props {
 }
 
 export function RailActionsFiche({ operations, companyId, salarieId, modeCompact = false }: Props) {
-  const router = useRouter();
+  const { push } = useNavigationGardee();
   const {
     version,
     nombreModifiees,
@@ -111,7 +111,8 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
       setChargementDialogue(false);
       setErreurDialogue(undefined);
       terminerAttenteSuppression();
-      router.push(`/societes/${companyId}/salaries`);
+      annuler();
+      push(`/societes/${companyId}/salaries`);
     } catch (erreur) {
       if (erreur instanceof AppelApiEchoue && estConflitVersion(erreur.erreur.code)) {
         setDialogueSuppressionOuvert(false);
@@ -135,7 +136,15 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
     } finally {
       setChargementDialogue(false);
     }
-  }, [companyId, router, salarieId, signalerConflitVersion, terminerAttenteSuppression, version]);
+  }, [
+    annuler,
+    companyId,
+    push,
+    salarieId,
+    signalerConflitVersion,
+    terminerAttenteSuppression,
+    version,
+  ]);
 
   const boutonEnregistrer = (
     <Button

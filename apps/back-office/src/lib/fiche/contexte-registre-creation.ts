@@ -7,6 +7,7 @@ import type { RubriqueCreable } from './rubrique-creable';
 export interface EntreeSommaireCreation {
   readonly id: string;
   readonly libelle: string;
+  readonly modifiee: boolean;
 }
 
 export type ResultatCreationSalarie =
@@ -24,6 +25,9 @@ export type ResultatCreationSalarie =
 export interface RegistreCreationContexte {
   readonly enregistrementEnCours: boolean;
   readonly rubriquesSommaire: readonly EntreeSommaireCreation[];
+  readonly nombreModifiees: number;
+  aModificationsNonEnregistrees(): boolean;
+  libellesRubriquesModifiees(): readonly string[];
   enregistrerRubrique(rubrique: RubriqueCreable): () => void;
   lireValeurs<T>(id: string): T;
   notifierSommaire(): void;

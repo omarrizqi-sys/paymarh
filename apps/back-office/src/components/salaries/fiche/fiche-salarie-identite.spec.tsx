@@ -6,6 +6,7 @@ import { AppelApiEchoue } from '@/lib/api/client';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
 import { FicheSalarieClient } from './fiche-salarie-client';
 import { deposerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 
 const {
   modifierIdentiteSalarie,
@@ -126,16 +127,18 @@ function reponseOk(
 
 function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
   return render(
-    <FicheSalarieClient
-      companyId="soc-1"
-      salarieId="sal-1"
-      initial={fiche}
-      pays={PAYS}
-      situationsFamiliales={SITUATIONS}
-      liensParente={LIENS_PARENTE}
-      banques={[]}
-      typesSaisie={TYPES_SAISIE}
-    />
+    <NavigationGardeeTestProvider>
+      <FicheSalarieClient
+        companyId="soc-1"
+        salarieId="sal-1"
+        initial={fiche}
+        pays={PAYS}
+        situationsFamiliales={SITUATIONS}
+        liensParente={LIENS_PARENTE}
+        banques={[]}
+        typesSaisie={TYPES_SAISIE}
+      />
+    </NavigationGardeeTestProvider>
   );
 }
 

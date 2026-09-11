@@ -21,6 +21,7 @@ import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provid
 import { RubriqueComptesBancaires } from './rubrique-comptes-bancaires';
 import { RubriqueIdentite, type ValeursIdentite } from './rubrique-identite';
 import { RailActionsFiche } from './rail-actions-fiche';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 
 const BANQUES: readonly Banque[] = [
   { id: 'bnq-1', nom: 'Attijariwafa Bank', ancienNom: null, codeBanque: '007', couleur: '#000' },
@@ -82,7 +83,13 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
 });
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 function compte(surcharges: Partial<CompteBancaireSalarie> = {}): CompteBancaireSalarie {
@@ -184,18 +191,20 @@ function rendreRubrique({
 } = {}) {
   return render(
     <RegistreFicheProvider versionInitiale={versionInitiale} onRechargerServeur={vi.fn()}>
-      <FormulaireTableauProvider>
-        {extra}
-        <RubriqueComptesBancaires
-          companyId="soc-1"
-          salarieId="sal-1"
-          comptesServeur={comptes}
-          banques={BANQUES}
-          operations={operations}
-          onComptesChange={onComptesChange}
-        />
-        <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
-      </FormulaireTableauProvider>
+      <NavigationGardeeTestProvider>
+        <FormulaireTableauProvider>
+          {extra}
+          <RubriqueComptesBancaires
+            companyId="soc-1"
+            salarieId="sal-1"
+            comptesServeur={comptes}
+            banques={BANQUES}
+            operations={operations}
+            onComptesChange={onComptesChange}
+          />
+          <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
+        </FormulaireTableauProvider>
+      </NavigationGardeeTestProvider>
     </RegistreFicheProvider>
   );
 }
@@ -230,16 +239,18 @@ function rubriqueIdentiteTest(): ReactNode {
 
 function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBase()) {
   return render(
-    <FicheSalarieClient
-      companyId="soc-1"
-      salarieId="sal-1"
-      initial={fiche}
-      pays={PAYS}
-      situationsFamiliales={SITUATIONS}
-      liensParente={LIENS}
-      banques={BANQUES}
-      typesSaisie={TYPES_SAISIE}
-    />
+    <NavigationGardeeTestProvider>
+      <FicheSalarieClient
+        companyId="soc-1"
+        salarieId="sal-1"
+        initial={fiche}
+        pays={PAYS}
+        situationsFamiliales={SITUATIONS}
+        liensParente={LIENS}
+        banques={BANQUES}
+        typesSaisie={TYPES_SAISIE}
+      />
+    </NavigationGardeeTestProvider>
   );
 }
 
@@ -891,17 +902,19 @@ function HarnessComptesParentSynchronise({
   const [comptes, setComptes] = useState<readonly CompteBancaireSalarie[]>([]);
   return (
     <RegistreFicheProvider versionInitiale={3} onRechargerServeur={vi.fn()}>
-      <FormulaireTableauProvider>
-        <RubriqueComptesBancaires
-          companyId="soc-1"
-          salarieId="sal-1"
-          comptesServeur={comptes}
-          banques={BANQUES}
-          operations={operations}
-          onComptesChange={(suivant, _version) => setComptes(suivant)}
-        />
-        <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
-      </FormulaireTableauProvider>
+      <NavigationGardeeTestProvider>
+        <FormulaireTableauProvider>
+          <RubriqueComptesBancaires
+            companyId="soc-1"
+            salarieId="sal-1"
+            comptesServeur={comptes}
+            banques={BANQUES}
+            operations={operations}
+            onComptesChange={(suivant, _version) => setComptes(suivant)}
+          />
+          <RailActionsFiche operations={operations} companyId="soc-test" salarieId="sal-test" />
+        </FormulaireTableauProvider>
+      </NavigationGardeeTestProvider>
     </RegistreFicheProvider>
   );
 }

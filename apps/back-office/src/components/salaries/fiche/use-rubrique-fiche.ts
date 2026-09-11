@@ -129,6 +129,7 @@ export function useRubriqueFiche<T>({
       return enregistrerRubriqueCreation({
         id,
         libelle,
+        estModifiee: () => estModifieeRef.current(courantRef.current, valeursServeurRef.current),
         valeurs: () => courantRef.current,
         reinitialiser: () => reinitialiserRef.current(),
       });

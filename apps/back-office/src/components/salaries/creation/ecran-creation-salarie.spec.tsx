@@ -5,6 +5,7 @@ import type { Pays, SituationFamiliale } from '@paymarh/shared-types';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { EcranCreationSalarie } from './ecran-creation-salarie';
 import { consommerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
+import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 
 const { creerSalarie, routerPush } = vi.hoisted(() => ({
   creerSalarie: vi.fn(),
@@ -20,7 +21,13 @@ vi.mock('@/lib/api/salaries', async (importOriginal) => {
 });
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: routerPush }),
+  useRouter: () => ({
+    push: routerPush,
+    refresh: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
 }));
 
 const PAYS: readonly Pays[] = [{ id: 'pays-ma', ordre: 1, codeIso: 'MA', libelle: 'Maroc' }];
@@ -52,7 +59,9 @@ function select(id: string): HTMLSelectElement {
 
 function rendre() {
   return render(
-    <EcranCreationSalarie companyId="soc-1" pays={PAYS} situationsFamiliales={SITUATIONS} />
+    <NavigationGardeeTestProvider>
+      <EcranCreationSalarie companyId="soc-1" pays={PAYS} situationsFamiliales={SITUATIONS} />
+    </NavigationGardeeTestProvider>
   );
 }
 

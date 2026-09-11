@@ -47,6 +47,39 @@ export default [
   },
 
   {
+    // Navigation interne des ecrans fiche et creation : un seul module autorise
+    // a importer les outils Next de changement d ecran.
+    files: [
+      'apps/back-office/src/components/salaries/fiche/**/*.{ts,tsx}',
+      'apps/back-office/src/components/salaries/creation/**/*.{ts,tsx}',
+      'apps/back-office/src/app/societes/\\[id\\]/salaries/\\[salarieId\\]/**/*.{ts,tsx}',
+      'apps/back-office/src/app/societes/\\[id\\]/salaries/nouveau/**/*.{ts,tsx}',
+      'apps/back-office/src/components/navigation/navigation-en-tete.tsx',
+    ],
+    ignores: ['apps/back-office/src/components/navigation/navigation-gardee.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'next/link',
+              message:
+                'Import interdit : toute navigation de la zone fiche ou creation passe par `@/components/navigation/navigation-gardee` — utilisez `LienGarde` à la place de `Link`.',
+            },
+            {
+              name: 'next/navigation',
+              importNames: ['useRouter', 'redirect', 'permanentRedirect'],
+              message:
+                'Import interdit : toute navigation de la zone fiche ou creation passe par `@/components/navigation/navigation-gardee` — utilisez `useNavigationGardee()` (`push`, `replace`, `back`, `forward`, `refresh`) à la place de `useRouter`.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  {
     // --- Specificites NestJS -------------------------------------------
     files: ['apps/api/**/*.ts'],
     rules: {

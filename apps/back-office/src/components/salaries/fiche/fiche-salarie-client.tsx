@@ -1,14 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
 import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
+  type MutableRefObject,
   type SetStateAction,
 } from 'react';
 import type {
@@ -23,10 +23,8 @@ import { lireSalarie } from '@/lib/api/salaries';
 import { possedePermission } from '@/lib/permissions';
 import { consommerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
 import { repartirAlertesCreation } from '@/lib/fiche/repartir-alertes-creation';
-import {
-  AvertissementNavigationFiche,
-  confirmerNavigationAvecModifications,
-} from './avertissement-navigation';
+import { AvertissementNavigationFiche } from './avertissement-navigation';
+import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdable-racine';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RubriqueIdentite, type ValeursIdentite } from './rubrique-identite';
 import {
@@ -44,6 +42,7 @@ import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
 import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rubriques';
 import { SqueletteFicheSalarie } from './squelette-fiche-salarie';
+import { LienGarde, useNavigationGardee } from '@/components/navigation/navigation-gardee';
 
 interface Props {
   readonly companyId: string;
@@ -64,22 +63,20 @@ function SyncVersion({ version }: { readonly version: number }) {
   return null;
 }
 
-function LienRetourListe({ companyId }: { readonly companyId: string }) {
-  const { rubriquesSommaire } = useRegistreFiche();
-  const libelles = rubriquesSommaire.filter((r) => r.modifiee).map((r) => r.libelle);
+function DeclarerSaisiePerdableFiche() {
+  const { aModificationsNonEnregistrees, libellesRubriquesModifiees } = useRegistreFiche();
+  useDeclarerSaisiePerdable(aModificationsNonEnregistrees, libellesRubriquesModifiees);
+  return null;
+}
 
+function LienRetourListe({ companyId }: { readonly companyId: string }) {
   return (
-    <Link
+    <LienGarde
       href={`/societes/${companyId}/salaries`}
       className="text-primary mb-4 inline-block text-sm hover:underline"
-      onClick={(event) => {
-        if (!confirmerNavigationAvecModifications(libelles)) {
-          event.preventDefault();
-        }
-      }}
     >
       ← Retour à la liste
-    </Link>
+    </LienGarde>
   );
 }
 
@@ -333,23 +330,25 @@ export function FicheSalarieClient({
   banques,
   typesSaisie,
 }: Props) {
-  const router = useRouter();
   const [fiche, setFiche] = useState(initial);
+  const refreshRef = useRef<() => void>(() => undefined) as MutableRefObject<() => void>;
 
-  const rechargerServeur = useCallback(async () => {
+  const onRechargerServeur = useCallback(async () => {
     const reponse = await lireSalarie(companyId, salarieId);
     flushSync(() => {
       setFiche(reponse.donnees);
     });
-    router.refresh();
-  }, [companyId, router, salarieId]);
+    refreshRef.current();
+  }, [companyId, salarieId]);
 
   return (
     <RegistreFicheProvider
       versionInitiale={initial.version}
-      onRechargerServeur={rechargerServeur}
+      onRechargerServeur={onRechargerServeur}
       onApresEnregistrement={(version) => setFiche((prev) => ({ ...prev, version }))}
     >
+      <DeclarerSaisiePerdableFiche />
+      <LiaisonRefreshNavigation refreshRef={refreshRef} />
       <LienRetourListe companyId={companyId} />
       <FormulaireTableauProvider>
         <ContenuFicheSalarie
@@ -366,4 +365,16 @@ export function FicheSalarieClient({
       </FormulaireTableauProvider>
     </RegistreFicheProvider>
   );
+}
+
+function LiaisonRefreshNavigation({
+  refreshRef,
+}: {
+  readonly refreshRef: MutableRefObject<() => void>;
+}) {
+  const { refresh } = useNavigationGardee();
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh, refreshRef]);
+  return null;
 }

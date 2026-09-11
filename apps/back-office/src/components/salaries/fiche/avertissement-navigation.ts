@@ -1,20 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRegistreCreation } from '@/lib/fiche/contexte-registre-creation';
 import { useRegistreFiche } from './registre-fiche-provider';
 
 /**
  * Avertissement avant de quitter la page.
  *
  * Limite connue (2.1.c-2) : beforeunload couvre fermeture/rechargement d onglet ;
- * le lien retour explicite appelle confirmerNavigationAvecModifications.
+ * la navigation interne passe par navigation-gardee (LienGarde, useNavigationGardee).
  * Next.js 16.3.3 ne fournit pas de garde router centralisee pour router.push ni le retour navigateur.
  */
-export function AvertissementNavigationFiche() {
-  const { rubriquesSommaire } = useRegistreFiche();
-  const libellesModifies = rubriquesSommaire.filter((r) => r.modifiee).map((r) => r.libelle);
-  const aModifications = libellesModifies.length > 0;
-
+function useAvertissementBeforeUnload(aModifications: boolean): void {
   useEffect(() => {
     if (!aModifications) return;
 
@@ -26,15 +23,20 @@ export function AvertissementNavigationFiche() {
     window.addEventListener('beforeunload', gestionnaire);
     return () => window.removeEventListener('beforeunload', gestionnaire);
   }, [aModifications]);
+}
 
+export function AvertissementNavigationFiche() {
+  const { rubriquesSommaire } = useRegistreFiche();
+  const aModifications = rubriquesSommaire.some((rubrique) => rubrique.modifiee);
+  useAvertissementBeforeUnload(aModifications);
   return null;
 }
 
-export function confirmerNavigationAvecModifications(libelles: readonly string[]): boolean {
-  if (libelles.length === 0) return true;
-  return window.confirm(
-    `Des modifications non enregistrées concernent : ${libelles.join(', ')}. Quitter quand même ?`
-  );
+export function AvertissementNavigationCreation() {
+  const { rubriquesSommaire } = useRegistreCreation();
+  const aModifications = rubriquesSommaire.some((rubrique) => rubrique.modifiee);
+  useAvertissementBeforeUnload(aModifications);
+  return null;
 }
 
 export function messageConfirmationAnnuler(libelles: readonly string[]): string {

@@ -1,7 +1,5 @@
 'use client';
 
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { flushSync } from 'react-dom';
 import { useMemo, useState } from 'react';
 import type { AlerteApi, Pays, SituationFamiliale } from '@paymarh/shared-types';
@@ -27,6 +25,9 @@ import { repartirAlertesCreation } from '@/lib/fiche/repartir-alertes-creation';
 import { deposerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-creation-salarie';
 import { RailActionsCreation } from './rail-actions-creation';
 import { RegistreCreationProvider, useRegistreCreation } from './registre-creation-provider';
+import { AvertissementNavigationCreation } from '@/components/salaries/fiche/avertissement-navigation';
+import { LienGarde, useNavigationGardee } from '@/components/navigation/navigation-gardee';
+import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdable-racine';
 
 const VALEURS_IDENTITE_VIDES: ValeursIdentite = {
   nom: '',
@@ -77,9 +78,15 @@ interface Props {
   readonly situationsFamiliales: readonly SituationFamiliale[];
 }
 
+function DeclarerSaisiePerdableCreation() {
+  const { aModificationsNonEnregistrees, libellesRubriquesModifiees } = useRegistreCreation();
+  useDeclarerSaisiePerdable(aModificationsNonEnregistrees, libellesRubriquesModifiees);
+  return null;
+}
+
 function ContenuCreationSalarie({ companyId, pays, situationsFamiliales }: Props) {
-  const router = useRouter();
-  const { creer, rubriquesSommaire } = useRegistreCreation();
+  const { push } = useNavigationGardee();
+  const { creer, annuler, rubriquesSommaire } = useRegistreCreation();
   const [alertesRefus, setAlertesRefus] = useState<readonly AlerteApi[]>([]);
   const [erreurGenerique, setErreurGenerique] = useState<string | undefined>();
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
@@ -88,10 +95,7 @@ function ContenuCreationSalarie({ companyId, pays, situationsFamiliales }: Props
 
   const parBloc = useMemo(() => repartirAlertesCreation(alertesRefus), [alertesRefus]);
 
-  const entreesSommaire = useMemo(
-    () => rubriquesSommaire.map((entree) => ({ ...entree, modifiee: false })),
-    [rubriquesSommaire]
-  );
+  const entreesSommaire = useMemo(() => rubriquesSommaire, [rubriquesSommaire]);
 
   async function soumettre(): Promise<void> {
     setAlertesRefus([]);
@@ -99,7 +103,8 @@ function ContenuCreationSalarie({ companyId, pays, situationsFamiliales }: Props
     const resultat = await creer();
     if (resultat.ok) {
       deposerAlertesCreationSalarie(resultat.salarieId, resultat.alertes);
-      router.push(`/societes/${companyId}/salaries/${resultat.salarieId}`);
+      annuler();
+      push(`/societes/${companyId}/salaries/${resultat.salarieId}`);
       return;
     }
     flushSync(() => {
@@ -110,6 +115,7 @@ function ContenuCreationSalarie({ companyId, pays, situationsFamiliales }: Props
 
   return (
     <div className="space-y-4">
+      <AvertissementNavigationCreation />
       <header className="space-y-1">
         <h1 className="text-2xl font-semibold">Nouveau salarié</h1>
       </header>
@@ -179,12 +185,13 @@ function ContenuCreationSalarie({ companyId, pays, situationsFamiliales }: Props
 export function EcranCreationSalarie(props: Props) {
   return (
     <RegistreCreationProvider companyId={props.companyId}>
-      <Link
+      <DeclarerSaisiePerdableCreation />
+      <LienGarde
         href={`/societes/${props.companyId}/salaries`}
         className="text-primary mb-4 inline-block text-sm hover:underline"
       >
         ← Retour à la liste
-      </Link>
+      </LienGarde>
       <ContenuCreationSalarie {...props} />
     </RegistreCreationProvider>
   );
