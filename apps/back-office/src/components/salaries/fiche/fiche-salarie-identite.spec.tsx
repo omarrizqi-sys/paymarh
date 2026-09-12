@@ -558,6 +558,7 @@ describe('Fiche salarie — blocs identite', () => {
       'dates',
       'prets',
       'saisies-sur-salaire',
+      'emplois',
     ]);
 
     fireEvent.click(screen.getByTestId('sommaire-coordonnees'));

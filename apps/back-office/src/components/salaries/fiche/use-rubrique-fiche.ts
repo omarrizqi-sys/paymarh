@@ -8,11 +8,15 @@ import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistre
 import { valeursStructurellementEgales } from '@/lib/egalite-valeurs';
 import { useRegistreCreationOptionnel } from '@/lib/fiche/contexte-registre-creation';
 import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
+import type { EntitePorteuse } from '@/lib/fiche/orchestrateur-enregistrement';
 import { useRegistreFicheOptionnel } from './registre-fiche-provider';
+
+const ENTITE_SALARIE_PAR_DEFAUT: EntitePorteuse = { kind: 'salarie' };
 
 export interface RubriqueFicheProps<T> {
   readonly id: string;
   readonly libelle: string;
+  readonly entite?: EntitePorteuse;
   readonly valeursServeur: T;
   readonly estModifiee: (courant: T, serveur: T) => boolean;
   readonly envoyer: (version: number, courant: T) => Promise<EnvoiRubriqueResultat>;
@@ -25,6 +29,7 @@ export interface RubriqueFicheProps<T> {
 export function useRubriqueFiche<T>({
   id,
   libelle,
+  entite: entiteProp,
   valeursServeur,
   estModifiee,
   envoyer,
@@ -32,6 +37,10 @@ export function useRubriqueFiche<T>({
   alertesExternes,
   erreurExterne,
 }: RubriqueFicheProps<T>) {
+  const entite = entiteProp ?? ENTITE_SALARIE_PAR_DEFAUT;
+  const entiteRef = useRef(entite);
+  entiteRef.current = entite;
+
   const fiche = useRegistreFicheOptionnel();
   const creation = useRegistreCreationOptionnel();
 
@@ -39,7 +48,7 @@ export function useRubriqueFiche<T>({
   const enregistrerRubriqueCreation = creation?.enregistrerRubrique;
   const notifierSommaire =
     fiche?.notifierSommaire ?? creation?.notifierSommaire ?? (() => undefined);
-  const version = fiche?.version ?? 0;
+  const version = fiche === null ? undefined : fiche.lireVersion(entite);
   const enregistrementEnCours =
     fiche?.enregistrementEnCours ?? creation?.enregistrementEnCours ?? false;
 
@@ -145,6 +154,7 @@ export function useRubriqueFiche<T>({
     return enregistrerRubriqueFiche({
       id,
       libelle,
+      entite: entiteRef.current,
       estModifiee: lireEstModifiee,
       reinitialiser: () => reinitialiserRef.current(),
       envoyer: async (versionEnvoi) => {

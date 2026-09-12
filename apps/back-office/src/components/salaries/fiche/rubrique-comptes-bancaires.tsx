@@ -245,6 +245,7 @@ export function RubriqueComptesBancaires({
     const desenregistrer = enregistrerRubrique({
       id: 'comptes-bancaires',
       libelle: 'Comptes bancaires',
+      entite: { kind: 'salarie' },
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
       reinitialiser: reinitialiserRubrique,

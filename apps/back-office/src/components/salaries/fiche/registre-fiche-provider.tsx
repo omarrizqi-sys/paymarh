@@ -15,19 +15,37 @@ import {
   compterRubriquesModifiees,
   enregistrerRubriquesModifiees,
   libellesRubriquesModifiees,
+  type EntitePorteuse,
   type ResultatRubriqueEnregistrement,
   type RubriqueEnregistrable,
+  type VersionsParEntite,
 } from '@/lib/fiche/orchestrateur-enregistrement';
-import { ORDRE_RUBRIQUES_FICHE_SALARIE } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
+import {
+  assertRubriquesDansOrdre,
+  ID_SOMMAIRE_EMPLOIS,
+  LIBELLE_SOMMAIRE_EMPLOIS,
+  ORDRE_RUBRIQUES_SALARIE,
+  ordreEnregistrementFiche,
+  type EmploiPourOrdre,
+} from '@/lib/fiche/ordre-rubriques-fiche-salarie';
+import {
+  lireVersionEntite,
+  mettreAJourVersionEntite,
+  versionsEmploisDepuisListe,
+} from '@/lib/fiche/versions-entite';
 
 export interface EntreeSommaireRubrique {
   readonly id: string;
   readonly libelle: string;
   readonly modifiee: boolean;
+  /** Entrée de navigation sans rubrique enregistrable (ex. « Emplois »). */
+  readonly navigationSeule?: boolean;
 }
 
 interface RegistreFicheContexte {
+  /** Version du salarié — raccourci vers versions.salarie. */
   readonly version: number;
+  readonly versions: VersionsParEntite;
   readonly enregistrementEnCours: boolean;
   readonly ecritureHorsSequenceEnCours: boolean;
   readonly conflitVersion: boolean;
@@ -37,6 +55,7 @@ interface RegistreFicheContexte {
   readonly nombreModifiees: number;
   aModificationsNonEnregistrees(): boolean;
   libellesRubriquesModifiees(): readonly string[];
+  lireVersion(entite: EntitePorteuse): number;
   enregistrer(): Promise<void>;
   annuler(): void;
   rechargerDepuisServeur(): void;
@@ -45,6 +64,7 @@ interface RegistreFicheContexte {
   rechargementEnAttente: boolean;
   enregistrerRubrique(rubrique: RubriqueEnregistrable): () => void;
   mettreAJourVersion(version: number): void;
+  synchroniserVersions(versions: VersionsParEntite): void;
   signalerVersionApresEcritureHorsSequence(nouvelleVersion: number): void;
   signalerDebutEcritureHorsSequence(): void;
   signalerFinEcritureHorsSequence(): void;
@@ -70,20 +90,45 @@ export function useRegistreFicheOptionnel(): RegistreFicheContexte | null {
 
 interface PropsProvider {
   readonly versionInitiale: number;
+  readonly emplois?: readonly EmploiPourOrdre[];
   readonly onRechargerServeur: () => Promise<void>;
   readonly onApresEnregistrement?: (version: number) => void;
   readonly children?: ReactNode;
 }
 
+export function emploisPourOrdre(
+  emplois: readonly {
+    readonly id: string;
+    readonly version: number;
+    readonly numeroOrdre: number;
+    readonly contrat: { readonly libellePoste: string };
+  }[]
+): EmploiPourOrdre[] {
+  return [...emplois]
+    .sort((a, b) => a.numeroOrdre - b.numeroOrdre)
+    .map((emploi) => ({
+      id: emploi.id,
+      libellePoste: emploi.contrat.libellePoste,
+      version: emploi.version,
+    }));
+}
+
 export function RegistreFicheProvider({
   versionInitiale,
+  emplois = [],
   onRechargerServeur,
   onApresEnregistrement,
   children,
 }: PropsProvider) {
   const rubriquesRef = useRef<Map<string, RubriqueEnregistrable>>(new Map());
   const avantEnvoiRef = useRef<Set<() => void>>(new Set());
-  const [version, setVersion] = useState(versionInitiale);
+  const emploisRef = useRef(emplois);
+  emploisRef.current = emplois;
+
+  const [versions, setVersions] = useState<VersionsParEntite>(() => ({
+    salarie: versionInitiale,
+    emplois: versionsEmploisDepuisListe(emplois),
+  }));
   const [enregistrementEnCours, setEnregistrementEnCours] = useState(false);
   const [ecritureHorsSequenceEnCours, setEcritureHorsSequenceEnCours] = useState(false);
   const [conflitVersion, setConflitVersion] = useState(false);
@@ -94,10 +139,28 @@ export function RegistreFicheProvider({
   const [revisionSommaire, setRevisionSommaire] = useState(0);
   const [rechargementEnAttente, setRechargementEnAttente] = useState(false);
 
+  const ordreEnregistrement = useCallback((): readonly string[] => {
+    return ordreEnregistrementFiche(emploisRef.current);
+  }, []);
+
+  const verifierCoherenceOrdre = useCallback(() => {
+    assertRubriquesDansOrdre(rubriquesRef.current.keys(), ordreEnregistrement());
+  }, [ordreEnregistrement]);
+
   const rubriquesOrdonnees = useCallback((): RubriqueEnregistrable[] => {
-    return ORDRE_RUBRIQUES_FICHE_SALARIE.map((id) => rubriquesRef.current.get(id)).filter(
-      (rubrique): rubrique is RubriqueEnregistrable => rubrique !== undefined
-    );
+    verifierCoherenceOrdre();
+    return ordreEnregistrement()
+      .map((id) => rubriquesRef.current.get(id))
+      .filter((rubrique): rubrique is RubriqueEnregistrable => rubrique !== undefined);
+  }, [ordreEnregistrement, verifierCoherenceOrdre]);
+
+  const emploisModifies = useCallback((): boolean => {
+    for (const rubrique of rubriquesRef.current.values()) {
+      if (rubrique.entite.kind === 'emploi' && rubrique.estModifiee()) {
+        return true;
+      }
+    }
+    return false;
   }, []);
 
   const notifierSommaire = useCallback(() => {
@@ -106,12 +169,24 @@ export function RegistreFicheProvider({
 
   const rubriquesSommaire = useMemo((): EntreeSommaireRubrique[] => {
     void revisionSommaire;
-    return rubriquesOrdonnees().map((rubrique) => ({
-      id: rubrique.id,
-      libelle: rubrique.libelle,
-      modifiee: rubrique.estModifiee(),
-    }));
-  }, [revisionSommaire, rubriquesOrdonnees]);
+    const salarie = ORDRE_RUBRIQUES_SALARIE.map((id) => rubriquesRef.current.get(id))
+      .filter((rubrique): rubrique is RubriqueEnregistrable => rubrique !== undefined)
+      .map((rubrique) => ({
+        id: rubrique.id,
+        libelle: rubrique.libelle,
+        modifiee: rubrique.estModifiee(),
+      }));
+
+    return [
+      ...salarie,
+      {
+        id: ID_SOMMAIRE_EMPLOIS,
+        libelle: LIBELLE_SOMMAIRE_EMPLOIS,
+        modifiee: emploisModifies(),
+        navigationSeule: true,
+      },
+    ];
+  }, [emploisModifies, revisionSommaire]);
 
   const nombreModifiees = useMemo(() => {
     void revisionSommaire;
@@ -126,25 +201,43 @@ export function RegistreFicheProvider({
     return libellesRubriquesModifiees(rubriquesOrdonnees());
   }, [rubriquesOrdonnees]);
 
+  const lireVersion = useCallback(
+    (entite: EntitePorteuse): number => {
+      const version = lireVersionEntite(versions, entite);
+      if (version === undefined) {
+        throw new Error(
+          `Version introuvable pour l entite ${entite.kind === 'emploi' ? entite.emploiId : 'salarie'}.`
+        );
+      }
+      return version;
+    },
+    [versions]
+  );
+
   const enregistrerRubrique = useCallback(
     (rubrique: RubriqueEnregistrable) => {
       rubriquesRef.current.set(rubrique.id, rubrique);
+      assertRubriquesDansOrdre([rubrique.id], ordreEnregistrement());
       notifierSommaire();
       return () => {
         rubriquesRef.current.delete(rubrique.id);
         notifierSommaire();
       };
     },
-    [notifierSommaire]
+    [notifierSommaire, ordreEnregistrement]
   );
 
   const mettreAJourVersion = useCallback((nouvelleVersion: number) => {
-    setVersion(nouvelleVersion);
+    setVersions((prev) => mettreAJourVersionEntite(prev, { kind: 'salarie' }, nouvelleVersion));
+  }, []);
+
+  const synchroniserVersions = useCallback((nouvelles: VersionsParEntite) => {
+    setVersions(nouvelles);
   }, []);
 
   const signalerVersionApresEcritureHorsSequence = useCallback(
     (nouvelleVersion: number) => {
-      setVersion(nouvelleVersion);
+      setVersions((prev) => mettreAJourVersionEntite(prev, { kind: 'salarie' }, nouvelleVersion));
       onApresEnregistrement?.(nouvelleVersion);
     },
     [onApresEnregistrement]
@@ -170,6 +263,7 @@ export function RegistreFicheProvider({
   }, []);
 
   const enregistrer = useCallback(async () => {
+    verifierCoherenceOrdre();
     for (const callback of avantEnvoiRef.current) {
       callback();
     }
@@ -177,18 +271,24 @@ export function RegistreFicheProvider({
     setConflitVersion(false);
     setResultatsRecap([]);
     try {
-      const resultat = await enregistrerRubriquesModifiees(rubriquesOrdonnees(), version);
-      setVersion(resultat.version);
+      const resultat = await enregistrerRubriquesModifiees(rubriquesOrdonnees(), versions);
+      setVersions(resultat.versions);
       setResultatsRecap(resultat.resultats);
       setConflitVersion(resultat.conflit);
       const alertes = resultat.resultats.flatMap((r) => r.alertes ?? []);
       setAlertesGlobales(alertes);
-      onApresEnregistrement?.(resultat.version);
+      onApresEnregistrement?.(resultat.versions.salarie);
       notifierSommaire();
     } finally {
       setEnregistrementEnCours(false);
     }
-  }, [notifierSommaire, onApresEnregistrement, rubriquesOrdonnees, version]);
+  }, [
+    notifierSommaire,
+    onApresEnregistrement,
+    rubriquesOrdonnees,
+    verifierCoherenceOrdre,
+    versions,
+  ]);
 
   const annuler = useCallback(() => {
     for (const rubrique of rubriquesOrdonnees()) {
@@ -226,7 +326,8 @@ export function RegistreFicheProvider({
 
   const valeur = useMemo(
     (): RegistreFicheContexte => ({
-      version,
+      version: versions.salarie,
+      versions,
       enregistrementEnCours,
       ecritureHorsSequenceEnCours,
       conflitVersion,
@@ -236,6 +337,7 @@ export function RegistreFicheProvider({
       nombreModifiees,
       aModificationsNonEnregistrees,
       libellesRubriquesModifiees: libellesRubriquesModifieesDepuisRegistre,
+      lireVersion,
       enregistrer,
       annuler,
       rechargerDepuisServeur,
@@ -244,6 +346,7 @@ export function RegistreFicheProvider({
       rechargementEnAttente,
       enregistrerRubrique,
       mettreAJourVersion,
+      synchroniserVersions,
       signalerVersionApresEcritureHorsSequence,
       signalerDebutEcritureHorsSequence,
       signalerFinEcritureHorsSequence,
@@ -253,7 +356,7 @@ export function RegistreFicheProvider({
       onRechargerServeur,
     }),
     [
-      version,
+      versions,
       enregistrementEnCours,
       ecritureHorsSequenceEnCours,
       conflitVersion,
@@ -263,6 +366,7 @@ export function RegistreFicheProvider({
       nombreModifiees,
       aModificationsNonEnregistrees,
       libellesRubriquesModifieesDepuisRegistre,
+      lireVersion,
       enregistrer,
       annuler,
       rechargerDepuisServeur,
@@ -271,6 +375,7 @@ export function RegistreFicheProvider({
       rechargementEnAttente,
       enregistrerRubrique,
       mettreAJourVersion,
+      synchroniserVersions,
       signalerVersionApresEcritureHorsSequence,
       signalerDebutEcritureHorsSequence,
       signalerFinEcritureHorsSequence,

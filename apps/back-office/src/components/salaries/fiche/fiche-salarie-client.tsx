@@ -25,7 +25,12 @@ import { consommerAlertesCreationSalarie } from '@/lib/fiche/transport-alertes-c
 import { repartirAlertesCreation } from '@/lib/fiche/repartir-alertes-creation';
 import { AvertissementNavigationFiche } from './avertissement-navigation';
 import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdable-racine';
-import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
+import { versionsEmploisDepuisListe } from '@/lib/fiche/versions-entite';
+import {
+  emploisPourOrdre,
+  RegistreFicheProvider,
+  useRegistreFiche,
+} from './registre-fiche-provider';
 import { RubriqueIdentite, type ValeursIdentite } from './rubrique-identite';
 import {
   RubriqueIdentifiantsLegaux,
@@ -55,11 +60,14 @@ interface Props {
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
 }
 
-function SyncVersion({ version }: { readonly version: number }) {
-  const { mettreAJourVersion } = useRegistreFiche();
+function SyncVersions({ fiche }: { readonly fiche: FicheSalarieAvecOperations }) {
+  const { synchroniserVersions } = useRegistreFiche();
   useEffect(() => {
-    mettreAJourVersion(version);
-  }, [mettreAJourVersion, version]);
+    synchroniserVersions({
+      salarie: fiche.version,
+      emplois: versionsEmploisDepuisListe(fiche.emplois),
+    });
+  }, [fiche.version, fiche.emplois, synchroniserVersions]);
   return null;
 }
 
@@ -190,7 +198,7 @@ function ContenuFicheSalarie({
 
   return (
     <div className="space-y-4">
-      <SyncVersion version={fiche.version} />
+      <SyncVersions fiche={fiche} />
       <AvertissementNavigationFiche />
 
       <header className="space-y-1">
@@ -331,6 +339,7 @@ export function FicheSalarieClient({
   typesSaisie,
 }: Props) {
   const [fiche, setFiche] = useState(initial);
+  const emploisOrdre = useMemo(() => emploisPourOrdre(fiche.emplois), [fiche.emplois]);
   const refreshRef = useRef<() => void>(() => undefined) as MutableRefObject<() => void>;
 
   const onRechargerServeur = useCallback(async () => {
@@ -344,6 +353,7 @@ export function FicheSalarieClient({
   return (
     <RegistreFicheProvider
       versionInitiale={initial.version}
+      emplois={emploisOrdre}
       onRechargerServeur={onRechargerServeur}
       onApresEnregistrement={(version) => setFiche((prev) => ({ ...prev, version }))}
     >

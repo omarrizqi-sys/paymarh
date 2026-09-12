@@ -256,6 +256,7 @@ export function RubriquePrets({ companyId, salarieId, lignesServeur, onVersionCh
     const desenregistrer = enregistrerRubrique({
       id: 'prets',
       libelle: 'Prêts',
+      entite: { kind: 'salarie' },
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
       reinitialiser: reinitialiserRubrique,

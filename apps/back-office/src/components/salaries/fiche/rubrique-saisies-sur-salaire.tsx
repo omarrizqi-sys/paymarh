@@ -300,6 +300,7 @@ export function RubriqueSaisiesSurSalaire({
     const desenregistrer = enregistrerRubrique({
       id: 'saisies-sur-salaire',
       libelle: 'Saisies sur salaire',
+      entite: { kind: 'salarie' },
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
       reinitialiser: reinitialiserRubrique,

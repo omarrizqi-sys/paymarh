@@ -4,6 +4,7 @@ import { createElement, useEffect, useState, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { MESSAGE_ERREUR_GENERIQUE } from '@/lib/messages-interface';
+import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
 import type { RubriqueEnregistrable } from '@/lib/fiche/orchestrateur-enregistrement';
 import { RegistreFicheProvider, useRegistreFiche } from './registre-fiche-provider';
 import { RailActionsFiche } from './rail-actions-fiche';
@@ -63,6 +64,7 @@ function RubriqueModifiable({
     return enregistrerRubrique({
       id,
       libelle,
+      entite: { kind: 'salarie' },
       estModifiee: () => modifiee,
       envoyer,
       reinitialiser: () => {
@@ -90,11 +92,17 @@ function Harness({
   rubriques,
   onRecharger = vi.fn(async () => undefined),
   versionInitiale = 1,
+  emplois = [],
   children,
 }: {
   readonly rubriques?: RubriqueEnregistrable[];
   readonly onRecharger?: () => Promise<void>;
   readonly versionInitiale?: number;
+  readonly emplois?: readonly {
+    readonly id: string;
+    readonly libellePoste: string;
+    readonly version: number;
+  }[];
   readonly children?: ReactNode;
 }) {
   return createElement(
@@ -102,7 +110,7 @@ function Harness({
     null,
     createElement(
       RegistreFicheProvider,
-      { versionInitiale, onRechargerServeur: onRecharger },
+      { versionInitiale, emplois, onRechargerServeur: onRecharger },
       createElement(DeclarerRegistreFichePourGarde),
       rubriques?.map((rubrique) => createElement(RubriqueTest, { key: rubrique.id, rubrique })),
       children,
@@ -209,6 +217,61 @@ describe('RailActionsFiche', () => {
     expect(screen.queryByTestId('erreur-rubrique-coordonnees')).toBeNull();
   });
 
+  it('conflit sur une rubrique d emploi arrete la sequence et affiche le bandeau fiche', async () => {
+    const emploiId = 'emp-1';
+    const rubriqueId = idRubriqueEmploi(emploiId, 'contrat');
+    const libelle = libelleRubriqueEmploi('contrat', 'Responsable paie');
+    const envoyerEmploi = vi.fn(async () => {
+      throw new AppelApiEchoue(409, {
+        code: 'CONFLIT_VERSION',
+        message: 'La fiche a ete modifiee entre-temps.',
+      });
+    });
+    function RubriqueEmploiModifiable() {
+      const { enregistrerRubrique, notifierSommaire } = useRegistreFiche();
+      const [modifiee, setModifiee] = useState(false);
+      useEffect(() => {
+        return enregistrerRubrique({
+          id: rubriqueId,
+          libelle,
+          entite: { kind: 'emploi', emploiId },
+          estModifiee: () => modifiee,
+          envoyer: envoyerEmploi,
+          reinitialiser: () => {
+            setModifiee(false);
+            notifierSommaire();
+          },
+        });
+      }, [enregistrerRubrique, modifiee, notifierSommaire]);
+      return createElement(
+        'button',
+        {
+          type: 'button',
+          'data-testid': 'marquer-emploi',
+          onClick: () => {
+            setModifiee(true);
+            notifierSommaire();
+          },
+        },
+        'Marquer emploi'
+      );
+    }
+
+    render(
+      createElement(Harness, {
+        emplois: [{ id: emploiId, libellePoste: 'Responsable paie', version: 5 }],
+        children: createElement(RubriqueEmploiModifiable),
+      })
+    );
+
+    fireEvent.click(screen.getByTestId('marquer-emploi'));
+    fireEvent.click(screen.getByRole('button', { name: /Enregistrer/ }));
+
+    await waitFor(() => expect(screen.getByTestId('bandeau-conflit-version')).toBeTruthy());
+    expect(envoyerEmploi).toHaveBeenCalledWith(5);
+    expect(screen.getAllByTestId('bandeau-conflit-version')).toHaveLength(1);
+  });
+
   it('une rubrique refusee pour conflit de version affiche le bandeau sans bouton Reessayer', async () => {
     const envoyer = vi.fn(async () => {
       throw new AppelApiEchoue(409, {
@@ -285,6 +348,7 @@ describe('RailActionsFiche', () => {
         return enregistrerRubrique({
           id,
           libelle,
+          entite: { kind: 'salarie' },
           estModifiee: () => modifiee,
           envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
           reinitialiser: () => {

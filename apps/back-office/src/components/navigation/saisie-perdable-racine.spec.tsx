@@ -47,6 +47,7 @@ function EcranSaisieSimule({
     return enregistrerRubrique({
       id: 'identite',
       libelle: 'Identite',
+      entite: { kind: 'salarie' },
       estModifiee: () => modifieeLocale,
       envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
       reinitialiser: () => setModifieeLocale(false),

@@ -272,6 +272,7 @@ export function RubriquePersonnesACharge({
     const desenregistrer = enregistrerRubrique({
       id: 'personnes-a-charge',
       libelle: 'Personnes à charge',
+      entite: { kind: 'salarie' },
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
       reinitialiser: reinitialiserRubrique,

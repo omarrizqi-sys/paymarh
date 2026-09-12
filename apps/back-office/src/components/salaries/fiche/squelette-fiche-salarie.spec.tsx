@@ -24,6 +24,7 @@ function EnregistrerRubriquesSommaire() {
     const desA = enregistrerRubrique({
       id: 'identite',
       libelle: 'Identite',
+      entite: { kind: 'salarie' },
       estModifiee: () => false,
       envoyer: vi.fn(),
       reinitialiser: () => undefined,
@@ -31,6 +32,7 @@ function EnregistrerRubriquesSommaire() {
     const desB = enregistrerRubrique({
       id: 'coordonnees',
       libelle: 'Coordonnees',
+      entite: { kind: 'salarie' },
       estModifiee: () => false,
       envoyer: vi.fn(),
       reinitialiser: () => undefined,

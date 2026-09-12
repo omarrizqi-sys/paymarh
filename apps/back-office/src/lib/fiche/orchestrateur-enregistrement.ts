@@ -1,6 +1,14 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { estConflitVersion } from './codes-conflit';
+import {
+  lireVersionEntite,
+  mettreAJourVersionEntite,
+  type EntitePorteuse,
+  type VersionsParEntite,
+} from './versions-entite';
+
+export type { EntitePorteuse, VersionsParEntite };
 
 export type StatutRubriqueEnregistrement = 'succes' | 'echec' | 'conflit' | 'non_tente';
 
@@ -20,6 +28,7 @@ export interface EnvoiRubriqueResultat {
 export interface RubriqueEnregistrable {
   readonly id: string;
   readonly libelle: string;
+  readonly entite: EntitePorteuse;
   estModifiee(): boolean;
   envoyer(version: number): Promise<EnvoiRubriqueResultat>;
   reinitialiser(): void;
@@ -28,27 +37,38 @@ export interface RubriqueEnregistrable {
 export interface ResultatEnregistrementGlobal {
   readonly resultats: readonly ResultatRubriqueEnregistrement[];
   readonly conflit: boolean;
-  readonly version: number;
+  readonly versions: VersionsParEntite;
 }
 
 /**
  * Enregistre les rubriques modifiees dans l ordre de la page.
- * Propage la version apres chaque succes ; continue apres un 400 metier ;
+ * Chaque rubrique recoit la version de son entite porteuse uniquement ;
+ * un succes met a jour cette entite seule. Continue apres un 400 metier ;
  * s arrete sur conflit de version ou If-Match manquant.
  */
 export async function enregistrerRubriquesModifiees(
   rubriques: readonly RubriqueEnregistrable[],
-  versionInitiale: number
+  versionsInitiales: VersionsParEntite
 ): Promise<ResultatEnregistrementGlobal> {
   const modifiees = rubriques.filter((rubrique) => rubrique.estModifiee());
-  let version = versionInitiale;
+  let versions: VersionsParEntite = {
+    salarie: versionsInitiales.salarie,
+    emplois: { ...versionsInitiales.emplois },
+  };
   const resultats: ResultatRubriqueEnregistrement[] = [];
   let conflit = false;
 
   for (const rubrique of modifiees) {
+    const versionEnvoi = lireVersionEntite(versions, rubrique.entite);
+    if (versionEnvoi === undefined) {
+      throw new Error(
+        `Version introuvable pour l entite ${rubrique.entite.kind === 'emploi' ? rubrique.entite.emploiId : 'salarie'}.`
+      );
+    }
+
     try {
-      const reponse = await rubrique.envoyer(version);
-      version = reponse.version;
+      const reponse = await rubrique.envoyer(versionEnvoi);
+      versions = mettreAJourVersionEntite(versions, rubrique.entite, reponse.version);
       resultats.push({
         id: rubrique.id,
         libelle: rubrique.libelle,
@@ -81,7 +101,7 @@ export async function enregistrerRubriquesModifiees(
     }
   }
 
-  return { resultats, conflit, version };
+  return { resultats, conflit, versions };
 }
 
 export function compterRubriquesModifiees(rubriques: readonly RubriqueEnregistrable[]): number {

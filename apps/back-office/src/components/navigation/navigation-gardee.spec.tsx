@@ -129,6 +129,7 @@ function RubriqueModifiable({ id, libelle }: { readonly id: string; readonly lib
     return enregistrerRubrique({
       id,
       libelle,
+      entite: { kind: 'salarie' },
       estModifiee: () => modifiee,
       envoyer: vi.fn(async () => ({ version: 2, alertes: [] })),
       reinitialiser: () => setModifiee(false),
