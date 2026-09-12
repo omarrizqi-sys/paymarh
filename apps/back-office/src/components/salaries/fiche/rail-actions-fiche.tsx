@@ -44,7 +44,7 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
     rechargerDepuisServeur,
     confirmerRechargementServeur,
     annulerRechargementServeur,
-    rubriquesSommaire,
+    libellesRubriquesModifiees,
     signalerDebutEcritureHorsSequence,
     signalerFinEcritureHorsSequence,
     signalerConflitVersion,
@@ -56,7 +56,6 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
   const [erreurDialogue, setErreurDialogue] = useState<string | undefined>();
   const jetonSuppressionRef = useRef('');
 
-  const libellesModifies = rubriquesSommaire.filter((r) => r.modifiee).map((r) => r.libelle);
   const peutSupprimer = possedePermission(operations, 'salarie.supprimer');
   const saisieBloquee = enregistrementEnCours || ecritureHorsSequenceEnCours;
 
@@ -172,7 +171,7 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
       disabled={nombreModifiees === 0 || saisieBloquee}
       title="Annuler"
       onClick={() => {
-        if (!window.confirm(messageConfirmationAnnuler(libellesModifies))) return;
+        if (!window.confirm(messageConfirmationAnnuler(libellesRubriquesModifiees()))) return;
         void annuler();
       }}
     >
@@ -208,7 +207,9 @@ export function RailActionsFiche({ operations, companyId, salarieId, modeCompact
         <Alert data-testid="dialogue-rechargement">
           <AlertDescription>
             {messageConfirmationRechargement(
-              libellesModifies.length > 0 ? libellesModifies : ['toutes les rubriques']
+              libellesRubriquesModifiees().length > 0
+                ? libellesRubriquesModifiees()
+                : ['toutes les rubriques']
             )}
           </AlertDescription>
           <div className="mt-2 flex gap-2">
