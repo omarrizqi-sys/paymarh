@@ -202,35 +202,38 @@ export const PAYS = [
 ] as const;
 
 export const TYPES_CONTRAT = [
-  { code: 'CDI', libelle: 'Contrat à durée indéterminée' },
-  { code: 'CDD', libelle: 'Contrat à durée déterminée' },
-  { code: 'CTT', libelle: 'Contrat de travail temporaire' },
-  { code: 'INT_CDI', libelle: 'Intérimaire — contrat à durée indéterminée' },
-  { code: 'OBJ', libelle: 'Contrat à objet défini' },
-  { code: 'STAGE', libelle: 'Convention de stage' },
-  { code: 'MANDAT', libelle: 'Mandataire social' },
+  { ordre: 1, code: 'CDI', libelle: 'Contrat à durée indéterminée' },
+  { ordre: 2, code: 'CDD', libelle: 'Contrat à durée déterminée' },
+  { ordre: 3, code: 'CTT', libelle: 'Contrat de travail temporaire' },
+  { ordre: 4, code: 'INT_CDI', libelle: 'Intérimaire — contrat à durée indéterminée' },
+  { ordre: 5, code: 'OBJ', libelle: 'Contrat à objet défini' },
+  { ordre: 6, code: 'STAGE', libelle: 'Convention de stage' },
+  { ordre: 7, code: 'MANDAT', libelle: 'Mandataire social' },
 ] as const;
 
 export const MOTIFS_SORTIE = [
-  { code: 'DEMISSION', libelle: 'Démission' },
-  { code: 'LIC_FAUTE_SIMPLE', libelle: 'Licenciement pour faute simple' },
-  { code: 'LIC_FAUTE_GRAVE', libelle: 'Licenciement pour faute grave' },
-  { code: 'LIC_FAUTE_LOURDE', libelle: 'Licenciement pour faute lourde' },
-  { code: 'LIC_ECONOMIQUE', libelle: 'Licenciement pour motif économique' },
-  { code: 'FIN_CDD', libelle: 'Fin de contrat à durée déterminée' },
-  { code: 'COMMUN_ACCORD', libelle: 'Rupture d’un commun accord' },
-  { code: 'RUPTURE_ESSAI', libelle: 'Rupture de la période d’essai' },
-  { code: 'RETRAITE_VOLONTAIRE', libelle: 'Départ volontaire à la retraite' },
-  { code: 'RETRAITE_OFFICE', libelle: 'Retraite d’office (limite d’âge)' },
-  { code: 'FORCE_MAJEURE', libelle: 'Force majeure' },
-  { code: 'DETACHEMENT', libelle: 'Départ en détachement' },
-  { code: 'DECES', libelle: 'Décès, disparition' },
+  { ordre: 1, code: 'DEMISSION', libelle: 'Démission' },
+  { ordre: 2, code: 'LIC_FAUTE_SIMPLE', libelle: 'Licenciement pour faute simple' },
+  { ordre: 3, code: 'LIC_FAUTE_GRAVE', libelle: 'Licenciement pour faute grave' },
+  { ordre: 4, code: 'LIC_FAUTE_LOURDE', libelle: 'Licenciement pour faute lourde' },
+  { ordre: 5, code: 'LIC_ECONOMIQUE', libelle: 'Licenciement pour motif économique' },
+  { ordre: 6, code: 'FIN_CDD', libelle: 'Fin de contrat à durée déterminée' },
+  { ordre: 7, code: 'COMMUN_ACCORD', libelle: 'Rupture d’un commun accord' },
+  { ordre: 8, code: 'RUPTURE_ESSAI', libelle: 'Rupture de la période d’essai' },
+  { ordre: 9, code: 'RETRAITE_VOLONTAIRE', libelle: 'Départ volontaire à la retraite' },
+  { ordre: 10, code: 'RETRAITE_OFFICE', libelle: 'Retraite d’office (limite d’âge)' },
+  { ordre: 11, code: 'FORCE_MAJEURE', libelle: 'Force majeure' },
+  { ordre: 12, code: 'DETACHEMENT', libelle: 'Départ en détachement' },
+  { ordre: 13, code: 'DECES', libelle: 'Décès, disparition' },
 ] as const;
 
-export const STATUTS_PARTICULIERS = [{ code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' }] as const;
+export const STATUTS_PARTICULIERS = [
+  { ordre: 1, code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
+] as const;
 
 /** Code technique des lignes TAHFIZ propagees — jamais propose a la saisie. */
 export const STATUT_TECHNIQUE_TAHFIZ = {
+  ordre: 2,
   code: 'TAHFIZ',
   libelle: 'TAHFIZ — exonération société',
 } as const;

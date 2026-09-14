@@ -546,6 +546,7 @@ model Pays {
 /// Type de contrat de travail (liste ouverte).
 model TypeContrat {
   id      String @id @default(uuid()) @db.Uuid
+  ordre   Int
   code    String @unique
   libelle String
 
@@ -555,6 +556,7 @@ model TypeContrat {
 /// Motif de sortie du salarie.
 model MotifSortie {
   id      String @id @default(uuid()) @db.Uuid
+  ordre   Int
   code    String @unique
   libelle String
 
@@ -565,6 +567,7 @@ model MotifSortie {
 /// saisissable : un code technique sert uniquement aux lignes propagees.
 model StatutParticulier {
   id      String @id @default(uuid()) @db.Uuid
+  ordre   Int
   code    String @unique
   libelle String
 

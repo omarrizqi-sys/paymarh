@@ -151,31 +151,35 @@ async function seedReferences(): Promise<{
   for (const type of TYPES_CONTRAT) {
     await prisma.typeContrat.upsert({
       where: { code: type.code },
-      update: { libelle: type.libelle },
-      create: { code: type.code, libelle: type.libelle },
+      update: { ordre: type.ordre, libelle: type.libelle },
+      create: { ordre: type.ordre, code: type.code, libelle: type.libelle },
     });
   }
 
   for (const motif of MOTIFS_SORTIE) {
     await prisma.motifSortie.upsert({
       where: { code: motif.code },
-      update: { libelle: motif.libelle },
-      create: { code: motif.code, libelle: motif.libelle },
+      update: { ordre: motif.ordre, libelle: motif.libelle },
+      create: { ordre: motif.ordre, code: motif.code, libelle: motif.libelle },
     });
   }
 
   for (const statut of STATUTS_PARTICULIERS) {
     await prisma.statutParticulier.upsert({
       where: { code: statut.code },
-      update: { libelle: statut.libelle },
-      create: { code: statut.code, libelle: statut.libelle },
+      update: { ordre: statut.ordre, libelle: statut.libelle },
+      create: { ordre: statut.ordre, code: statut.code, libelle: statut.libelle },
     });
   }
 
   await prisma.statutParticulier.upsert({
     where: { code: STATUT_TECHNIQUE_TAHFIZ.code },
-    update: { libelle: STATUT_TECHNIQUE_TAHFIZ.libelle },
-    create: { code: STATUT_TECHNIQUE_TAHFIZ.code, libelle: STATUT_TECHNIQUE_TAHFIZ.libelle },
+    update: { ordre: STATUT_TECHNIQUE_TAHFIZ.ordre, libelle: STATUT_TECHNIQUE_TAHFIZ.libelle },
+    create: {
+      ordre: STATUT_TECHNIQUE_TAHFIZ.ordre,
+      code: STATUT_TECHNIQUE_TAHFIZ.code,
+      libelle: STATUT_TECHNIQUE_TAHFIZ.libelle,
+    },
   });
 
   for (const situation of SITUATIONS_FAMILIALES) {
