@@ -56,4 +56,22 @@ export class ReferentielsController {
   typesSaisieSurSalaire() {
     return this.referentiels.typesSaisieSurSalaire();
   }
+
+  @Get('types-contrat')
+  @RequiertPermission('referentiel.lire')
+  typesContrat() {
+    return this.referentiels.typesContrat();
+  }
+
+  @Get('motifs-sortie')
+  @RequiertPermission('referentiel.lire')
+  motifsSortie() {
+    return this.referentiels.motifsSortie();
+  }
+
+  @Get('statuts-particuliers')
+  @RequiertPermission('referentiel.lire')
+  statutsParticuliers() {
+    return this.referentiels.statutsParticuliers();
+  }
 }

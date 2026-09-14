@@ -63,3 +63,24 @@ export interface TypeSaisieSurSalaire {
   readonly code: string;
   readonly libelle: string;
 }
+
+export interface TypeContrat {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}
+
+export interface MotifSortie {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}
+
+export interface StatutParticulier {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}

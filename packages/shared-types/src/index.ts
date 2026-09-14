@@ -79,6 +79,9 @@ export type {
   SituationFamiliale,
   LienParente,
   TypeSaisieSurSalaire,
+  TypeContrat,
+  MotifSortie,
+  StatutParticulier,
 } from './referentiel';
 export type {
   JourSemaine,

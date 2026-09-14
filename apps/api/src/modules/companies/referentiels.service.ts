@@ -3,6 +3,7 @@ import type { ApiResponse, ListResponse } from '@paymarh/shared-types';
 import { assertPeutFaire } from '../../common/permissions/peut-faire.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
+import { CODE_STATUT_TAHFIZ } from '../salaries/tahfiz/codes-tahfiz.js';
 import { ok } from './api-response.js';
 
 @Injectable()
@@ -67,6 +68,27 @@ export class ReferentielsService {
   async typesSaisieSurSalaire(): Promise<ApiResponse<ListResponse<unknown>>> {
     this.assertLecture();
     const items = await this.prisma.typeSaisieSurSalaire.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
+
+  async typesContrat(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.typeContrat.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
+
+  async motifsSortie(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.motifSortie.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
+
+  async statutsParticuliers(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.statutParticulier.findMany({
+      where: { code: { not: CODE_STATUT_TAHFIZ } },
+      orderBy: { ordre: 'asc' },
+    });
     return ok({ items, total: items.length });
   }
 }
