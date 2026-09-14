@@ -137,6 +137,9 @@ function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
         liensParente={LIENS_PARENTE}
         banques={[]}
         typesSaisie={TYPES_SAISIE}
+        typesContrat={[]}
+        motifsSortie={[]}
+        statutsParticuliers={[]}
       />
     </NavigationGardeeTestProvider>
   );

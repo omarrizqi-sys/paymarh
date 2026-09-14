@@ -4,8 +4,11 @@ import type {
   JourFerie,
   LienParente,
   ListResponse,
+  MotifSortie,
   Pays,
   SituationFamiliale,
+  StatutParticulier,
+  TypeContrat,
   TypeExoneration,
   TypeHeure,
   TypeSaisieSurSalaire,
@@ -48,6 +51,18 @@ export async function listerTypesSaisieSurSalaire() {
   return appelerApiGet<ListResponse<TypeSaisieSurSalaire>>(
     '/referentiels/types-saisie-sur-salaire'
   );
+}
+
+export async function listerTypesContrat() {
+  return appelerApiGet<ListResponse<TypeContrat>>('/referentiels/types-contrat');
+}
+
+export async function listerMotifsSortie() {
+  return appelerApiGet<ListResponse<MotifSortie>>('/referentiels/motifs-sortie');
+}
+
+export async function listerStatutsParticuliers() {
+  return appelerApiGet<ListResponse<StatutParticulier>>('/referentiels/statuts-particuliers');
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */

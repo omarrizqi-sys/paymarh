@@ -4,8 +4,11 @@ import { lireSalarie } from '@/lib/api/salaries';
 import {
   listerBanques,
   listerLiensParente,
+  listerMotifsSortie,
   listerPays,
   listerSituationsFamiliales,
+  listerStatutsParticuliers,
+  listerTypesContrat,
   listerTypesSaisieSurSalaire,
 } from '@/lib/api/referentiels';
 import { journaliserErreurServeur } from '@/lib/api/journaliser-erreur-serveur';
@@ -18,13 +21,26 @@ export default async function PageFicheSalarie({ params }: Props) {
   const { id: companyId, salarieId } = await params;
 
   try {
-    const [reponse, pays, situations, liensParente, banques, typesSaisie] = await Promise.all([
+    const [
+      reponse,
+      pays,
+      situations,
+      liensParente,
+      banques,
+      typesSaisie,
+      typesContrat,
+      motifsSortie,
+      statutsParticuliers,
+    ] = await Promise.all([
       lireSalarie(companyId, salarieId),
       listerPays(),
       listerSituationsFamiliales(),
       listerLiensParente(),
       listerBanques(),
       listerTypesSaisieSurSalaire(),
+      listerTypesContrat(),
+      listerMotifsSortie(),
+      listerStatutsParticuliers(),
     ]);
 
     return (
@@ -38,6 +54,9 @@ export default async function PageFicheSalarie({ params }: Props) {
           liensParente={liensParente.data.items}
           banques={banques.data.items}
           typesSaisie={typesSaisie.data.items}
+          typesContrat={typesContrat.data.items}
+          motifsSortie={motifsSortie.data.items}
+          statutsParticuliers={statutsParticuliers.data.items}
         />
       </div>
     );

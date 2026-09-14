@@ -159,6 +159,9 @@ function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBas
         liensParente={[]}
         banques={[]}
         typesSaisie={TYPES_SAISIE}
+        typesContrat={[]}
+        motifsSortie={[]}
+        statutsParticuliers={[]}
       />
     </NavigationGardeeTestProvider>
   );

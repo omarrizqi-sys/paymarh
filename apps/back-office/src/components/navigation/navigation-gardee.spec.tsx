@@ -398,6 +398,9 @@ describe('Navigation gardee — fiche client (lien retour integre)', () => {
           liensParente={[]}
           banques={[]}
           typesSaisie={[]}
+          typesContrat={[]}
+          motifsSortie={[]}
+          statutsParticuliers={[]}
         />
       </CoquilleNavigationTest>
     );
@@ -429,6 +432,9 @@ describe('Navigation gardee — en-tete global', () => {
           liensParente={[]}
           banques={[]}
           typesSaisie={[]}
+          typesContrat={[]}
+          motifsSortie={[]}
+          statutsParticuliers={[]}
         />
       </CoquilleNavigationTest>
     );
@@ -479,6 +485,9 @@ describe('Navigation gardee — en-tete global', () => {
           liensParente={[]}
           banques={[]}
           typesSaisie={[]}
+          typesContrat={[]}
+          motifsSortie={[]}
+          statutsParticuliers={[]}
         />
       </CoquilleNavigationTest>
     );

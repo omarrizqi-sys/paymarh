@@ -215,6 +215,9 @@ describe('RubriqueSaisiesSurSalaire — sommaire', () => {
           liensParente={[]}
           banques={[]}
           typesSaisie={TYPES_SAISIE}
+          typesContrat={[]}
+          motifsSortie={[]}
+          statutsParticuliers={[]}
         />
       </NavigationGardeeTestProvider>
     );

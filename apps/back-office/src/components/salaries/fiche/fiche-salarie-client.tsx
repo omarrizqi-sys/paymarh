@@ -14,8 +14,11 @@ import {
 import type {
   Banque,
   LienParente,
+  MotifSortie,
   Pays,
   SituationFamiliale,
+  StatutParticulier,
+  TypeContrat,
   TypeSaisieSurSalaire,
 } from '@paymarh/shared-types';
 import type { FicheSalarieAvecOperations } from '@/lib/api/salaries';
@@ -58,6 +61,10 @@ interface Props {
   readonly liensParente: readonly LienParente[];
   readonly banques: readonly Banque[];
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
+  /** Chargés pour les écrans emploi (temps 3) — pas encore consommés. */
+  readonly typesContrat: readonly TypeContrat[];
+  readonly motifsSortie: readonly MotifSortie[];
+  readonly statutsParticuliers: readonly StatutParticulier[];
 }
 
 function SyncVersions({ fiche }: { readonly fiche: FicheSalarieAvecOperations }) {
@@ -337,6 +344,9 @@ export function FicheSalarieClient({
   liensParente,
   banques,
   typesSaisie,
+  typesContrat: _typesContrat,
+  motifsSortie: _motifsSortie,
+  statutsParticuliers: _statutsParticuliers,
 }: Props) {
   const [fiche, setFiche] = useState(initial);
   const emploisOrdre = useMemo(() => emploisPourOrdre(fiche.emplois), [fiche.emplois]);
