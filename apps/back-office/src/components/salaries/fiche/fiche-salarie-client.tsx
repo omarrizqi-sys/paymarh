@@ -13,6 +13,7 @@ import {
 } from 'react';
 import type {
   Banque,
+  Etablissement,
   LienParente,
   MotifSortie,
   Pays,
@@ -45,7 +46,7 @@ import { RubriquePersonnesACharge } from './rubrique-personnes-a-charge';
 import { RubriqueComptesBancaires } from './rubrique-comptes-bancaires';
 import { RubriquePrets } from './rubrique-prets';
 import { RubriqueSaisiesSurSalaire } from './rubrique-saisies-sur-salaire';
-import { RubriqueRemunerationPlaceholder } from './rubrique-remuneration-placeholder';
+import { BlocEmplois } from './bloc-emplois';
 import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RailActionsFiche } from './rail-actions-fiche';
 import { SommaireRubriques, useDefilementRubriqueSommaire } from './sommaire-rubriques';
@@ -61,10 +62,10 @@ interface Props {
   readonly liensParente: readonly LienParente[];
   readonly banques: readonly Banque[];
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
-  /** Chargés pour les écrans emploi (temps 3) — pas encore consommés. */
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
   readonly statutsParticuliers: readonly StatutParticulier[];
+  readonly etablissements: readonly Etablissement[];
 }
 
 function SyncVersions({ fiche }: { readonly fiche: FicheSalarieAvecOperations }) {
@@ -104,6 +105,9 @@ function ContenuFicheSalarie({
   liensParente,
   banques,
   typesSaisie,
+  typesContrat,
+  motifsSortie,
+  etablissements,
   onFicheChange,
 }: {
   readonly companyId: string;
@@ -114,6 +118,9 @@ function ContenuFicheSalarie({
   readonly liensParente: readonly LienParente[];
   readonly banques: readonly Banque[];
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
+  readonly typesContrat: readonly TypeContrat[];
+  readonly motifsSortie: readonly MotifSortie[];
+  readonly etablissements: readonly Etablissement[];
   readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
   const [rubriqueVisibleId, setRubriqueVisibleId] = useState<string | undefined>();
@@ -319,7 +326,15 @@ function ContenuFicheSalarie({
                 />
               </>
             ) : null}
-            <RubriqueRemunerationPlaceholder operations={fiche.operations} />
+            <BlocEmplois
+              emplois={fiche.emplois}
+              operations={fiche.operations}
+              typesContrat={typesContrat}
+              motifsSortie={motifsSortie}
+              etablissements={etablissements}
+              comptesBancaires={'comptesBancaires' in fiche ? fiche.comptesBancaires : undefined}
+              banques={banques}
+            />
           </>
         }
         renderRail={(compact) => (
@@ -344,9 +359,10 @@ export function FicheSalarieClient({
   liensParente,
   banques,
   typesSaisie,
-  typesContrat: _typesContrat,
-  motifsSortie: _motifsSortie,
+  typesContrat,
+  motifsSortie,
   statutsParticuliers: _statutsParticuliers,
+  etablissements,
 }: Props) {
   const [fiche, setFiche] = useState(initial);
   const emploisOrdre = useMemo(() => emploisPourOrdre(fiche.emplois), [fiche.emplois]);
@@ -380,6 +396,9 @@ export function FicheSalarieClient({
           liensParente={liensParente}
           banques={banques}
           typesSaisie={typesSaisie}
+          typesContrat={typesContrat}
+          motifsSortie={motifsSortie}
+          etablissements={etablissements}
           onFicheChange={setFiche}
         />
       </FormulaireTableauProvider>

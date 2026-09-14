@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { FicheSalarieClient } from '@/components/salaries/fiche/fiche-salarie-client';
 import { lireSalarie } from '@/lib/api/salaries';
+import { listerEtablissements } from '@/lib/api/etablissements';
 import {
   listerBanques,
   listerLiensParente,
@@ -31,6 +32,7 @@ export default async function PageFicheSalarie({ params }: Props) {
       typesContrat,
       motifsSortie,
       statutsParticuliers,
+      etablissements,
     ] = await Promise.all([
       lireSalarie(companyId, salarieId),
       listerPays(),
@@ -41,6 +43,7 @@ export default async function PageFicheSalarie({ params }: Props) {
       listerTypesContrat(),
       listerMotifsSortie(),
       listerStatutsParticuliers(),
+      listerEtablissements(companyId),
     ]);
 
     return (
@@ -57,6 +60,7 @@ export default async function PageFicheSalarie({ params }: Props) {
           typesContrat={typesContrat.data.items}
           motifsSortie={motifsSortie.data.items}
           statutsParticuliers={statutsParticuliers.data.items}
+          etablissements={etablissements.data.items}
         />
       </div>
     );
