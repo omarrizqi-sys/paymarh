@@ -25,8 +25,9 @@ export type IdRubriqueFicheSalarie = IdRubriqueSalarie;
 /** Rubriques d un emploi, dans l ordre d envoi déclaré (écrans à venir). */
 export const ORDRE_RUBRIQUES_EMPLOI = [
   'contrat',
-  'remuneration',
   'affectation',
+  'remuneration',
+  'paiement',
   'primes-contractuelles',
   'avantages-en-nature',
   'statuts-particuliers',
@@ -36,8 +37,9 @@ export type IdRubriqueEmploi = (typeof ORDRE_RUBRIQUES_EMPLOI)[number];
 
 export const LIBELLES_RUBRIQUES_EMPLOI: Record<IdRubriqueEmploi, string> = {
   contrat: 'Contrat',
-  remuneration: 'Rémunération',
   affectation: 'Affectation',
+  remuneration: 'Rémunération',
+  paiement: 'Paiement',
   'primes-contractuelles': 'Primes contractuelles',
   'avantages-en-nature': 'Avantages en nature',
   'statuts-particuliers': 'Statuts particuliers',
