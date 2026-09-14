@@ -33,7 +33,7 @@ import {
 //   exoneration, pays, types contrat, motifs sortie, statuts, situations, liens parente) ;
 // - un compte CABINET, un super-admin, un admin de compte ;
 // - une societe complete : 2 etablissements, 2 comptes bancaires, grille
-//   horaire 44 h, feries coches, 2 moisEffet d historique ;
+//   horaire 44 h, feries coches, historique societe et siege multi-mois ;
 // - trois salaries de demonstration (complet actif, minimal sans emploi, sortie).
 //
 // Idempotent : on peut relancer sans creer de doublon.
@@ -398,9 +398,18 @@ async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>)
     },
   });
 
-  // --- Historique etablissement principal (2 moisEffet) + grille + feries ---
+  // --- Historique etablissement principal (3 moisEffet siege + 2 posterieurs demo) + grille + feries ---
   const heuresHebdo = new Decimal(44);
   const heuresMensuelles = heuresHebdomadairesVersMensuelles(heuresHebdo);
+
+  // Anterieur au debut d emploi de Youssef Bennani (2022-03) : rend l heritage observable sans bulletin.
+  const param2022 = await upsertParamEtablissement(siege.id, '2022-01', {
+    dureeHebdomadaire: heuresHebdo,
+    jourReposHebdomadaire: 'DIMANCHE',
+    teletravailAutorise: false,
+    indemniteTeletravailVersee: null,
+    montantIndemniteTeletravail: null,
+  });
 
   const paramJanvier = await upsertParamEtablissement(siege.id, '2025-01', {
     dureeHebdomadaire: heuresHebdo,
@@ -418,6 +427,7 @@ async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>)
     montantIndemniteTeletravail: new Decimal('500.00'),
   });
 
+  await seedGrilleHoraire(param2022.id, refs.typeHeureNormaleId, heuresHebdo, heuresMensuelles);
   await seedGrilleHoraire(paramJanvier.id, refs.typeHeureNormaleId, heuresHebdo, heuresMensuelles);
   await seedGrilleHoraire(paramJuillet.id, refs.typeHeureNormaleId, heuresHebdo, heuresMensuelles);
 
@@ -452,7 +462,7 @@ async function seedSocieteDemo(refs: Awaited<ReturnType<typeof seedReferences>>)
   });
 
   console.log(
-    `Historique : 2 moisEffet societe (2025-01, 2025-07), 2 moisEffet siege, heures mensuelles deduites = ${heuresMensuelles.toString()}`
+    `Historique : 2 moisEffet societe (2025-01, 2025-07), 3 moisEffet siege (2022-01, 2025-01, 2025-07), heures mensuelles deduites = ${heuresMensuelles.toString()}`
   );
 
   // --- Comptes bancaires (usages differents) ---
