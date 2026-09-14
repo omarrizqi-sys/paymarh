@@ -185,7 +185,7 @@ describe('BlocEmplois', () => {
     expect(document.getElementById('emp-1/paiement')).toBeNull();
   });
 
-  it('une valeur heritee s affiche avec son origine', () => {
+  it('affiche la phrase d heritage quand resolutions est fourni en prop', () => {
     rendre([
       emploiBase('emp-1', {
         resolutions: {
