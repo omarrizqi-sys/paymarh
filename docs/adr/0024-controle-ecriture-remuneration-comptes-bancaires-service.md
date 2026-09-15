@@ -12,7 +12,7 @@ Avant le temps 2.b, seul `salarie.modifier` était vérifié sur la route. L'int
 
 ## Décision
 
-Le contrôle `salarie.remuneration.ecrire` est placé dans **`TableauxSalarieService.remplacerComptesBancaires`**, via `assertEcritureComptesBancairesSalarie`, au début de la méthode, avant toute validation ou écriture.
+Le contrôle `salarie.remuneration.ecrire` est placé dans **`TableauxSalarieService.remplacerComptesBancaires`**, via `assertEcritureRemunerationSalarie` (anciennement `assertEcritureComptesBancairesSalarie`, renommé en ADR 0032), au début de la méthode, avant toute validation ou écriture.
 
 - Refus : `403 Forbidden`, message « Action non autorisée. », sans code métier — aligné sur `permission.guard.ts`.
 - L'intercepteur existant **n'est pas modifié**.

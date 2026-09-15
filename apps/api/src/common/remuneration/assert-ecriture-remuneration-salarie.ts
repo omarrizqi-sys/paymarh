@@ -5,10 +5,10 @@ import type { TenantContextService } from '../tenancy/tenant-context.service.js'
 const MESSAGE_INTERDIT = 'Action non autorisée.';
 
 /**
- * Point de controle unique pour toute ecriture de comptes bancaires salarie.
+ * Point de controle unique pour toute ecriture de remuneration salarie.
  * Voyage avec la donnee : tout appelant passant par le service la rencontre.
  */
-export function assertEcritureComptesBancairesSalarie(
+export function assertEcritureRemunerationSalarie(
   tenantContext: TenantContextService,
   permissions: PermissionService
 ): void {

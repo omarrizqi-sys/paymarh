@@ -8,7 +8,7 @@ import {
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
-import { assertEcritureComptesBancairesSalarie } from '../../common/remuneration/assert-ecriture-comptes-bancaires-salarie.js';
+import { assertEcritureRemunerationSalarie } from '../../common/remuneration/assert-ecriture-remuneration-salarie.js';
 import {
   PERMISSION_SERVICE,
   type PermissionService,
@@ -254,7 +254,7 @@ export class TableauxSalarieService {
     dto: RemplacerComptesBancairesDto,
     versionAttendue: number
   ) {
-    assertEcritureComptesBancairesSalarie(this.tenantContext, this.permissions);
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     const salarie = await this.trouverSalarie(salarieId);
     try {
       assertPartVirement(dto.comptes);
