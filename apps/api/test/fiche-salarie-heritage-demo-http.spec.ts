@@ -84,7 +84,7 @@ describe('GET /salaries/:id — heritage sur donnees demo (2.1.c-3)', () => {
     const { donnees } = (await reponse.json()) as {
       donnees: {
         emplois: {
-          contrat: { libellePoste: string };
+          numeroOrdre: number;
           affectation: { dureeContractuelle: string | null };
           resolutions: {
             dureeContractuelle: {
@@ -97,9 +97,7 @@ describe('GET /salaries/:id — heritage sur donnees demo (2.1.c-3)', () => {
       };
     };
 
-    const emploiOuvert = donnees.emplois.find(
-      (emploi) => emploi.contrat.libellePoste === 'Responsable paie'
-    );
+    const emploiOuvert = donnees.emplois.find((emploi) => emploi.numeroOrdre === 1);
     expect(emploiOuvert).toBeDefined();
     expect(emploiOuvert?.affectation.dureeContractuelle).toBeNull();
     expect(emploiOuvert?.resolutions.dureeContractuelle).toEqual({

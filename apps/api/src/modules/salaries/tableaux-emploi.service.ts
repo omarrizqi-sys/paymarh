@@ -26,10 +26,7 @@ import type {
   ModifierStatutParticulierDto,
 } from './dto/tableaux-emploi.dto.js';
 import { versDate } from './deductions-emploi.js';
-import {
-  assertDateFinApresDebut,
-  ValidationBloquanteEmploiError,
-} from './validation-emploi.js';
+import { assertDateFinApresDebut, ValidationBloquanteEmploiError } from './validation-emploi.js';
 import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import {
   HistorisationLigneTemporelleService,
