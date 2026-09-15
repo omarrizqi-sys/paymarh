@@ -26,6 +26,10 @@ import type {
   ModifierStatutParticulierDto,
 } from './dto/tableaux-emploi.dto.js';
 import { versDate } from './deductions-emploi.js';
+import {
+  assertDateFinApresDebut,
+  ValidationBloquanteEmploiError,
+} from './validation-emploi.js';
 import { ResolutionHeritageService } from './heritage/resolution-heritage.service.js';
 import {
   HistorisationLigneTemporelleService,
@@ -38,6 +42,7 @@ import { MoisEnCoursService } from './mois-en-cours/mois-en-cours.service.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
 import {
+  assertMontantStrictementPositif,
   assertPasChevauchementStatuts,
   collecterAlerteStatutHorsEmploi,
   refuserChampMoisEffetEmploi,
@@ -55,7 +60,10 @@ function parseDateNullable(valeur: string | null | undefined): Date | null {
 }
 
 function relancerValidation(erreur: unknown): never {
-  if (erreur instanceof ValidationBloquanteTableauEmploiError) {
+  if (
+    erreur instanceof ValidationBloquanteTableauEmploiError ||
+    erreur instanceof ValidationBloquanteEmploiError
+  ) {
     throw new BadRequestException({
       code: erreur.code,
       message: erreur.message,
@@ -139,6 +147,11 @@ export class TableauxEmploiService {
   ) {
     assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
+    try {
+      assertMontantStrictementPositif(dto.montant);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
 
@@ -165,6 +178,13 @@ export class TableauxEmploiService {
   ) {
     assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
+    if (dto.montant !== undefined) {
+      try {
+        assertMontantStrictementPositif(dto.montant);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
     const existant = await this.trouverAvantage(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
@@ -267,6 +287,12 @@ export class TableauxEmploiService {
     const dateDebut = versDate(dto.dateDebut);
     const dateFin = parseDateNullable(dto.dateFin);
 
+    try {
+      assertDateFinApresDebut(dateDebut, dateFin);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
+
     const lignes = await this.prisma.statutParticulierLigne.findMany({
       where: { emploiId },
       select: { id: true, dateDebut: true, dateFin: true },
@@ -318,6 +344,12 @@ export class TableauxEmploiService {
 
     const dateDebut = dto.dateDebut !== undefined ? versDate(dto.dateDebut) : existant.dateDebut;
     const dateFin = dto.dateFin !== undefined ? parseDateNullable(dto.dateFin) : existant.dateFin;
+
+    try {
+      assertDateFinApresDebut(dateDebut, dateFin);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
 
     const lignes = await this.prisma.statutParticulierLigne.findMany({
       where: { emploiId },

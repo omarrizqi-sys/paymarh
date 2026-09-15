@@ -1,10 +1,20 @@
-import { IsArray, IsDateString, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsDateString,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 export class CreerPrimeContractuelleDto {
   @IsString()
   primeRef!: string;
 
   @IsArray()
+  @ArrayMinSize(1)
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(12, { each: true })
@@ -18,6 +28,7 @@ export class ModifierPrimeContractuelleDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(12, { each: true })
@@ -32,6 +43,7 @@ export class CreerAvantageEnNatureDto {
   montant!: string;
 
   @IsArray()
+  @ArrayMinSize(1)
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(12, { each: true })
@@ -49,6 +61,7 @@ export class ModifierAvantageEnNatureDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
   @IsInt({ each: true })
   @Min(1, { each: true })
   @Max(12, { each: true })

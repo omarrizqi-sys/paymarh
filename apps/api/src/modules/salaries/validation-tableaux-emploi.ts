@@ -1,4 +1,5 @@
 import type { AlerteApi } from '@paymarh/shared-types';
+import { Decimal } from 'decimal.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 
 export class ValidationBloquanteTableauEmploiError extends Error {
@@ -63,6 +64,26 @@ export function refuserStatutNonSaisissable(statutCode: string | undefined): voi
       CODES_REPONSE.CHAMP_INTERDIT.code,
       CODES_REPONSE.CHAMP_INTERDIT.message,
       'statutCode'
+    );
+  }
+}
+
+export function assertMontantStrictementPositif(montant: string): void {
+  let decimal: Decimal;
+  try {
+    decimal = new Decimal(montant);
+  } catch {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.CARACTERE_NON_CONFORME.code,
+      CODES_REPONSE.CARACTERE_NON_CONFORME.message,
+      'montant'
+    );
+  }
+  if (!decimal.isFinite() || !decimal.greaterThan(0)) {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.CARACTERE_NON_CONFORME.code,
+      CODES_REPONSE.CARACTERE_NON_CONFORME.message,
+      'montant'
     );
   }
 }

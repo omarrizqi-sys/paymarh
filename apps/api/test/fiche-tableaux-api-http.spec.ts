@@ -1544,6 +1544,157 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(supprime).toBeNull();
   });
 
+  it('TB36 — moisApplication vide refuse a la creation d une prime contractuelle', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MOIS-VIDE`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [],
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CHAMP_OBLIGATOIRE');
+    expect(corps.champ).toBe('moisApplication');
+    expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB37 — moisApplication non vide accepte a la creation d une prime contractuelle', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MOIS-OK`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [6],
+      }),
+    });
+
+    expect(reponse.status).toBe(201);
+    expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(1);
+  });
+
+  it('TB38 — montant zero ou negatif refuse a la creation d un avantage en nature', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MONTANT-REFUS`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        natureRef: 'VOITURE',
+        montant: '0',
+        moisApplication: [1],
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CARACTERE_NON_CONFORME');
+    expect(corps.champ).toBe('montant');
+    expect(await prisma.avantageEnNature.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB39 — montant strictement positif accepte a la creation d un avantage en nature', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MONTANT-OK`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        natureRef: 'VOITURE',
+        montant: '500.00',
+        moisApplication: [1],
+      }),
+    });
+
+    expect(reponse.status).toBe(201);
+    expect(await prisma.avantageEnNature.count({ where: { emploiId: emploi.id } })).toBe(1);
+  });
+
+  it('TB40 — dateFin anterieure a dateDebut refusee sur un statut particulier', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-DATE-FIN-REFUS`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2025-06-01',
+        dateFin: '2025-05-01',
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('DATE_FIN_ANTERIEURE_DEBUT');
+    expect(corps.champ).toBe('dateFin');
+    expect(await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB41 — statut particulier d un seul jour accepte (dateFin egale dateDebut)', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-DATE-FIN-OK`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'IDMAJ',
+        dateDebut: '2025-06-15',
+        dateFin: '2025-06-15',
+      }),
+    });
+
+    expect(reponse.status).toBe(201);
+    expect(await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } })).toBe(1);
+  });
+
   it('K2 — apercu statut saisi manuellement rend mode supprimer sans exiger de version', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-K2-STATUT`,
