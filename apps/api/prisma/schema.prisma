@@ -914,6 +914,26 @@ model SaisieSurSalaire {
   @@index([typeSaisieCode])
 }
 
+/// Referentiel provisoire des primes contractuelles (liste ouverte).
+model PrimeReferentiel {
+  id      String @id @default(uuid()) @db.Uuid
+  ordre   Int
+  code    String @unique
+  libelle String
+
+  primesContractuelles PrimeContractuelle[]
+}
+
+/// Referentiel provisoire des natures d avantage en nature (liste ouverte).
+model NatureAvantageEnNature {
+  id      String @id @default(uuid()) @db.Uuid
+  ordre   Int
+  code    String @unique
+  libelle String
+
+  avantagesEnNature AvantageEnNature[]
+}
+
 /// Prime contractuelle — non historisee (transit par elements variables).
 model PrimeContractuelle {
   id             String @id @default(uuid()) @db.Uuid
@@ -921,9 +941,11 @@ model PrimeContractuelle {
   primeRef       String
   moisApplication Int[]
 
-  emploi Emploi @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  emploi Emploi          @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  prime  PrimeReferentiel @relation(fields: [primeRef], references: [code], onDelete: Restrict)
 
   @@index([emploiId])
+  @@index([primeRef])
 }
 
 /// Avantage en nature — historise par validite temporelle (bloc REMUNERATION).
@@ -938,9 +960,11 @@ model AvantageEnNature {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  emploi Emploi @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  emploi  Emploi                 @relation(fields: [emploiId], references: [id], onDelete: Cascade)
+  nature  NatureAvantageEnNature @relation(fields: [natureRef], references: [code], onDelete: Restrict)
 
   @@index([emploiId])
+  @@index([natureRef])
 }
 
 /// Ligne de statut particulier sur un emploi.
