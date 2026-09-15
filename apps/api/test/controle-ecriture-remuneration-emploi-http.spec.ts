@@ -105,7 +105,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: '500',
         moisApplication: [1],
       }),
@@ -123,7 +123,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     const avantage = await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('400'),
         moisApplication: [6],
         moisEffetDebut: '2025-01',
@@ -157,7 +157,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     const avantage = await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('300'),
         moisApplication: [3],
         moisEffetDebut: '2025-01',
@@ -239,7 +239,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [1],
       }),
     });
@@ -256,7 +256,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     const prime = await prisma.primeContractuelle.create({
       data: {
         emploiId: emploi.id,
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [6],
       },
     });
@@ -287,7 +287,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     const prime = await prisma.primeContractuelle.create({
       data: {
         emploiId: emploi.id,
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [3],
       },
     });
@@ -321,7 +321,7 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [1],
       }),
     });

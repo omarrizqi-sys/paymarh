@@ -859,12 +859,12 @@ describe('API fiche emploi — endpoints emplois (2.1.b-3)', () => {
     });
 
     await prisma.primeContractuelle.create({
-      data: { emploiId: cree.id, primeRef: 'PRIME-TRANSPORT', moisApplication: [12] },
+      data: { emploiId: cree.id, primeRef: 'A15', moisApplication: [12] },
     });
     await prisma.avantageEnNature.create({
       data: {
         emploiId: cree.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('500'),
         moisApplication: [1, 2, 3],
         moisEffetDebut: '2025-01',

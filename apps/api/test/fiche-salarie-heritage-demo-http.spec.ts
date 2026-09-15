@@ -60,7 +60,7 @@ describe('GET /salaries/:id — heritage sur donnees demo (2.1.c-3)', () => {
     expect(emploiOuvert).toBeDefined();
 
     const nourriture = emploiOuvert?.avantagesEnNature.find(
-      (avantage) => avantage.natureRef === 'NOURRITURE'
+      (avantage) => avantage.natureRef === 'B03'
     );
     expect(nourriture?.etat).toBe('CLOTUREE');
 

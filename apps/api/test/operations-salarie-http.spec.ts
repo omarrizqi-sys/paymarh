@@ -139,12 +139,12 @@ describe('API salarié — operations autorisées (2.1.c-1 temps 1.1)', () => {
     expect(param.status).toBe(200);
 
     await prisma.primeContractuelle.create({
-      data: { emploiId, primeRef: 'PRIME-TRANSPORT', moisApplication: [6] },
+      data: { emploiId, primeRef: 'A15', moisApplication: [6] },
     });
     await prisma.avantageEnNature.create({
       data: {
         emploiId,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('500'),
         moisApplication: [6],
         moisEffetDebut: '2025-01',

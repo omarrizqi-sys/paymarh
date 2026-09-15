@@ -18,7 +18,9 @@ import {
 import {
   LIENS_PARENTE,
   MOTIFS_SORTIE,
+  NATURES_AVANTAGE_EN_NATURE,
   PAYS,
+  PRIMES_REFERENTIEL,
   SITUATIONS_FAMILIALES,
   STATUTS_PARTICULIERS,
   STATUT_TECHNIQUE_TAHFIZ,
@@ -213,6 +215,22 @@ async function seedReferences(): Promise<{
     });
   }
 
+  for (const prime of PRIMES_REFERENTIEL) {
+    await prisma.primeReferentiel.upsert({
+      where: { code: prime.code },
+      update: { ordre: prime.ordre, libelle: prime.libelle },
+      create: { ordre: prime.ordre, code: prime.code, libelle: prime.libelle },
+    });
+  }
+
+  for (const nature of NATURES_AVANTAGE_EN_NATURE) {
+    await prisma.natureAvantageEnNature.upsert({
+      where: { code: nature.code },
+      update: { ordre: nature.ordre, libelle: nature.libelle },
+      create: { ordre: nature.ordre, code: nature.code, libelle: nature.libelle },
+    });
+  }
+
   const formeSarl = await prisma.formeJuridique.findUniqueOrThrow({ where: { code: 'SARL' } });
   const banqueAttijari = await prisma.banque.findFirstOrThrow({
     where: { nom: 'Attijariwafa Bank' },
@@ -233,7 +251,7 @@ async function seedReferences(): Promise<{
   });
 
   console.log(
-    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s), ${PAYS.length} pays, ${TYPES_CONTRAT.length} types contrat, ${MOTIFS_SORTIE.length} motifs sortie, ${STATUTS_PARTICULIERS.length} statut(s) particulier(s), ${SITUATIONS_FAMILIALES.length} situations familiales, ${LIENS_PARENTE.length} liens parente, ${TYPES_SAISIE_SUR_SALAIRE.length} types saisie sur salaire.`
+    `References : ${FORMES_JURIDIQUES.length} formes, ${BANQUES.length} banques, ${JOURS_FERIES.length} jours feries, ${TYPES_HEURE.length} types d heure, ${TYPES_EXONERATION.length} exoneration(s), ${PAYS.length} pays, ${TYPES_CONTRAT.length} types contrat, ${MOTIFS_SORTIE.length} motifs sortie, ${STATUTS_PARTICULIERS.length} statut(s) particulier(s), ${SITUATIONS_FAMILIALES.length} situations familiales, ${LIENS_PARENTE.length} liens parente, ${TYPES_SAISIE_SUR_SALAIRE.length} types saisie sur salaire, ${PRIMES_REFERENTIEL.length} primes, ${NATURES_AVANTAGE_EN_NATURE.length} natures avantage en nature.`
   );
 
   return {
@@ -883,26 +901,26 @@ async function seedTableauxEtSecondEmploiDemo(
   });
 
   const primeExistante = await prisma.primeContractuelle.findFirst({
-    where: { emploiId: emploiOuvert.id, primeRef: 'PRIME-TRANSPORT' },
+    where: { emploiId: emploiOuvert.id, primeRef: 'A15' },
   });
   if (primeExistante === null) {
     await prisma.primeContractuelle.create({
       data: {
         emploiId: emploiOuvert.id,
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [6, 12],
       },
     });
   }
 
   const avantageActif = await prisma.avantageEnNature.findFirst({
-    where: { emploiId: emploiOuvert.id, natureRef: 'VOITURE' },
+    where: { emploiId: emploiOuvert.id, natureRef: 'B02' },
   });
   if (avantageActif === null) {
     await prisma.avantageEnNature.create({
       data: {
         emploiId: emploiOuvert.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('1200.00'),
         moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         moisEffetDebut: '2022-03',
@@ -912,13 +930,13 @@ async function seedTableauxEtSecondEmploiDemo(
   }
 
   const avantageClos = await prisma.avantageEnNature.findFirst({
-    where: { emploiId: emploiOuvert.id, natureRef: 'LOGEMENT' },
+    where: { emploiId: emploiOuvert.id, natureRef: 'B01' },
   });
   if (avantageClos === null) {
     await prisma.avantageEnNature.create({
       data: {
         emploiId: emploiOuvert.id,
-        natureRef: 'LOGEMENT',
+        natureRef: 'B01',
         montant: new Decimal('2500.00'),
         moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         moisEffetDebut: '2022-03',
@@ -928,13 +946,13 @@ async function seedTableauxEtSecondEmploiDemo(
   }
 
   const avantageNourriture = await prisma.avantageEnNature.findFirst({
-    where: { emploiId: emploiOuvert.id, natureRef: 'NOURRITURE' },
+    where: { emploiId: emploiOuvert.id, natureRef: 'B03' },
   });
   if (avantageNourriture === null) {
     await prisma.avantageEnNature.create({
       data: {
         emploiId: emploiOuvert.id,
-        natureRef: 'NOURRITURE',
+        natureRef: 'B03',
         montant: new Decimal('300.00'),
         moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
         moisEffetDebut: '2022-01',
