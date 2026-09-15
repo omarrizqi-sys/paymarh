@@ -1695,6 +1695,179 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } })).toBe(1);
   });
 
+  it('TB42 — moisApplication vide refuse a la modification d une prime contractuelle', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MOIS-VIDE-MODIF-PRIME`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const prime = await prisma.primeContractuelle.create({
+      data: {
+        emploiId: emploi.id,
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [6],
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles/${prime.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ moisApplication: [] }),
+      }
+    );
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CHAMP_OBLIGATOIRE');
+    expect(corps.champ).toBe('moisApplication');
+    const encore = await prisma.primeContractuelle.findUniqueOrThrow({ where: { id: prime.id } });
+    expect(encore.moisApplication).toEqual([6]);
+  });
+
+  it('TB43 — moisApplication vide refuse a la creation d un avantage en nature', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MOIS-VIDE-CREER-AVN`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        natureRef: 'VOITURE',
+        montant: '500',
+        moisApplication: [],
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CHAMP_OBLIGATOIRE');
+    expect(corps.champ).toBe('moisApplication');
+    expect(await prisma.avantageEnNature.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB44 — moisApplication vide refuse a la modification d un avantage en nature', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MOIS-VIDE-MODIF-AVN`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const avantage = await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploi.id,
+        natureRef: 'VOITURE',
+        montant: new Decimal('400'),
+        moisApplication: [6],
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature/${avantage.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ moisApplication: [] }),
+      }
+    );
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CHAMP_OBLIGATOIRE');
+    expect(corps.champ).toBe('moisApplication');
+    const encore = await prisma.avantageEnNature.findUniqueOrThrow({ where: { id: avantage.id } });
+    expect(encore.moisApplication).toEqual([6]);
+  });
+
+  it('TB45 — montant zero ou negatif refuse a la modification d un avantage en nature', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-MONTANT-REFUS-MODIF`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const avantage = await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploi.id,
+        natureRef: 'VOITURE',
+        montant: new Decimal('400'),
+        moisApplication: [6],
+        moisEffetDebut: '2025-01',
+        moisEffetFin: null,
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature/${avantage.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ montant: '0' }),
+      }
+    );
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('CARACTERE_NON_CONFORME');
+    expect(corps.champ).toBe('montant');
+    const encore = await prisma.avantageEnNature.findUniqueOrThrow({ where: { id: avantage.id } });
+    expect(encore.montant.toString()).toBe('400');
+  });
+
+  it('TB46 — dateFin anterieure a dateDebut refusee a la modification d un statut particulier', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-DATE-FIN-REFUS-MODIF`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const statut = await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploi.id,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2025-06-01'),
+        dateFin: null,
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers/${statut.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ dateFin: '2025-05-01' }),
+      }
+    );
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; champ: string };
+    expect(corps.code).toBe('DATE_FIN_ANTERIEURE_DEBUT');
+    expect(corps.champ).toBe('dateFin');
+    const encore = await prisma.statutParticulierLigne.findUniqueOrThrow({
+      where: { id: statut.id },
+    });
+    expect(encore.dateFin).toBeNull();
+  });
+
   it('K2 — apercu statut saisi manuellement rend mode supprimer sans exiger de version', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-K2-STATUT`,
