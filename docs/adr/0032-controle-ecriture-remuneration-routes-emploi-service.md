@@ -38,3 +38,7 @@ ADR 0024 a déjà tranché ce cas pour `comptes` vs `comptesBancaires`. Ici, `mo
 - RE1–RE4 et RE6 prouvent le refus et le non-débordement sur les routes réelles.
 - RE5 prouve le refus au niveau service (`EmploisService.creer`), hors intercepteur.
 - La propagation TAHFIZ (statuts particuliers) n'est pas traversée : elle n'écrit pas de versions rémunération.
+
+## Note — 2026-09-15 (temps 5, sous-étape 2.1.c-3)
+
+Quatrième occurrence du même défaut sur les **primes contractuelles** : `creerPrimeContractuelle`, `modifierPrimeContractuelle` et `supprimerPrimeContractuelle` n'appelaient pas `assertEcritureRemunerationSalarie` — seule `emploi.modifier` sur la route. Même cause, même correction (contrôle dans `TableauxEmploiService`, pas extension du registre). RE7–RE10 couvrent refus et non-débordement.

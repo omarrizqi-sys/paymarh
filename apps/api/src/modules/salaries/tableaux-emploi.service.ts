@@ -82,6 +82,7 @@ export class TableauxEmploiService {
     dto: CreerPrimeContractuelleDto,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
     const emploi = await this.trouverEmploi(emploiId);
 
@@ -103,6 +104,7 @@ export class TableauxEmploiService {
     dto: ModifierPrimeContractuelleDto,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
     await this.trouverPrime(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
@@ -121,6 +123,7 @@ export class TableauxEmploiService {
   }
 
   async supprimerPrimeContractuelle(emploiId: string, ligneId: string, versionAttendue: number) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     await this.trouverPrime(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
 

@@ -225,6 +225,144 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     expect(await prisma.emploi.count({ where: { salarieId: salarie.id } })).toBe(0);
   });
 
+  it('RE7 — POST prime contractuelle refuse sans salarie.remuneration.ecrire', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-RE7-CREER`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetesSansEcritureRemuneration(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [1],
+      }),
+    });
+
+    expect(reponse.status).toBe(403);
+    expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('RE8 — PATCH prime contractuelle refuse sans salarie.remuneration.ecrire', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-RE8-MODIF`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const prime = await prisma.primeContractuelle.create({
+      data: {
+        emploiId: emploi.id,
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [6],
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles/${prime.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetesSansEcritureRemuneration(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ moisApplication: [12] }),
+      }
+    );
+
+    expect(reponse.status).toBe(403);
+    const encore = await prisma.primeContractuelle.findUniqueOrThrow({ where: { id: prime.id } });
+    expect(encore.moisApplication).toEqual([6]);
+  });
+
+  it('RE9 — DELETE prime contractuelle refuse sans salarie.remuneration.ecrire', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-RE9-SUPPR`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const prime = await prisma.primeContractuelle.create({
+      data: {
+        emploiId: emploi.id,
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [3],
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles/${prime.id}`),
+      {
+        method: 'DELETE',
+        headers: {
+          ...entetesSansEcritureRemuneration(utilisateurId, societe.companyId),
+          'if-match': '0',
+        },
+      }
+    );
+
+    expect(reponse.status).toBe(403);
+    expect(await prisma.primeContractuelle.findUnique({ where: { id: prime.id } })).not.toBeNull();
+  });
+
+  it('RE10 — non-debordement : avec les deux droits, les trois operations sur une prime reussissent', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-RE10-NON-DEB`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const creation = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        primeRef: 'PRIME-TRANSPORT',
+        moisApplication: [1],
+      }),
+    });
+    expect(creation.status).toBe(201);
+    const { donnees: emploiCree } = (await creation.json()) as {
+      donnees: { primesContractuelles: { id: string }[]; version: number };
+    };
+    const primeId = emploiCree.primesContractuelles[0]?.id;
+    expect(primeId).toBeDefined();
+
+    const modification = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles/${primeId}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': String(emploiCree.version),
+        },
+        body: JSON.stringify({ moisApplication: [1, 2] }),
+      }
+    );
+    expect(modification.status).toBe(200);
+    const { donnees: emploiModifie } = (await modification.json()) as {
+      donnees: { version: number };
+    };
+
+    const suppression = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles/${primeId}`),
+      {
+        method: 'DELETE',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'if-match': String(emploiModifie.version),
+        },
+      }
+    );
+    expect(suppression.status).toBe(200);
+    expect(await prisma.primeContractuelle.findUnique({ where: { id: primeId } })).toBeNull();
+  });
+
   it('RE6 — non-debordement : contrat, affectation et statut particulier restent modifiables', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-RE6-NON-DEB`,
