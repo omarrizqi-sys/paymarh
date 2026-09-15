@@ -12,6 +12,7 @@ import {
   MessagesAlerteChamp,
   RegistreAlertesSalarie,
 } from '@/components/salaries/formulaire/messages-alerte-salarie';
+import { afficherMontant } from '@/lib/affichage/montants';
 import { AppelApiEchoue } from '@/lib/api/client';
 import {
   creerSaisieSurSalaire,
@@ -529,11 +530,11 @@ function FormulaireSaisieSurSalaire({
         <p>Mois de début : {ligne.moisDebut}</p>
         {pension ? (
           <>
-            <p>Montant mensuel : {ligne.montantMensuel}</p>
+            <p>Montant mensuel : {afficherMontant(ligne.montantMensuel)}</p>
             <p>Mois de fin : {ligne.moisFin}</p>
           </>
         ) : null}
-        {tiers ? <p>Montant total : {ligne.montantTotal}</p> : null}
+        {tiers ? <p>Montant total : {afficherMontant(ligne.montantTotal)}</p> : null}
       </div>
     );
   }

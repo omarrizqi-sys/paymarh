@@ -10,6 +10,7 @@ import {
   MessagesAlerteChamp,
   RegistreAlertesSalarie,
 } from '@/components/salaries/formulaire/messages-alerte-salarie';
+import { afficherMontant } from '@/lib/affichage/montants';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { creerPret, impactSuppressionPret, modifierPret, supprimerPret } from '@/lib/api/salaries';
 import { envoyerLignesTableau } from '@/lib/fiche/envoi-lignes-tableau';
@@ -464,7 +465,7 @@ function FormulairePret({
       <div className="space-y-2" data-testid="formulaire-lecture-seule">
         <p>Libellé / objet : {ligne.libelleObjet}</p>
         <p>Libellé bulletin : {ligne.libelleBulletin}</p>
-        <p>Montant total : {ligne.montantTotal}</p>
+        <p>Montant total : {afficherMontant(ligne.montantTotal)}</p>
         <p>Mois de début : {ligne.moisDebut}</p>
         <p>Mensualité : {ligne.mensualite}</p>
         <p>Nombre d&apos;échéances : {ligne.nombreEcheances}</p>
