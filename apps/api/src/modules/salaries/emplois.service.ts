@@ -9,7 +9,12 @@ import type { AlerteApi, EmploiFiche } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
+import {
+  PERMISSION_SERVICE,
+  type PermissionService,
+} from '../../common/permissions/permission.service.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
+import { assertEcritureRemunerationSalarie } from '../../common/remuneration/assert-ecriture-remuneration-salarie.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { accountScope, companyScope } from '../../common/tenancy/tenant-scope.js';
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
@@ -85,10 +90,12 @@ export class EmploisService {
     private readonly heritage: ResolutionHeritageService,
     private readonly tahfiz: PropagationTahfizService,
     @Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort,
-    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort
+    @Inject(REFERENTIEL_NATIONAL_PORT) private readonly referentiel: ReferentielNationalPort,
+    @Inject(PERMISSION_SERVICE) private readonly permissions: PermissionService
   ) {}
 
   async creer(salarieId: string, dto: CreerEmploiDto) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffet(dto);
     const salarie = await this.trouverSalarie(salarieId);
     await this.verifierEtablissement(salarie.companyId, dto.affectation.etablissementId);
@@ -333,6 +340,7 @@ export class EmploisService {
     dto: ModifierRemunerationEmploiDto,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffet(dto);
     const emploi = await this.trouverEmploi(id);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);

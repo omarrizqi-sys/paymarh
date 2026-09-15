@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -8,7 +9,12 @@ import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import { calculerJetonConfirmation, jetonsIdentiques } from '../companies/jeton-confirmation.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
+import {
+  PERMISSION_SERVICE,
+  type PermissionService,
+} from '../../common/permissions/permission.service.js';
 import { PrismaService } from '../../common/prisma/prisma.service.js';
+import { assertEcritureRemunerationSalarie } from '../../common/remuneration/assert-ecriture-remuneration-salarie.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
 import { accountScope } from '../../common/tenancy/tenant-scope.js';
 import type {
@@ -67,7 +73,8 @@ export class TableauxEmploiService {
     private readonly moisEnCours: MoisEnCoursService,
     private readonly verrouillage: VerrouillageOptimisteService,
     private readonly historisationLigne: HistorisationLigneTemporelleService,
-    private readonly heritage: ResolutionHeritageService
+    private readonly heritage: ResolutionHeritageService,
+    @Inject(PERMISSION_SERVICE) private readonly permissions: PermissionService
   ) {}
 
   async creerPrimeContractuelle(
@@ -127,6 +134,7 @@ export class TableauxEmploiService {
     dto: CreerAvantageEnNatureDto,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
@@ -152,6 +160,7 @@ export class TableauxEmploiService {
     dto: ModifierAvantageEnNatureDto,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     refuserChampMoisEffetEmploi(dto);
     const existant = await this.trouverAvantage(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
@@ -212,6 +221,7 @@ export class TableauxEmploiService {
     confirmationJeton: string | undefined,
     versionAttendue: number
   ) {
+    assertEcritureRemunerationSalarie(this.tenantContext, this.permissions);
     const ligne = await this.trouverAvantage(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
     await this.exigerJetonSuppressionAvantage(
