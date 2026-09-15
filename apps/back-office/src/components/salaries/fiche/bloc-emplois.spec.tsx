@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EmploiFiche, Permission } from '@paymarh/shared-types';
 import { BlocEmplois } from './bloc-emplois';
+import { RegistreFicheProvider } from './registre-fiche-provider';
 
 const TYPES_CONTRAT = [
   { id: 'tc-1', ordre: 1, code: 'CDI', libelle: 'Contrat à durée indéterminée' },
@@ -89,17 +90,30 @@ function emploiBase(
 
 function rendre(
   emplois: readonly EmploiFiche[],
-  operations: readonly Permission[] = ['salarie.lire', 'salarie.remuneration.lire']
+  operations: readonly Permission[] = ['salarie.lire', 'salarie.remuneration.lire'],
+  onEmploisChange = vi.fn()
 ) {
   return render(
-    <BlocEmplois
-      emplois={emplois}
-      operations={operations}
-      typesContrat={TYPES_CONTRAT}
-      motifsSortie={MOTIFS_SORTIE}
-      etablissements={ETABLISSEMENTS}
-      banques={[]}
-    />
+    <RegistreFicheProvider
+      versionInitiale={1}
+      emplois={emplois.map((emploi) => ({
+        id: emploi.id,
+        libellePoste: emploi.contrat.libellePoste,
+        version: emploi.version,
+      }))}
+      onRechargerServeur={vi.fn(async () => undefined)}
+    >
+      <BlocEmplois
+        companyId="soc-test"
+        emplois={emplois}
+        operations={operations}
+        typesContrat={TYPES_CONTRAT}
+        motifsSortie={MOTIFS_SORTIE}
+        etablissements={ETABLISSEMENTS}
+        banques={[]}
+        onEmploisChange={onEmploisChange}
+      />
+    </RegistreFicheProvider>
   );
 }
 
@@ -117,7 +131,9 @@ describe('BlocEmplois', () => {
   it('un seul emploi : deplie a l ouverture', () => {
     rendre([emploiBase('emp-1')]);
 
-    expect(screen.getByTestId('accordeon-emploi-corps-emp-1')).toBeTruthy();
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-1').classList.contains('hidden')).toBe(
+      false
+    );
   });
 
   it('plusieurs emplois : aucun deplie a l ouverture', () => {
@@ -129,8 +145,12 @@ describe('BlocEmplois', () => {
       }),
     ]);
 
-    expect(screen.queryByTestId('accordeon-emploi-corps-emp-1')).toBeNull();
-    expect(screen.queryByTestId('accordeon-emploi-corps-emp-2')).toBeNull();
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-1').classList.contains('hidden')).toBe(
+      true
+    );
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-2').classList.contains('hidden')).toBe(
+      true
+    );
   });
 
   it('deplier un emploi replie le precedent', () => {
@@ -143,12 +163,20 @@ describe('BlocEmplois', () => {
     ]);
 
     fireEvent.click(screen.getByTestId('accordeon-emploi-entete-emp-2'));
-    expect(screen.getByTestId('accordeon-emploi-corps-emp-2')).toBeTruthy();
-    expect(screen.queryByTestId('accordeon-emploi-corps-emp-1')).toBeNull();
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-2').classList.contains('hidden')).toBe(
+      false
+    );
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-1').classList.contains('hidden')).toBe(
+      true
+    );
 
     fireEvent.click(screen.getByTestId('accordeon-emploi-entete-emp-1'));
-    expect(screen.getByTestId('accordeon-emploi-corps-emp-1')).toBeTruthy();
-    expect(screen.queryByTestId('accordeon-emploi-corps-emp-2')).toBeNull();
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-1').classList.contains('hidden')).toBe(
+      false
+    );
+    expect(screen.getByTestId('accordeon-emploi-corps-emp-2').classList.contains('hidden')).toBe(
+      true
+    );
   });
 
   it('aucun emploi termine : la bascule est absente du DOM', () => {
@@ -176,13 +204,12 @@ describe('BlocEmplois', () => {
     expect(screen.getByTestId('accordeon-emploi-emp-termine')).toBeTruthy();
   });
 
-  it('sans salarie.remuneration.lire : remuneration et paiement absents du DOM', () => {
+  it('sans salarie.remuneration.lire : la rubrique remuneration absente du DOM', () => {
     rendre([emploiBase('emp-1')], ['salarie.lire']);
 
     expect(document.getElementById('emp-1/contrat')).toBeTruthy();
     expect(document.getElementById('emp-1/affectation')).toBeTruthy();
     expect(document.getElementById('emp-1/remuneration')).toBeNull();
-    expect(document.getElementById('emp-1/paiement')).toBeNull();
   });
 
   it('affiche la phrase d heritage quand resolutions est fourni en prop', () => {
@@ -239,15 +266,42 @@ describe('BlocEmplois', () => {
       }),
     ]);
 
-    expect(screen.getByTestId('emp-1-type-contrat').textContent).toBe(
-      'Contrat à durée indéterminée'
+    expect((screen.getByTestId('emp-1-type-contrat-select') as HTMLSelectElement).value).toBe(
+      'CDI'
     );
-    expect(screen.getByTestId('emp-1-motif-sortie').textContent).toBe('Démission');
+    expect((screen.getByTestId('emp-1-motif-sortie-select') as HTMLSelectElement).value).toBe(
+      'DEMISSION'
+    );
   });
 
   it('porte l identifiant attendu par le sommaire', () => {
     rendre([emploiBase('emp-1')]);
 
     expect(document.getElementById('emplois')).toBeTruthy();
+  });
+
+  it('affiche la phrase d heritage sous la repartition horaire', () => {
+    rendre([
+      emploiBase('emp-1', {
+        resolutions: {
+          ...resolutionsVides(),
+          grilleHoraire: {
+            valeur: [{ jourSemaine: 'LUNDI', typeHeureId: 'n', nombreHeures: '8' }],
+            origine: 'ETABLISSEMENT',
+            libelleEntite: 'Siège',
+          },
+        },
+      }),
+    ]);
+
+    expect(screen.getByTestId('emp-1-heritage-repartition-horaire').textContent).toBe(
+      '1 ligne de grille horaire — établissement Siège'
+    );
+  });
+
+  it('affiche le montant formate en lecture seule sans droit d ecriture remuneration', () => {
+    rendre([emploiBase('emp-1')], ['salarie.lire', 'salarie.remuneration.lire']);
+
+    expect(screen.getByTestId('emp-1-montant').textContent).toBe('12\u202f000,00');
   });
 });

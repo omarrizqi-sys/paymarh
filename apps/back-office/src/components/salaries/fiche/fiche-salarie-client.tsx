@@ -327,6 +327,7 @@ function ContenuFicheSalarie({
               </>
             ) : null}
             <BlocEmplois
+              companyId={companyId}
               emplois={fiche.emplois}
               operations={fiche.operations}
               typesContrat={typesContrat}
@@ -334,6 +335,7 @@ function ContenuFicheSalarie({
               etablissements={etablissements}
               comptesBancaires={'comptesBancaires' in fiche ? fiche.comptesBancaires : undefined}
               banques={banques}
+              onEmploisChange={(emplois) => appliquerSlice({ emplois })}
             />
           </>
         }

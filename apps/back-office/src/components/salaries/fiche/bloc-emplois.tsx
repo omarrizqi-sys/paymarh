@@ -10,6 +10,7 @@ import type {
   Permission,
   TypeContrat,
 } from '@paymarh/shared-types';
+import { remplacerEmploiDansListe } from '@/lib/fiche/valeurs-emploi';
 import { Button } from '@/components/ui/button';
 import {
   ID_SOMMAIRE_EMPLOIS,
@@ -19,6 +20,7 @@ import { separerEmploisActifsEtTermines } from '@/lib/fiche/trier-emplois-affich
 import { AccordeonEmploi } from './emploi/accordeon-emploi';
 
 interface Props {
+  readonly companyId: string;
   readonly emplois: readonly EmploiFiche[];
   readonly operations: readonly Permission[];
   readonly typesContrat: readonly TypeContrat[];
@@ -26,6 +28,7 @@ interface Props {
   readonly etablissements: readonly Etablissement[];
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
+  readonly onEmploisChange: (emplois: readonly EmploiFiche[]) => void;
 }
 
 function emploiDeplieInitial(emplois: readonly EmploiFiche[]): string | null {
@@ -36,6 +39,7 @@ function emploiDeplieInitial(emplois: readonly EmploiFiche[]): string | null {
 }
 
 export function BlocEmplois({
+  companyId,
   emplois,
   operations,
   typesContrat,
@@ -43,7 +47,11 @@ export function BlocEmplois({
   etablissements,
   comptesBancaires,
   banques,
+  onEmploisChange,
 }: Props) {
+  const remplacerEmploi = (emploiMisAJour: EmploiFiche) => {
+    onEmploisChange(remplacerEmploiDansListe(emplois, emploiMisAJour));
+  };
   const { actifs, termines } = useMemo(() => separerEmploisActifsEtTermines(emplois), [emplois]);
   const [emploiDeplieId, setEmploiDeplieId] = useState<string | null>(() =>
     emploiDeplieInitial(emplois)
@@ -72,6 +80,7 @@ export function BlocEmplois({
         {actifs.map((emploi) => (
           <AccordeonEmploi
             key={emploi.id}
+            companyId={companyId}
             emploi={emploi}
             deplie={emploiDeplieId === emploi.id}
             onBasculer={() => basculerEmploi(emploi.id)}
@@ -81,6 +90,7 @@ export function BlocEmplois({
             comptesBancaires={comptesBancaires}
             banques={banques}
             operations={operations}
+            onEmploiChange={remplacerEmploi}
           />
         ))}
         {termines.length > 0 ? (
@@ -98,6 +108,7 @@ export function BlocEmplois({
               ? termines.map((emploi) => (
                   <AccordeonEmploi
                     key={emploi.id}
+                    companyId={companyId}
                     emploi={emploi}
                     deplie={emploiDeplieId === emploi.id}
                     onBasculer={() => basculerEmploi(emploi.id)}
@@ -107,6 +118,7 @@ export function BlocEmplois({
                     comptesBancaires={comptesBancaires}
                     banques={banques}
                     operations={operations}
+                    onEmploiChange={remplacerEmploi}
                   />
                 ))
               : null}

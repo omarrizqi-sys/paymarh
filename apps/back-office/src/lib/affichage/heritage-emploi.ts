@@ -1,5 +1,10 @@
-import type { NiveauHeritage, ResolutionChamp } from '@paymarh/shared-types';
+import type {
+  LigneGrilleHoraireResolue,
+  NiveauHeritage,
+  ResolutionChamp,
+} from '@paymarh/shared-types';
 import { libelleJourSemaine } from '@/lib/affichage/libelles';
+import { afficherMontant } from '@/lib/affichage/montants';
 import { afficherBoolean } from '@/lib/affichage/libelles-emploi';
 
 export function libelleOrigineHeritage(
@@ -64,5 +69,18 @@ export function phraseHeritageBoolean(
 export function phraseHeritageMontant(
   resolution: ResolutionChamp<string> | null | undefined
 ): string | null {
-  return phraseHeritageChamp(resolution, (valeur) => valeur);
+  return phraseHeritageChamp(resolution, afficherMontant);
+}
+
+function libelleGrilleHoraireResolue(lignes: readonly LigneGrilleHoraireResolue[]): string {
+  if (lignes.length === 0) {
+    return 'Grille horaire vide';
+  }
+  return `${lignes.length} ligne${lignes.length > 1 ? 's' : ''} de grille horaire`;
+}
+
+export function phraseHeritageGrilleHoraire(
+  resolution: ResolutionChamp<readonly LigneGrilleHoraireResolue[]> | null | undefined
+): string | null {
+  return phraseHeritageChamp(resolution, libelleGrilleHoraireResolue);
 }

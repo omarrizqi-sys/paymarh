@@ -14,10 +14,10 @@ import { possedePermission } from '@/lib/permissions';
 import { libelleReferentielParCode } from '@/lib/affichage/libelles-emploi';
 import { RubriqueEmploiAffectation } from './rubrique-emploi-affectation';
 import { RubriqueEmploiContrat } from './rubrique-emploi-contrat';
-import { RubriqueEmploiPaiement } from './rubrique-emploi-paiement';
 import { RubriqueEmploiRemuneration } from './rubrique-emploi-remuneration';
 
 interface Props {
+  readonly companyId: string;
   readonly emploi: EmploiFiche;
   readonly deplie: boolean;
   readonly onBasculer: () => void;
@@ -27,6 +27,7 @@ interface Props {
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
   readonly operations: readonly Permission[];
+  readonly onEmploiChange: (emploi: EmploiFiche) => void;
 }
 
 function ligneRepliée(emploi: EmploiFiche, typesContrat: readonly TypeContrat[]): string {
@@ -42,6 +43,7 @@ function ligneRepliée(emploi: EmploiFiche, typesContrat: readonly TypeContrat[]
 }
 
 export function AccordeonEmploi({
+  companyId,
   emploi,
   deplie,
   onBasculer,
@@ -51,6 +53,7 @@ export function AccordeonEmploi({
   comptesBancaires,
   banques,
   operations,
+  onEmploiChange,
 }: Props) {
   const peutLireRemuneration = possedePermission(operations, 'salarie.remuneration.lire');
 
@@ -69,32 +72,38 @@ export function AccordeonEmploi({
           aria-hidden
         />
       </button>
-      {deplie ? (
-        <div
-          className="space-y-4 border-t px-4 py-4"
-          data-testid={`accordeon-emploi-corps-${emploi.id}`}
-        >
-          <RubriqueEmploiContrat
-            emploiId={emploi.id}
-            libellePoste={emploi.contrat.libellePoste}
-            contrat={emploi.contrat}
-            typesContrat={typesContrat}
-            motifsSortie={motifsSortie}
+      <div
+        className={`space-y-4 border-t px-4 py-4 ${deplie ? '' : 'hidden'}`}
+        data-testid={`accordeon-emploi-corps-${emploi.id}`}
+      >
+        <RubriqueEmploiContrat
+          companyId={companyId}
+          emploi={emploi}
+          typesContrat={typesContrat}
+          motifsSortie={motifsSortie}
+          onEmploiChange={onEmploiChange}
+        />
+        <RubriqueEmploiAffectation
+          companyId={companyId}
+          emploi={emploi}
+          etablissements={etablissements}
+          onEmploiChange={onEmploiChange}
+        />
+        {peutLireRemuneration &&
+        emploi.remuneration !== undefined &&
+        emploi.paiement !== undefined ? (
+          <RubriqueEmploiRemuneration
+            companyId={companyId}
+            emploi={emploi}
+            remuneration={emploi.remuneration}
+            paiement={emploi.paiement}
+            comptesBancaires={comptesBancaires}
+            banques={banques}
+            operations={operations}
+            onEmploiChange={onEmploiChange}
           />
-          <RubriqueEmploiAffectation emploi={emploi} etablissements={etablissements} />
-          {peutLireRemuneration && emploi.remuneration !== undefined ? (
-            <RubriqueEmploiRemuneration emploi={emploi} remuneration={emploi.remuneration} />
-          ) : null}
-          {peutLireRemuneration && emploi.paiement !== undefined ? (
-            <RubriqueEmploiPaiement
-              emploi={emploi}
-              paiement={emploi.paiement}
-              comptesBancaires={comptesBancaires}
-              banques={banques}
-            />
-          ) : null}
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </section>
   );
 }

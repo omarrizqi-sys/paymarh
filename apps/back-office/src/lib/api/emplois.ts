@@ -1,5 +1,89 @@
-import type { EmploiFiche, ReponseEcriture } from '@paymarh/shared-types';
-import { appelerSalarieDelete, appelerSalarieGet } from './client-salarie';
+import type {
+  BaseSaisieDuree,
+  EmploiFiche,
+  JourSemaine,
+  ModeDeterminationSalaire,
+  ModePaiement,
+  ReponseEcriture,
+  StatutCadre,
+} from '@paymarh/shared-types';
+import { appelerSalarieDelete, appelerSalarieGet, appelerSalariePatch } from './client-salarie';
+
+export async function modifierContratEmploi(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    libellePoste?: string;
+    dateDebut?: string;
+    dateFin?: string | null;
+    typeContratCode?: string;
+    periodeEssaiDateFin?: string | null;
+    renouvellementEssaiDateFin?: string | null;
+    statutCadre?: StatutCadre | null;
+    coefficient?: string | null;
+    position?: string | null;
+    indice?: string | null;
+    dateSortie?: string | null;
+    motifSortieCode?: string | null;
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/contrat`,
+    corps,
+    version
+  );
+}
+
+export async function modifierRemunerationEmploi(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    modeDeterminationSalaire?: ModeDeterminationSalaire;
+    montant?: string;
+    masquerNombreHeures?: boolean;
+    masquerTauxHoraire?: boolean;
+    bulletinTousLesMois?: boolean;
+    moisProduction?: number[];
+    modePaiement?: ModePaiement | null;
+    compteBancaireId?: string | null;
+    teletravailIndemniteVersee?: boolean | null;
+    teletravailMontant?: string | null;
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/remuneration`,
+    corps,
+    version
+  );
+}
+
+export async function modifierAffectationEmploi(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    etablissementId?: string;
+    departementRef?: string | null;
+    serviceRef?: string | null;
+    baseSaisieDuree?: BaseSaisieDuree;
+    dureeContractuelle?: string | null;
+    repartitionHoraireRef?: string | null;
+    reposHebdomadaire?: JourSemaine | null;
+    suivreJoursFeriesEtablissement?: boolean;
+    teletravailAutorise?: boolean | null;
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/affectation-temps-de-travail`,
+    corps,
+    version
+  );
+}
 
 export interface ImpactSuppressionEmploi {
   readonly message: string;
