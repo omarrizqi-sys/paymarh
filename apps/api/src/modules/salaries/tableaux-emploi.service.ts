@@ -43,6 +43,7 @@ import {
   assertNatureRefConnue,
   assertPasChevauchementStatuts,
   assertPrimeRefConnue,
+  assertStatutCodeConnu,
   collecterAlerteStatutHorsEmploi,
   refuserChampMoisEffetEmploi,
   refuserStatutNonSaisissable,
@@ -308,6 +309,11 @@ export class TableauxEmploiService {
   ) {
     refuserChampMoisEffetEmploi(dto);
     refuserStatutNonSaisissable(dto.statutCode);
+    try {
+      await assertStatutCodeConnu(this.prisma, dto.statutCode);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contrat = this.contratAuMois(emploi, moisEnCours);
@@ -363,6 +369,13 @@ export class TableauxEmploiService {
   ) {
     refuserChampMoisEffetEmploi(dto);
     refuserStatutNonSaisissable(dto.statutCode);
+    if (dto.statutCode !== undefined) {
+      try {
+        await assertStatutCodeConnu(this.prisma, dto.statutCode);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
     const existant = await this.trouverStatut(emploiId, ligneId);
     this.refuserStatutPropage(existant.origine);
 

@@ -120,6 +120,23 @@ export async function assertNatureRefConnue(
   }
 }
 
+export async function assertStatutCodeConnu(
+  prisma: PrismaService,
+  statutCode: string
+): Promise<void> {
+  const connu = await prisma.statutParticulier.findUnique({
+    where: { code: statutCode },
+    select: { code: true },
+  });
+  if (connu === null) {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+      CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+      'statutCode'
+    );
+  }
+}
+
 export function refuserChampMoisEffetEmploi(dto: object): void {
   const interdit = ['moisEffet', 'moisEffetDebut', 'moisEffetFin'] as const;
   for (const cle of interdit) {

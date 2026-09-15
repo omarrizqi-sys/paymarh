@@ -1896,7 +1896,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(donnees.message).toBe('La ligne sera supprimée définitivement.');
   });
 
-  it('41 — POST prime contractuelle avec primeRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+  it('TB47 — POST prime contractuelle avec primeRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-PRIME-INCONNUE`,
     });
@@ -1920,7 +1920,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(0);
   });
 
-  it('42 — POST avantage en nature avec natureRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+  it('TB48 — POST avantage en nature avec natureRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-NATURE-INCONNUE`,
     });
@@ -1946,5 +1946,72 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(corps.champ).toBe('natureRef');
     expect(corps.message).toBe('Cette valeur n’est pas disponible.');
     expect(await prisma.avantageEnNature.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB49 — POST statut particulier avec statutCode inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-STATUT-INCONNUE-CREER`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        statutCode: 'INEXISTANT_XYZ',
+        dateDebut: '2025-01-01',
+        dateFin: null,
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; message: string; champ: string };
+    expect(corps.code).toBe('VALEUR_INDISPONIBLE');
+    expect(corps.champ).toBe('statutCode');
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
+    expect(await prisma.statutParticulierLigne.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('TB50 — PATCH statut particulier avec statutCode inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-STATUT-INCONNUE-MODIF`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const statut = await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploi.id,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2025-01-01'),
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+
+    const reponse = await fetch(
+      urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers/${statut.id}`),
+      {
+        method: 'PATCH',
+        headers: {
+          ...entetes(utilisateurId, societe.companyId),
+          'content-type': 'application/json',
+          'if-match': '0',
+        },
+        body: JSON.stringify({ statutCode: 'INEXISTANT_XYZ' }),
+      }
+    );
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; message: string; champ: string };
+    expect(corps.code).toBe('VALEUR_INDISPONIBLE');
+    expect(corps.champ).toBe('statutCode');
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
+    const encore = await prisma.statutParticulierLigne.findUniqueOrThrow({
+      where: { id: statut.id },
+    });
+    expect(encore.statutCode).toBe('IDMAJ');
   });
 });
