@@ -91,4 +91,16 @@ export class ReferentielsService {
     });
     return ok({ items, total: items.length });
   }
+
+  async primes(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.primeReferentiel.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
+
+  async naturesAvantageEnNature(): Promise<ApiResponse<ListResponse<unknown>>> {
+    this.assertLecture();
+    const items = await this.prisma.natureAvantageEnNature.findMany({ orderBy: { ordre: 'asc' } });
+    return ok({ items, total: items.length });
+  }
 }

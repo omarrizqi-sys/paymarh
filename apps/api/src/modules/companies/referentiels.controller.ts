@@ -74,4 +74,16 @@ export class ReferentielsController {
   statutsParticuliers() {
     return this.referentiels.statutsParticuliers();
   }
+
+  @Get('primes')
+  @RequiertPermission('referentiel.lire')
+  primes() {
+    return this.referentiels.primes();
+  }
+
+  @Get('natures-avantage-en-nature')
+  @RequiertPermission('referentiel.lire')
+  naturesAvantageEnNature() {
+    return this.referentiels.naturesAvantageEnNature();
+  }
 }

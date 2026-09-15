@@ -1,7 +1,10 @@
 import type { INestApplication } from '@nestjs/common';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { HEADER_PERMISSIONS_REFUSEES } from '../src/common/permissions/permissions-refusees.header.js';
 import {
   MOTIFS_SORTIE,
+  NATURES_AVANTAGE_EN_NATURE,
+  PRIMES_REFERENTIEL,
   STATUTS_PARTICULIERS,
   TYPES_CONTRAT,
 } from '../prisma/reference-data-fiche-salarie.js';
@@ -69,6 +72,68 @@ describe('GET /referentiels/types-contrat, /motifs-sortie et /statuts-particulie
     expect(corps.data.items.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))).toEqual(
       MOTIFS_SORTIE.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))
     );
+  });
+
+  it('E4 — GET /referentiels/primes rend quinze entrees dans l ordre du referentiel', async () => {
+    const sansTenant = await fetch(urlLocale(app, '/referentiels/primes'));
+    expect(sansTenant.status).toBe(401);
+
+    const reponse = await fetch(urlLocale(app, '/referentiels/primes'), {
+      headers: { 'x-paymarh-user-id': utilisateurId },
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      data: { items: { code: string; libelle: string; ordre: number }[]; total: number };
+    };
+    expect(corps.data.total).toBe(PRIMES_REFERENTIEL.length);
+    expect(corps.data.items.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))).toEqual(
+      PRIMES_REFERENTIEL.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))
+    );
+    const libellesOrdreAlpha = [...corps.data.items]
+      .map(({ libelle }) => libelle)
+      .sort((a, b) => a.localeCompare(b, 'fr'));
+    expect(corps.data.items.map(({ libelle }) => libelle)).not.toEqual(libellesOrdreAlpha);
+  });
+
+  it('E5 — GET /referentiels/primes refuse sans referentiel.lire', async () => {
+    const reponse = await fetch(urlLocale(app, '/referentiels/primes'), {
+      headers: {
+        'x-paymarh-user-id': utilisateurId,
+        [HEADER_PERMISSIONS_REFUSEES]: 'referentiel.lire',
+      },
+    });
+    expect(reponse.status).toBe(403);
+  });
+
+  it('E6 — GET /referentiels/natures-avantage-en-nature rend trois entrees dans l ordre du referentiel', async () => {
+    const sansTenant = await fetch(urlLocale(app, '/referentiels/natures-avantage-en-nature'));
+    expect(sansTenant.status).toBe(401);
+
+    const reponse = await fetch(urlLocale(app, '/referentiels/natures-avantage-en-nature'), {
+      headers: { 'x-paymarh-user-id': utilisateurId },
+    });
+    expect(reponse.status).toBe(200);
+    const corps = (await reponse.json()) as {
+      data: { items: { code: string; libelle: string; ordre: number }[]; total: number };
+    };
+    expect(corps.data.total).toBe(NATURES_AVANTAGE_EN_NATURE.length);
+    expect(corps.data.items.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))).toEqual(
+      NATURES_AVANTAGE_EN_NATURE.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))
+    );
+    const libellesOrdreAlpha = [...corps.data.items]
+      .map(({ libelle }) => libelle)
+      .sort((a, b) => a.localeCompare(b, 'fr'));
+    expect(corps.data.items.map(({ libelle }) => libelle)).not.toEqual(libellesOrdreAlpha);
+  });
+
+  it('E7 — GET /referentiels/natures-avantage-en-nature refuse sans referentiel.lire', async () => {
+    const reponse = await fetch(urlLocale(app, '/referentiels/natures-avantage-en-nature'), {
+      headers: {
+        'x-paymarh-user-id': utilisateurId,
+        [HEADER_PERMISSIONS_REFUSEES]: 'referentiel.lire',
+      },
+    });
+    expect(reponse.status).toBe(403);
   });
 
   it('E3 — GET /referentiels/statuts-particuliers rend les statuts saisissables dans l ordre et refuse sans tenant', async () => {

@@ -1,5 +1,6 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
+import type { PrismaService } from '../../common/prisma/prisma.service.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 
 export class ValidationBloquanteTableauEmploiError extends Error {
@@ -84,6 +85,37 @@ export function assertMontantStrictementPositif(montant: string): void {
       CODES_REPONSE.CARACTERE_NON_CONFORME.code,
       CODES_REPONSE.CARACTERE_NON_CONFORME.message,
       'montant'
+    );
+  }
+}
+
+export async function assertPrimeRefConnue(prisma: PrismaService, primeRef: string): Promise<void> {
+  const connue = await prisma.primeReferentiel.findUnique({
+    where: { code: primeRef },
+    select: { code: true },
+  });
+  if (connue === null) {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+      CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+      'primeRef'
+    );
+  }
+}
+
+export async function assertNatureRefConnue(
+  prisma: PrismaService,
+  natureRef: string
+): Promise<void> {
+  const connue = await prisma.natureAvantageEnNature.findUnique({
+    where: { code: natureRef },
+    select: { code: true },
+  });
+  if (connue === null) {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+      CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+      'natureRef'
     );
   }
 }

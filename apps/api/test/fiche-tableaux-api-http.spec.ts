@@ -542,7 +542,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     });
     const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
 
-    const payload = { primeRef: 'PRIME-TRANSPORT', moisApplication: [12] };
+    const payload = { primeRef: 'A15', moisApplication: [12] };
 
     await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
       method: 'POST',
@@ -791,12 +791,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
       data: { salarieId: salarie.id, rib: '007780000000000000000099' },
     });
     await prisma.primeContractuelle.create({
-      data: { emploiId: emploi.id, primeRef: 'P1', moisApplication: [1] },
+      data: { emploiId: emploi.id, primeRef: 'A15', moisApplication: [1] },
     });
     await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('500'),
         moisApplication: [1],
         moisEffetDebut: '2025-07',
@@ -1196,7 +1196,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [1],
         montant: '500.00',
       }),
@@ -1495,7 +1495,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const avantage = await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('400'),
         moisApplication: [6],
         moisEffetDebut: '2025-01',
@@ -1558,7 +1558,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [],
       }),
     });
@@ -1584,7 +1584,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [6],
       }),
     });
@@ -1607,7 +1607,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: '0',
         moisApplication: [1],
       }),
@@ -1634,7 +1634,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: '500.00',
         moisApplication: [1],
       }),
@@ -1703,7 +1703,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const prime = await prisma.primeContractuelle.create({
       data: {
         emploiId: emploi.id,
-        primeRef: 'PRIME-TRANSPORT',
+        primeRef: 'A15',
         moisApplication: [6],
       },
     });
@@ -1743,7 +1743,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
         'if-match': '0',
       },
       body: JSON.stringify({
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: '500',
         moisApplication: [],
       }),
@@ -1764,7 +1764,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const avantage = await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('400'),
         moisApplication: [6],
         moisEffetDebut: '2025-01',
@@ -1801,7 +1801,7 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const avantage = await prisma.avantageEnNature.create({
       data: {
         emploiId: emploi.id,
-        natureRef: 'VOITURE',
+        natureRef: 'B02',
         montant: new Decimal('400'),
         moisApplication: [6],
         moisEffetDebut: '2025-01',
@@ -1894,5 +1894,57 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     expect(donnees.emploiId).toBe(emploi.id);
     expect(donnees.ligneId).toBe(statut.id);
     expect(donnees.message).toBe('La ligne sera supprimée définitivement.');
+  });
+
+  it('41 — POST prime contractuelle avec primeRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-PRIME-INCONNUE`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/primes-contractuelles`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({ primeRef: 'INEXISTANT_XYZ', moisApplication: [1] }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; message: string; champ: string };
+    expect(corps.code).toBe('VALEUR_INDISPONIBLE');
+    expect(corps.champ).toBe('primeRef');
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
+    expect(await prisma.primeContractuelle.count({ where: { emploiId: emploi.id } })).toBe(0);
+  });
+
+  it('42 — POST avantage en nature avec natureRef inconnu est refuse avec VALEUR_INDISPONIBLE', async () => {
+    const salarie = await creerSalarieMin(prisma, societe.companyId, {
+      matricule: `${PREFIXE}-NATURE-INCONNUE`,
+    });
+    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+
+    const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/avantages-en-nature`), {
+      method: 'POST',
+      headers: {
+        ...entetes(utilisateurId, societe.companyId),
+        'content-type': 'application/json',
+        'if-match': '0',
+      },
+      body: JSON.stringify({
+        natureRef: 'INEXISTANT_XYZ',
+        montant: '100.00',
+        moisApplication: [1],
+      }),
+    });
+
+    expect(reponse.status).toBe(400);
+    const corps = (await reponse.json()) as { code: string; message: string; champ: string };
+    expect(corps.code).toBe('VALEUR_INDISPONIBLE');
+    expect(corps.champ).toBe('natureRef');
+    expect(corps.message).toBe('Cette valeur n’est pas disponible.');
+    expect(await prisma.avantageEnNature.count({ where: { emploiId: emploi.id } })).toBe(0);
   });
 });

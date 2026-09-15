@@ -40,7 +40,9 @@ import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
 import {
   assertMontantStrictementPositif,
+  assertNatureRefConnue,
   assertPasChevauchementStatuts,
+  assertPrimeRefConnue,
   collecterAlerteStatutHorsEmploi,
   refuserChampMoisEffetEmploi,
   refuserStatutNonSaisissable,
@@ -91,6 +93,12 @@ export class TableauxEmploiService {
     refuserChampMoisEffetEmploi(dto);
     const emploi = await this.trouverEmploi(emploiId);
 
+    try {
+      await assertPrimeRefConnue(this.prisma, dto.primeRef);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
+
     await this.prisma.primeContractuelle.create({
       data: {
         emploiId,
@@ -113,6 +121,14 @@ export class TableauxEmploiService {
     refuserChampMoisEffetEmploi(dto);
     await this.trouverPrime(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
+
+    if (dto.primeRef !== undefined) {
+      try {
+        await assertPrimeRefConnue(this.prisma, dto.primeRef);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
 
     const donnees: Record<string, unknown> = {};
     if (dto.primeRef !== undefined) donnees.primeRef = dto.primeRef;
@@ -152,6 +168,12 @@ export class TableauxEmploiService {
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
 
+    try {
+      await assertNatureRefConnue(this.prisma, dto.natureRef);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
+
     await this.prisma.avantageEnNature.create({
       data: {
         emploiId,
@@ -186,8 +208,17 @@ export class TableauxEmploiService {
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
 
+    const natureRef = dto.natureRef ?? existant.natureRef;
+    if (dto.natureRef !== undefined) {
+      try {
+        await assertNatureRefConnue(this.prisma, dto.natureRef);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
+
     const fusion = {
-      natureRef: dto.natureRef ?? existant.natureRef,
+      natureRef,
       montant: dto.montant !== undefined ? new Decimal(dto.montant) : existant.montant,
       moisApplication: dto.moisApplication ?? existant.moisApplication,
     };

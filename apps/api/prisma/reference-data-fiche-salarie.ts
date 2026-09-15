@@ -231,6 +231,30 @@ export const STATUTS_PARTICULIERS = [
   { ordre: 1, code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
 ] as const;
 
+export const PRIMES_REFERENTIEL = [
+  { ordre: 10, code: 'A04', libelle: 'Prime de panier' },
+  { ordre: 20, code: 'A15', libelle: 'Indemnité de transport' },
+  { ordre: 30, code: 'A24', libelle: 'Indemnité de représentation' },
+  { ordre: 40, code: 'A36', libelle: 'Prime d\u2019ancienneté' },
+  { ordre: 50, code: 'A38', libelle: 'Prime d\u2019assiduité' },
+  { ordre: 60, code: 'A39', libelle: 'Prime de fin d\u2019année' },
+  { ordre: 70, code: 'A40', libelle: 'Prime de 13e mois' },
+  { ordre: 80, code: 'A41', libelle: 'Prime de vacances' },
+  { ordre: 90, code: 'A42', libelle: 'Prime de polyvalence' },
+  { ordre: 100, code: 'A43', libelle: 'Prime de production' },
+  { ordre: 110, code: 'A44', libelle: 'Prime de rendement' },
+  { ordre: 120, code: 'A45', libelle: 'Prime de responsabilité' },
+  { ordre: 130, code: 'A47', libelle: 'Prime de qualité' },
+  { ordre: 140, code: 'A49', libelle: 'Prime d\u2019astreinte' },
+  { ordre: 150, code: 'A50', libelle: 'Prime de risque' },
+] as const;
+
+export const NATURES_AVANTAGE_EN_NATURE = [
+  { ordre: 10, code: 'B01', libelle: 'Logement de fonction' },
+  { ordre: 20, code: 'B02', libelle: 'Voiture de fonction' },
+  { ordre: 30, code: 'B03', libelle: 'Nourriture' },
+] as const;
+
 /** Code technique des lignes TAHFIZ propagees — jamais propose a la saisie. */
 export const STATUT_TECHNIQUE_TAHFIZ = {
   ordre: 2,

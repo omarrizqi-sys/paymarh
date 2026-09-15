@@ -84,3 +84,17 @@ export interface StatutParticulier {
   readonly code: string;
   readonly libelle: string;
 }
+
+export interface PrimeReferentiel {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}
+
+export interface NatureAvantageEnNature {
+  readonly id: Uuid;
+  readonly ordre: number;
+  readonly code: string;
+  readonly libelle: string;
+}

@@ -82,6 +82,8 @@ export type {
   TypeContrat,
   MotifSortie,
   StatutParticulier,
+  PrimeReferentiel,
+  NatureAvantageEnNature,
 } from './referentiel';
 export type {
   JourSemaine,
