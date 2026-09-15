@@ -37,6 +37,39 @@ describe('GET /salaries/:id — heritage sur donnees demo (2.1.c-3)', () => {
     await app?.close();
   });
 
+  it('Youssef Bennani — avantage cloture et statut actif via GET /salaries/:id', async () => {
+    const reponse = await fetch(urlLocale(app, `/salaries/${salarieId}`), {
+      headers: {
+        'x-paymarh-user-id': utilisateurId,
+        'x-paymarh-company-id': companyId,
+      },
+    });
+    expect(reponse.status).toBe(200);
+
+    const { donnees } = (await reponse.json()) as {
+      donnees: {
+        emplois: {
+          numeroOrdre: number;
+          avantagesEnNature: { natureRef: string; etat: string }[];
+          statutsParticuliers: { statutCode: string; dateDebut: string; etat: string }[];
+        }[];
+      };
+    };
+
+    const emploiOuvert = donnees.emplois.find((emploi) => emploi.numeroOrdre === 1);
+    expect(emploiOuvert).toBeDefined();
+
+    const nourriture = emploiOuvert?.avantagesEnNature.find(
+      (avantage) => avantage.natureRef === 'NOURRITURE'
+    );
+    expect(nourriture?.etat).toBe('CLOTUREE');
+
+    const statutActif = emploiOuvert?.statutsParticuliers.find(
+      (statut) => statut.statutCode === 'IDMAJ' && statut.dateDebut === '2021-06-01'
+    );
+    expect(statutActif?.etat).toBe('ACTIVE');
+  });
+
   it('Youssef Bennani — duree contractuelle heritee via GET /salaries/:id', async () => {
     // Sans bulletin, le mois en cours est 2022-03 (debut de l emploi ouvert « Responsable paie »).
     // Le parametrage siege a un mois d effet 2022-01, anterieur a ce mois : l heritage doit ressortir.

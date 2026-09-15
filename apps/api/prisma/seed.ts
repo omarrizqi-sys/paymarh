@@ -927,11 +927,48 @@ async function seedTableauxEtSecondEmploiDemo(
     });
   }
 
+  const avantageNourriture = await prisma.avantageEnNature.findFirst({
+    where: { emploiId: emploiOuvert.id, natureRef: 'NOURRITURE' },
+  });
+  if (avantageNourriture === null) {
+    await prisma.avantageEnNature.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        natureRef: 'NOURRITURE',
+        montant: new Decimal('300.00'),
+        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        moisEffetDebut: '2022-01',
+        moisEffetFin: '2022-02',
+      },
+    });
+  }
+
+  const statutIdmajActif = await prisma.statutParticulierLigne.findFirst({
+    where: {
+      emploiId: emploiOuvert.id,
+      statutCode: 'IDMAJ',
+      origine: 'SAISIE_MANUELLE',
+      dateDebut: new Date('2021-06-01'),
+    },
+  });
+  if (statutIdmajActif === null) {
+    await prisma.statutParticulierLigne.create({
+      data: {
+        emploiId: emploiOuvert.id,
+        statutCode: 'IDMAJ',
+        dateDebut: new Date('2021-06-01'),
+        dateFin: new Date('2022-12-31'),
+        origine: 'SAISIE_MANUELLE',
+      },
+    });
+  }
+
   const statutManuel = await prisma.statutParticulierLigne.findFirst({
     where: {
       emploiId: emploiOuvert.id,
       statutCode: 'IDMAJ',
       origine: 'SAISIE_MANUELLE',
+      dateDebut: new Date('2023-01-01'),
     },
   });
   if (statutManuel === null) {
