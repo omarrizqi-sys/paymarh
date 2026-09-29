@@ -8,10 +8,7 @@ export function NavigationEnTete() {
       <LienGarde href="/" className="font-semibold tracking-tight">
         VECTA
       </LienGarde>
-      <LienGarde
-        href="/societes"
-        className="text-muted-foreground hover:text-foreground text-sm"
-      >
+      <LienGarde href="/societes" className="text-muted-foreground hover:text-foreground text-sm">
         Sociétés
       </LienGarde>
     </nav>
