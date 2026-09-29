@@ -25,6 +25,8 @@ vi.mock('@/lib/api/emplois', () => ({
   modifierContratEmploi: (...args: unknown[]) => modifierContratEmploi(...args),
   modifierAffectationEmploi: (...args: unknown[]) => modifierAffectationEmploi(...args),
   modifierRemunerationEmploi: vi.fn(),
+  creerAvantageEnNature: vi.fn(),
+  modifierAvantageEnNature: vi.fn(),
   impactSuppressionEmploi: vi.fn(),
   supprimerEmploi: vi.fn(),
   impactSuppressionAvantageEnNature: vi.fn(),
@@ -210,7 +212,10 @@ function HarnessEmplois({
         etablissements: ETABLISSEMENTS,
         banques: [],
         comptesBancaires: [],
-        onEmploisChange: (prochains) => setEmplois([...prochains]),
+        naturesAvantageEnNature: [],
+        onEmploisChange: (maj) => {
+          setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
+        },
       }),
       children,
       createElement(RailActionsFiche, {

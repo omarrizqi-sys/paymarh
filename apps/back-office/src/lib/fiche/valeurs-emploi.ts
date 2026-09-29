@@ -134,6 +134,21 @@ export function remplacerEmploiDansListe(
   return emplois.map((emploi) => (emploi.id === emploiMisAJour.id ? emploiMisAJour : emploi));
 }
 
+export type MiseAJourEmploiFiche = EmploiFiche | ((emploiCourant: EmploiFiche) => EmploiFiche);
+
+export type MiseAJourListeEmplois =
+  readonly EmploiFiche[] | ((emploisCourants: readonly EmploiFiche[]) => readonly EmploiFiche[]);
+
+export function appliquerMiseAJourEmploiDansListe(
+  emplois: readonly EmploiFiche[],
+  maj: MiseAJourEmploiFiche
+): EmploiFiche[] {
+  if (typeof maj === 'function') {
+    return emplois.map((emploi) => maj(emploi));
+  }
+  return remplacerEmploiDansListe(emplois, maj);
+}
+
 export const JOURS_SEMAINE: readonly JourSemaine[] = [
   'LUNDI',
   'MARDI',

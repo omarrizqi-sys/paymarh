@@ -6,15 +6,18 @@ import type {
   EmploiFiche,
   Etablissement,
   MotifSortie,
+  NatureAvantageEnNature,
   Permission,
   TypeContrat,
 } from '@paymarh/shared-types';
 import { ChevronDown } from 'lucide-react';
+import type { MiseAJourEmploiFiche } from '@/lib/fiche/valeurs-emploi';
 import { possedePermission } from '@/lib/permissions';
 import { libelleReferentielParCode } from '@/lib/affichage/libelles-emploi';
 import { RubriqueEmploiAffectation } from './rubrique-emploi-affectation';
 import { RubriqueEmploiContrat } from './rubrique-emploi-contrat';
 import { RubriqueEmploiRemuneration } from './rubrique-emploi-remuneration';
+import { RubriqueEmploiAvantagesEnNature } from './rubrique-emploi-avantages-en-nature';
 
 interface Props {
   readonly companyId: string;
@@ -26,8 +29,9 @@ interface Props {
   readonly etablissements: readonly Etablissement[];
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
+  readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
   readonly operations: readonly Permission[];
-  readonly onEmploiChange: (emploi: EmploiFiche) => void;
+  readonly onEmploiChange: (maj: MiseAJourEmploiFiche) => void;
 }
 
 function ligneRepliée(emploi: EmploiFiche, typesContrat: readonly TypeContrat[]): string {
@@ -52,6 +56,7 @@ export function AccordeonEmploi({
   etablissements,
   comptesBancaires,
   banques,
+  naturesAvantageEnNature,
   operations,
   onEmploiChange,
 }: Props) {
@@ -99,6 +104,16 @@ export function AccordeonEmploi({
             paiement={emploi.paiement}
             comptesBancaires={comptesBancaires}
             banques={banques}
+            operations={operations}
+            onEmploiChange={onEmploiChange}
+          />
+        ) : null}
+        {'avantagesEnNature' in emploi ? (
+          <RubriqueEmploiAvantagesEnNature
+            companyId={companyId}
+            emploi={emploi}
+            lignesServeur={emploi.avantagesEnNature ?? []}
+            natures={naturesAvantageEnNature}
             operations={operations}
             onEmploiChange={onEmploiChange}
           />

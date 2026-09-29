@@ -7,7 +7,12 @@ import type {
   ReponseEcriture,
   StatutCadre,
 } from '@paymarh/shared-types';
-import { appelerSalarieDelete, appelerSalarieGet, appelerSalariePatch } from './client-salarie';
+import {
+  appelerSalarieDelete,
+  appelerSalarieGet,
+  appelerSalariePatch,
+  appelerSalariePost,
+} from './client-salarie';
 
 export async function modifierContratEmploi(
   companyId: string,
@@ -116,6 +121,43 @@ export async function supprimerEmploi(
 ): Promise<ReponseEcriture<{ readonly id: string }>> {
   const query = new URLSearchParams({ confirmationJeton });
   return appelerSalarieDelete(companyId, `/emplois/${emploiId}?${query.toString()}`, version);
+}
+
+export async function creerAvantageEnNature(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    natureRef: string;
+    montant: string;
+    moisApplication: number[];
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePost<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/avantages-en-nature`,
+    corps,
+    version
+  );
+}
+
+export async function modifierAvantageEnNature(
+  companyId: string,
+  emploiId: string,
+  ligneId: string,
+  version: number,
+  corps: {
+    natureRef?: string;
+    montant?: string;
+    moisApplication?: number[];
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/avantages-en-nature/${ligneId}`,
+    corps,
+    version
+  );
 }
 
 export async function impactSuppressionAvantageEnNature(

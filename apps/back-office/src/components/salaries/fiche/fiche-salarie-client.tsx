@@ -16,6 +16,7 @@ import type {
   Etablissement,
   LienParente,
   MotifSortie,
+  NatureAvantageEnNature,
   Pays,
   SituationFamiliale,
   StatutParticulier,
@@ -65,6 +66,7 @@ interface Props {
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
   readonly statutsParticuliers: readonly StatutParticulier[];
+  readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
   readonly etablissements: readonly Etablissement[];
 }
 
@@ -107,6 +109,7 @@ function ContenuFicheSalarie({
   typesSaisie,
   typesContrat,
   motifsSortie,
+  naturesAvantageEnNature,
   etablissements,
   onFicheChange,
 }: {
@@ -120,6 +123,7 @@ function ContenuFicheSalarie({
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
+  readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
   readonly etablissements: readonly Etablissement[];
   readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
@@ -335,7 +339,14 @@ function ContenuFicheSalarie({
               etablissements={etablissements}
               comptesBancaires={'comptesBancaires' in fiche ? fiche.comptesBancaires : undefined}
               banques={banques}
-              onEmploisChange={(emplois) => appliquerSlice({ emplois })}
+              naturesAvantageEnNature={naturesAvantageEnNature}
+              onEmploisChange={(maj) => {
+                if (typeof maj === 'function') {
+                  onFicheChange((prev) => ({ ...prev, emplois: [...maj(prev.emplois)] }));
+                  return;
+                }
+                appliquerSlice({ emplois: [...maj] });
+              }}
             />
           </>
         }
@@ -364,6 +375,7 @@ export function FicheSalarieClient({
   typesContrat,
   motifsSortie,
   statutsParticuliers: _statutsParticuliers,
+  naturesAvantageEnNature,
   etablissements,
 }: Props) {
   const [fiche, setFiche] = useState(initial);
@@ -400,6 +412,7 @@ export function FicheSalarieClient({
           typesSaisie={typesSaisie}
           typesContrat={typesContrat}
           motifsSortie={motifsSortie}
+          naturesAvantageEnNature={naturesAvantageEnNature}
           etablissements={etablissements}
           onFicheChange={setFiche}
         />

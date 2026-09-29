@@ -401,6 +401,7 @@ describe('Navigation gardee — fiche client (lien retour integre)', () => {
           typesContrat={[]}
           motifsSortie={[]}
           statutsParticuliers={[]}
+          naturesAvantageEnNature={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>
@@ -436,6 +437,7 @@ describe('Navigation gardee — en-tete global', () => {
           typesContrat={[]}
           motifsSortie={[]}
           statutsParticuliers={[]}
+          naturesAvantageEnNature={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>
@@ -490,6 +492,7 @@ describe('Navigation gardee — en-tete global', () => {
           typesContrat={[]}
           motifsSortie={[]}
           statutsParticuliers={[]}
+          naturesAvantageEnNature={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>

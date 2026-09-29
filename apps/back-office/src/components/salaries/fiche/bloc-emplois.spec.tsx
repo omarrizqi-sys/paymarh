@@ -111,6 +111,7 @@ function rendre(
         motifsSortie={MOTIFS_SORTIE}
         etablissements={ETABLISSEMENTS}
         banques={[]}
+        naturesAvantageEnNature={[]}
         onEmploisChange={onEmploisChange}
       />
     </RegistreFicheProvider>

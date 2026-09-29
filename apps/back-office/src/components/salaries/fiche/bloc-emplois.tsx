@@ -7,10 +7,15 @@ import type {
   EmploiFiche,
   Etablissement,
   MotifSortie,
+  NatureAvantageEnNature,
   Permission,
   TypeContrat,
 } from '@paymarh/shared-types';
-import { remplacerEmploiDansListe } from '@/lib/fiche/valeurs-emploi';
+import {
+  appliquerMiseAJourEmploiDansListe,
+  type MiseAJourEmploiFiche,
+  type MiseAJourListeEmplois,
+} from '@/lib/fiche/valeurs-emploi';
 import { Button } from '@/components/ui/button';
 import {
   ID_SOMMAIRE_EMPLOIS,
@@ -28,7 +33,8 @@ interface Props {
   readonly etablissements: readonly Etablissement[];
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
-  readonly onEmploisChange: (emplois: readonly EmploiFiche[]) => void;
+  readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
+  readonly onEmploisChange: (maj: MiseAJourListeEmplois) => void;
 }
 
 function emploiDeplieInitial(emplois: readonly EmploiFiche[]): string | null {
@@ -47,10 +53,11 @@ export function BlocEmplois({
   etablissements,
   comptesBancaires,
   banques,
+  naturesAvantageEnNature,
   onEmploisChange,
 }: Props) {
-  const remplacerEmploi = (emploiMisAJour: EmploiFiche) => {
-    onEmploisChange(remplacerEmploiDansListe(emplois, emploiMisAJour));
+  const remplacerEmploi = (maj: MiseAJourEmploiFiche) => {
+    onEmploisChange((emploisCourants) => appliquerMiseAJourEmploiDansListe(emploisCourants, maj));
   };
   const { actifs, termines } = useMemo(() => separerEmploisActifsEtTermines(emplois), [emplois]);
   const [emploiDeplieId, setEmploiDeplieId] = useState<string | null>(() =>
@@ -89,6 +96,7 @@ export function BlocEmplois({
             etablissements={etablissements}
             comptesBancaires={comptesBancaires}
             banques={banques}
+            naturesAvantageEnNature={naturesAvantageEnNature}
             operations={operations}
             onEmploiChange={remplacerEmploi}
           />
@@ -117,6 +125,7 @@ export function BlocEmplois({
                     etablissements={etablissements}
                     comptesBancaires={comptesBancaires}
                     banques={banques}
+                    naturesAvantageEnNature={naturesAvantageEnNature}
                     operations={operations}
                     onEmploiChange={remplacerEmploi}
                   />

@@ -5,6 +5,7 @@ import type {
   LienParente,
   ListResponse,
   MotifSortie,
+  NatureAvantageEnNature,
   Pays,
   SituationFamiliale,
   StatutParticulier,
@@ -63,6 +64,12 @@ export async function listerMotifsSortie() {
 
 export async function listerStatutsParticuliers() {
   return appelerApiGet<ListResponse<StatutParticulier>>('/referentiels/statuts-particuliers');
+}
+
+export async function listerNaturesAvantageEnNature() {
+  return appelerApiGet<ListResponse<NatureAvantageEnNature>>(
+    '/referentiels/natures-avantage-en-nature'
+  );
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */
