@@ -112,6 +112,7 @@ function rendre(
         etablissements={ETABLISSEMENTS}
         banques={[]}
         naturesAvantageEnNature={[]}
+        primesReferentiel={[]}
         onEmploisChange={onEmploisChange}
       />
     </RegistreFicheProvider>

@@ -9,6 +9,7 @@ import type {
   MotifSortie,
   NatureAvantageEnNature,
   Permission,
+  PrimeReferentiel,
   TypeContrat,
 } from '@paymarh/shared-types';
 import {
@@ -34,6 +35,7 @@ interface Props {
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
+  readonly primesReferentiel: readonly PrimeReferentiel[];
   readonly onEmploisChange: (maj: MiseAJourListeEmplois) => void;
 }
 
@@ -54,6 +56,7 @@ export function BlocEmplois({
   comptesBancaires,
   banques,
   naturesAvantageEnNature,
+  primesReferentiel,
   onEmploisChange,
 }: Props) {
   const remplacerEmploi = (maj: MiseAJourEmploiFiche) => {
@@ -97,6 +100,7 @@ export function BlocEmplois({
             comptesBancaires={comptesBancaires}
             banques={banques}
             naturesAvantageEnNature={naturesAvantageEnNature}
+            primesReferentiel={primesReferentiel}
             operations={operations}
             onEmploiChange={remplacerEmploi}
           />
@@ -126,6 +130,7 @@ export function BlocEmplois({
                     comptesBancaires={comptesBancaires}
                     banques={banques}
                     naturesAvantageEnNature={naturesAvantageEnNature}
+                    primesReferentiel={primesReferentiel}
                     operations={operations}
                     onEmploiChange={remplacerEmploi}
                   />

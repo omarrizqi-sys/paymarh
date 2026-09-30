@@ -219,6 +219,7 @@ describe('RubriqueSaisiesSurSalaire — sommaire', () => {
           motifsSortie={[]}
           statutsParticuliers={[]}
           naturesAvantageEnNature={[]}
+          primesReferentiel={[]}
           etablissements={[]}
         />
       </NavigationGardeeTestProvider>

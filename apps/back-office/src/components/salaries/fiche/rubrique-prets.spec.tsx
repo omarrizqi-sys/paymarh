@@ -163,6 +163,7 @@ function rendreFicheComplete(fiche: FicheSalarieAvecOperations = ficheSalarieBas
         motifsSortie={[]}
         statutsParticuliers={[]}
         naturesAvantageEnNature={[]}
+        primesReferentiel={[]}
         etablissements={[]}
       />
     </NavigationGardeeTestProvider>

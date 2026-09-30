@@ -3,10 +3,10 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { createElement, useState, type ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
-  AvantageEnNatureFiche,
   EmploiFiche,
-  NatureAvantageEnNature,
   Permission,
+  PrimeContractuelleFiche,
+  PrimeReferentiel,
 } from '@paymarh/shared-types';
 import { AppelApiEchoue } from '@/lib/api/client';
 import { LienGarde } from '@/components/navigation/navigation-gardee';
@@ -16,13 +16,13 @@ import { RegistreFicheProvider, useRegistreFiche } from '../registre-fiche-provi
 import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
 import { RailActionsFiche } from '../rail-actions-fiche';
 import { BlocEmplois } from '../bloc-emplois';
-import { RubriqueEmploiAvantagesEnNature } from './rubrique-emploi-avantages-en-nature';
-import { reinitialiserCompteurIdLocal } from '@/lib/fiche/avantages-en-nature-lignes';
+import { RubriqueEmploiPrimesContractuelles } from './rubrique-emploi-primes-contractuelles';
+import { reinitialiserCompteurIdLocal } from '@/lib/fiche/primes-contractuelles-lignes';
 
-const NATURES: readonly NatureAvantageEnNature[] = [
-  { id: 'n1', ordre: 1, code: 'B01', libelle: 'Logement de fonction' },
-  { id: 'n2', ordre: 2, code: 'B02', libelle: 'Voiture de fonction' },
-  { id: 'n3', ordre: 3, code: 'B03', libelle: 'Nourriture' },
+const PRIMES: readonly PrimeReferentiel[] = [
+  { id: 'p1', ordre: 10, code: 'A04', libelle: 'Prime de panier' },
+  { id: 'p2', ordre: 20, code: 'A15', libelle: 'Indemnité de transport' },
+  { id: 'p3', ordre: 30, code: 'A24', libelle: 'Indemnité de représentation' },
 ];
 
 const TYPES_CONTRAT = [
@@ -34,16 +34,14 @@ const MOTIFS_SORTIE = [{ id: 'ms-1', ordre: 1, code: 'DEMISSION', libelle: 'Dém
 const ETABLISSEMENTS = [{ id: 'etab-1', nom: 'Siège Casablanca' } as never];
 
 const {
-  creerAvantageEnNature,
-  modifierAvantageEnNature,
-  impactSuppressionAvantageEnNature,
-  supprimerAvantageEnNature,
+  creerPrimeContractuelle,
+  modifierPrimeContractuelle,
+  supprimerPrimeContractuelle,
   modifierContratEmploi,
 } = vi.hoisted(() => ({
-  creerAvantageEnNature: vi.fn(),
-  modifierAvantageEnNature: vi.fn(),
-  impactSuppressionAvantageEnNature: vi.fn(),
-  supprimerAvantageEnNature: vi.fn(),
+  creerPrimeContractuelle: vi.fn(),
+  modifierPrimeContractuelle: vi.fn(),
+  supprimerPrimeContractuelle: vi.fn(),
   modifierContratEmploi: vi.fn(),
 }));
 
@@ -51,18 +49,17 @@ vi.mock('@/lib/api/emplois', () => ({
   modifierContratEmploi: (...args: unknown[]) => modifierContratEmploi(...args),
   modifierAffectationEmploi: vi.fn(),
   modifierRemunerationEmploi: vi.fn(),
-  creerAvantageEnNature: (...args: unknown[]) => creerAvantageEnNature(...args),
-  modifierAvantageEnNature: (...args: unknown[]) => modifierAvantageEnNature(...args),
+  creerAvantageEnNature: vi.fn(),
+  modifierAvantageEnNature: vi.fn(),
   impactSuppressionEmploi: vi.fn(),
   supprimerEmploi: vi.fn(),
-  impactSuppressionAvantageEnNature: (...args: unknown[]) =>
-    impactSuppressionAvantageEnNature(...args),
-  supprimerAvantageEnNature: (...args: unknown[]) => supprimerAvantageEnNature(...args),
+  impactSuppressionAvantageEnNature: vi.fn(),
+  supprimerAvantageEnNature: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
-  creerPrimeContractuelle: vi.fn(),
-  modifierPrimeContractuelle: vi.fn(),
-  supprimerPrimeContractuelle: vi.fn(),
+  creerPrimeContractuelle: (...args: unknown[]) => creerPrimeContractuelle(...args),
+  modifierPrimeContractuelle: (...args: unknown[]) => modifierPrimeContractuelle(...args),
+  supprimerPrimeContractuelle: (...args: unknown[]) => supprimerPrimeContractuelle(...args),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -85,15 +82,11 @@ function resolutionsVides(): EmploiFiche['resolutions'] {
   };
 }
 
-function avantage(surcharges: Partial<AvantageEnNatureFiche> = {}): AvantageEnNatureFiche {
+function prime(surcharges: Partial<PrimeContractuelleFiche> = {}): PrimeContractuelleFiche {
   return {
-    id: 'av-1',
-    natureRef: 'B02',
-    montant: '3500.00',
-    moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-    moisEffetDebut: '2022-03',
-    moisEffetFin: null,
-    etat: 'ACTIVE',
+    id: 'pc-1',
+    primeRef: 'A15',
+    moisApplication: [6, 12],
     ...surcharges,
   };
 }
@@ -103,8 +96,8 @@ function emploiBase(
   surcharges: {
     readonly version?: number;
     readonly libellePoste?: string;
-    readonly avantagesEnNature?: readonly AvantageEnNatureFiche[];
-    readonly sansAvantages?: boolean;
+    readonly primesContractuelles?: readonly PrimeContractuelleFiche[];
+    readonly sansPrimes?: boolean;
   } = {}
 ): EmploiFiche {
   const base: EmploiFiche = {
@@ -157,27 +150,24 @@ function emploiBase(
     },
   };
 
-  if (surcharges.sansAvantages) {
+  if (surcharges.sansPrimes) {
     return base;
   }
 
-  if (surcharges.avantagesEnNature !== undefined) {
-    return { ...base, avantagesEnNature: surcharges.avantagesEnNature };
+  if (surcharges.primesContractuelles !== undefined) {
+    return { ...base, primesContractuelles: surcharges.primesContractuelles };
   }
 
   return {
     ...base,
-    avantagesEnNature: [
-      avantage({ id: 'av-voiture', natureRef: 'B02' }),
-      avantage({ id: 'av-logement', natureRef: 'B01', montant: '2000.00' }),
-      avantage({
-        id: 'av-nourriture',
-        natureRef: 'B03',
-        montant: '800.00',
+    primesContractuelles: [
+      prime({ id: 'pc-transport', primeRef: 'A15', moisApplication: [6, 12] }),
+      prime({
+        id: 'pc-tous',
+        primeRef: 'A04',
         moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        moisEffetFin: '2022-02',
-        etat: 'CLOTUREE',
       }),
+      prime({ id: 'pc-vide', primeRef: 'A24', moisApplication: [] }),
     ],
   };
 }
@@ -228,8 +218,8 @@ function Harness({
           etablissements: ETABLISSEMENTS,
           banques: [],
           comptesBancaires: [],
-          naturesAvantageEnNature: NATURES,
-          primesReferentiel: [],
+          naturesAvantageEnNature: [],
+          primesReferentiel: PRIMES,
           onEmploisChange: (maj) => {
             setEmplois((prev) => {
               const copie = [...(typeof maj === 'function' ? maj(prev) : maj)];
@@ -247,13 +237,6 @@ function Harness({
       )
     )
   );
-}
-
-function ouvrirAccordeon(emploiId: string) {
-  const corps = screen.getByTestId(`accordeon-emploi-corps-${emploiId}`);
-  if (corps.classList.contains('hidden')) {
-    fireEvent.click(screen.getByTestId(`accordeon-emploi-entete-${emploiId}`));
-  }
 }
 
 function HarnessRubriqueSeule({
@@ -285,11 +268,11 @@ function HarnessRubriqueSeule({
           onRechargerServeur: vi.fn(async () => undefined),
         },
         createElement(DeclarerGarde),
-        createElement(RubriqueEmploiAvantagesEnNature, {
+        createElement(RubriqueEmploiPrimesContractuelles, {
           companyId: 'soc-test',
           emploi: courant,
-          lignesServeur: courant.avantagesEnNature ?? [],
-          natures: NATURES,
+          lignesServeur: courant.primesContractuelles ?? [],
+          primes: PRIMES,
           operations,
           onEmploiChange: (maj) => {
             setCourant((prev) => (typeof maj === 'function' ? maj(prev) : maj));
@@ -305,19 +288,25 @@ function HarnessRubriqueSeule({
   );
 }
 
-describe('Rubrique emploi — Avantages en nature', () => {
+function ouvrirAccordeon(emploiId: string) {
+  const corps = screen.getByTestId(`accordeon-emploi-corps-${emploiId}`);
+  if (corps.classList.contains('hidden')) {
+    fireEvent.click(screen.getByTestId(`accordeon-emploi-entete-${emploiId}`));
+  }
+}
+
+describe('Rubrique emploi — Primes contractuelles', () => {
   afterEach(() => cleanup());
 
   beforeEach(() => {
     reinitialiserCompteurIdLocal();
-    creerAvantageEnNature.mockReset();
-    modifierAvantageEnNature.mockReset();
-    impactSuppressionAvantageEnNature.mockReset();
-    supprimerAvantageEnNature.mockReset();
+    creerPrimeContractuelle.mockReset();
+    modifierPrimeContractuelle.mockReset();
+    supprimerPrimeContractuelle.mockReset();
     modifierContratEmploi.mockReset();
   });
 
-  it('AN01 — affiche les libelles de nature, pas les codes', () => {
+  it('PC01 — affiche les libelles de prime, pas les codes', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
@@ -327,13 +316,12 @@ describe('Rubrique emploi — Avantages en nature', () => {
 
     ouvrirAccordeon('emp-1');
 
-    expect(screen.getByText('Voiture de fonction')).toBeTruthy();
-    expect(screen.getByText('Logement de fonction')).toBeTruthy();
-    expect(screen.getByText('Nourriture')).toBeTruthy();
-    expect(screen.queryByText('B02')).toBeNull();
+    expect(screen.getByText('Indemnité de transport')).toBeTruthy();
+    expect(screen.getByText('Prime de panier')).toBeTruthy();
+    expect(screen.queryByText('A15')).toBeNull();
   });
 
-  it('AN02 — ligne CLOTUREE grisee avec inactive depuis MM/AAAA', () => {
+  it('PC02 — affichage des mois d application', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
@@ -343,13 +331,14 @@ describe('Rubrique emploi — Avantages en nature', () => {
 
     ouvrirAccordeon('emp-1');
 
-    expect(screen.getByTestId('etat-ligne-av-nourriture').textContent).toBe(
-      'inactive depuis 02/2022'
-    );
-    expect(screen.getByTestId('ligne-av-nourriture').classList.contains('opacity-60')).toBe(true);
+    expect(screen.getByTestId('ligne-pc-transport').textContent).toContain('Juin');
+    expect(screen.getByTestId('ligne-pc-transport').textContent).toContain('Déc.');
+    expect(screen.getByTestId('ligne-pc-tous').textContent).toContain('Tous les mois');
+    const cellulesVide = screen.getByTestId('ligne-pc-vide').querySelectorAll('td');
+    expect(cellulesVide[1]?.textContent?.trim()).toBe('');
   });
 
-  it('AN03 — formulaire voiture : douze mois coches et Tous les mois coche', () => {
+  it('PC03 — aucune ligne grisee ni mention d etat', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
@@ -358,21 +347,16 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
 
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    expect(within(formulaire).getByLabelText('Tous les mois')).toBeTruthy();
-    expect((within(formulaire).getByLabelText('Tous les mois') as HTMLInputElement).checked).toBe(
-      true
-    );
-    for (let mois = 1; mois <= 12; mois += 1) {
-      expect(
-        (within(formulaire).getByLabelText(MOIS_LABELS[mois - 1]!) as HTMLInputElement).checked
-      ).toBe(true);
+    expect(screen.queryByTestId(/etat-ligne-/)).toBeNull();
+    expect(screen.queryByText(/inactive depuis/i)).toBeNull();
+    expect(screen.queryByText(/non enregistrée/i)).toBeNull();
+    for (const id of ['pc-transport', 'pc-tous', 'pc-vide']) {
+      expect(screen.getByTestId(`ligne-${id}`).classList.contains('opacity-60')).toBe(false);
     }
   });
 
-  it('AN04 — decocher juin puis valider : affichage local sans appel serveur', () => {
+  it('PC04 — formulaire ouvert avec prime et mois corrects', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
@@ -381,27 +365,51 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
+    fireEvent.click(screen.getByTestId('ligne-pc-transport'));
 
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.click(within(formulaire).getByLabelText('Juin'));
-    fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
-
-    expect(modifierAvantageEnNature).not.toHaveBeenCalled();
-    expect(screen.getByTestId('ligne-av-voiture').textContent).toContain('Janv.');
-    expect(screen.getByTestId('ligne-av-voiture').textContent).not.toContain('Juin');
+    const formulaire = screen.getByTestId('formulaire-pc-transport');
+    expect((within(formulaire).getByLabelText('Prime') as HTMLSelectElement).value).toBe('A15');
+    expect((within(formulaire).getByLabelText('Tous les mois') as HTMLInputElement).checked).toBe(
+      false
+    );
+    expect((within(formulaire).getByLabelText('Juin') as HTMLInputElement).checked).toBe(true);
+    expect((within(formulaire).getByLabelText('Décembre') as HTMLInputElement).checked).toBe(true);
   });
 
-  it('AN05 — enregistrer envoie la modification avec la version de l emploi', async () => {
+  it('PC05 — valider une ligne met a jour l affichage sans appel serveur', async () => {
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [emploiBase('emp-1')],
+        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+    fireEvent.click(screen.getByTestId('ligne-pc-tous'));
+    const formulaire = screen.getByTestId('formulaire-pc-tous');
+    fireEvent.click(within(formulaire).getByLabelText('Janvier'));
+    fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
+
+    expect(modifierPrimeContractuelle).not.toHaveBeenCalled();
+    expect(screen.getByTestId('ligne-pc-tous').textContent).not.toContain('Tous les mois');
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Enregistrer' }).hasAttribute('disabled')).toBe(
+        false
+      )
+    );
+  });
+
+  it('PC06 — enregistrer envoie la modification avec la version de l emploi', async () => {
     const emploi = emploiBase('emp-1', { version: 7 });
-    modifierAvantageEnNature.mockResolvedValueOnce({
+    modifierPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 8,
-        avantagesEnNature: [
-          avantage({
-            id: 'av-voiture',
-            moisApplication: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
+        primesContractuelles: [
+          prime({
+            id: 'pc-tous',
+            primeRef: 'A04',
+            moisApplication: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
           }),
         ],
       },
@@ -415,9 +423,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
       })
     );
 
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.click(within(formulaire).getByLabelText('Juin'));
+    fireEvent.click(screen.getByTestId('ligne-pc-tous'));
+    const formulaire = screen.getByTestId('formulaire-pc-tous');
+    fireEvent.click(within(formulaire).getByLabelText('Janvier'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
 
     const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
@@ -425,17 +433,19 @@ describe('Rubrique emploi — Avantages en nature', () => {
     fireEvent.click(boutonEnregistrer);
 
     await waitFor(() =>
-      expect(modifierAvantageEnNature).toHaveBeenCalledWith(
+      expect(modifierPrimeContractuelle).toHaveBeenCalledWith(
         'soc-test',
         'emp-1',
-        'av-voiture',
+        'pc-tous',
         7,
-        expect.objectContaining({ moisApplication: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12] })
+        expect.objectContaining({
+          moisApplication: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        })
       )
     );
   });
 
-  it('AN06 — Annuler fiche nomme la rubrique qualifiee', async () => {
+  it('PC07 — Annuler fiche nomme la rubrique qualifiee', async () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
     render(
@@ -445,9 +455,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
       })
     );
 
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.click(within(formulaire).getByLabelText('Juin'));
+    fireEvent.click(screen.getByTestId('ligne-pc-transport'));
+    const formulaire = screen.getByTestId('formulaire-pc-transport');
+    fireEvent.click(within(formulaire).getByLabelText('Juillet'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
 
     await waitFor(() =>
@@ -455,11 +465,11 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: /Annuler/ }));
 
-    expect(confirmSpy.mock.calls[0]?.[0]).toContain('Avantages en nature — Responsable paie');
+    expect(confirmSpy.mock.calls[0]?.[0]).toContain('Primes contractuelles — Responsable paie');
     confirmSpy.mockRestore();
   });
 
-  it('AN07 — garde de navigation nomme la rubrique qualifiee', () => {
+  it('PC08 — garde de navigation nomme la rubrique qualifiee', () => {
     render(
       createElement(
         Harness,
@@ -472,33 +482,24 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.click(within(formulaire).getByLabelText('Juin'));
+    fireEvent.click(screen.getByTestId('ligne-pc-transport'));
+    const formulaire = screen.getByTestId('formulaire-pc-transport');
+    fireEvent.click(within(formulaire).getByLabelText('Juillet'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
     fireEvent.click(screen.getByRole('link', { name: 'Retour liste' }));
 
     expect(screen.getByTestId('dialogue-suppression-differee-corps').textContent).toContain(
-      'Avantages en nature — Responsable paie'
+      'Primes contractuelles — Responsable paie'
     );
   });
 
-  it('AN08 — suppression immediate avec message serveur', async () => {
+  it('PC09 — suppression immediate avec message compose par l ecran', async () => {
     const emploi = emploiBase('emp-1', { version: 4 });
-    impactSuppressionAvantageEnNature.mockResolvedValueOnce({
-      donnees: {
-        emploiId: 'emp-1',
-        ligneId: 'av-voiture',
-        mode: 'supprimer',
-        message: 'Cet avantage sera supprimé définitivement.',
-        jetonConfirmation: 'jeton-abc',
-      },
-    });
-    supprimerAvantageEnNature.mockResolvedValueOnce({
+    supprimerPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 5,
-        avantagesEnNature: [avantage({ id: 'av-logement', natureRef: 'B01', montant: '2000.00' })],
+        primesContractuelles: [prime({ id: 'pc-tous', primeRef: 'A04' })],
       },
       alertes: [],
     });
@@ -511,48 +512,77 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('supprimer-av-voiture'));
+    fireEvent.click(screen.getByTestId('supprimer-pc-transport'));
+
+    expect(supprimerPrimeContractuelle).not.toHaveBeenCalled();
 
     await waitFor(() =>
-      expect(screen.getByText('Cet avantage sera supprimé définitivement.')).toBeTruthy()
+      expect(screen.getByTestId('dialogue-suppression-differee-titre').textContent).toContain(
+        'Supprimer la prime « Indemnité de transport » ? La suppression est immédiate et définitive.'
+      )
     );
 
-    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
 
-    await waitFor(() => expect(supprimerAvantageEnNature).toHaveBeenCalled());
-    expect(screen.queryByTestId('ligne-av-voiture')).toBeNull();
+    await waitFor(() =>
+      expect(supprimerPrimeContractuelle).toHaveBeenCalledWith(
+        'soc-test',
+        'emp-1',
+        'pc-transport',
+        4
+      )
+    );
+    expect(screen.queryByTestId('ligne-pc-transport')).toBeNull();
   });
 
-  it('AN09 — emploi sans avantage : en-tete et bouton Ajouter seulement', () => {
+  it('PC10 — suppression locale d une ligne jamais enregistree', () => {
     render(
       createElement(Harness, {
-        emploisInitiaux: [emploiBase('emp-2', { avantagesEnNature: [] })],
+        emploisInitiaux: [emploiBase('emp-1')],
+        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    expect(screen.getByTestId('ligne-local-1')).toBeTruthy();
+    fireEvent.click(screen.getByTestId('supprimer-local-1'));
+
+    expect(supprimerPrimeContractuelle).not.toHaveBeenCalled();
+    expect(screen.queryByTestId('ligne-local-1')).toBeNull();
+    expect(screen.queryByTestId('dialogue-suppression-differee')).toBeNull();
+  });
+
+  it('PC11 — emploi sans prime : en-tete et bouton Ajouter seulement', () => {
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [emploiBase('emp-2', { primesContractuelles: [] })],
         operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
     ouvrirAccordeon('emp-2');
 
-    expect(screen.getByTestId('avantages-en-nature-emp-2')).toBeTruthy();
+    expect(screen.getByTestId('primes-contractuelles-emp-2')).toBeTruthy();
     expect(screen.getByTestId('ajouter-ligne')).toBeTruthy();
-    expect(screen.queryByTestId(/ligne-av-/)).toBeNull();
+    expect(screen.queryByTestId(/ligne-pc-/)).toBeNull();
   });
 
-  it('AN10 — rubrique absente quand la cle avantagesEnNature manque de l emploi', () => {
+  it('PC12 — rubrique absente quand la cle primesContractuelles manque de l emploi', () => {
     render(
       createElement(Harness, {
-        emploisInitiaux: [emploiBase('emp-1', { sansAvantages: true })],
+        emploisInitiaux: [emploiBase('emp-1', { sansPrimes: true })],
         operations: ['salarie.lire'],
       })
     );
 
     ouvrirAccordeon('emp-1');
 
-    expect(screen.queryByTestId('avantages-en-nature-emp-1')).toBeNull();
-    expect(screen.queryByText('Avantages en nature')).toBeNull();
+    expect(screen.queryByTestId('primes-contractuelles-emp-1')).toBeNull();
+    expect(screen.queryByText('Primes contractuelles')).toBeNull();
   });
 
-  it('AN11 — lecture seule sans bouton Ajouter ni Supprimer', () => {
+  it('PC13 — lecture seule sans bouton Ajouter ni Supprimer', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
@@ -562,32 +592,17 @@ describe('Rubrique emploi — Avantages en nature', () => {
 
     ouvrirAccordeon('emp-1');
 
-    expect(screen.getByText('Voiture de fonction')).toBeTruthy();
+    expect(screen.getByText('Indemnité de transport')).toBeTruthy();
     expect(screen.queryByTestId('ajouter-ligne')).toBeNull();
-    expect(screen.queryByTestId('supprimer-av-voiture')).toBeNull();
+    expect(screen.queryByTestId('supprimer-pc-transport')).toBeNull();
   });
 
-  it('AN12 — ligne cloturee se deplie en lecture seule', () => {
-    render(
-      createElement(Harness, {
-        emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
-      })
-    );
-
-    ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-av-nourriture'));
-
-    expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
-    expect(screen.queryByTestId('valider-ligne')).toBeNull();
-  });
-
-  it('AN13 — refus metier 400 affiche le message serveur', async () => {
-    modifierAvantageEnNature.mockRejectedValueOnce(
+  it('PC14 — refus metier 400 affiche le message serveur', async () => {
+    modifierPrimeContractuelle.mockRejectedValueOnce(
       new AppelApiEchoue(400, {
-        code: 'MONTANT_INVALIDE',
-        message: 'Le montant doit être strictement positif.',
-        champ: 'montant',
+        code: 'MOIS_INVALIDE',
+        message: 'Au moins un mois d’application est requis.',
+        champ: 'moisApplication',
       })
     );
 
@@ -598,9 +613,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
       })
     );
 
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.change(within(formulaire).getByLabelText('Montant'), { target: { value: '-1' } });
+    fireEvent.click(screen.getByTestId('ligne-pc-transport'));
+    const formulaire = screen.getByTestId('formulaire-pc-transport');
+    fireEvent.click(within(formulaire).getByLabelText('Décembre'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
 
     const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
@@ -608,11 +623,11 @@ describe('Rubrique emploi — Avantages en nature', () => {
     fireEvent.click(boutonEnregistrer);
 
     await waitFor(() =>
-      expect(screen.getByText('Le montant doit être strictement positif.')).toBeTruthy()
+      expect(screen.getByText('Au moins un mois d’application est requis.')).toBeTruthy()
     );
   });
 
-  it('AN14 — enregistrement conjoint contrat et avantages propage le contrat mis a jour au parent', async () => {
+  it('PC15 — enregistrement conjoint contrat et prime propage le contrat mis a jour', async () => {
     const emploi = emploiBase('emp-1', { version: 7 });
     const historiqueEmplois: EmploiFiche[][] = [];
 
@@ -624,17 +639,12 @@ describe('Rubrique emploi — Avantages en nature', () => {
       },
       alertes: [],
     });
-    modifierAvantageEnNature.mockResolvedValueOnce({
+    modifierPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 9,
         contrat: { ...emploi.contrat, libellePoste: 'Directeur paie' },
-        avantagesEnNature: [
-          avantage({
-            id: 'av-voiture',
-            moisApplication: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
-          }),
-        ],
+        primesContractuelles: [prime({ id: 'pc-transport', moisApplication: [6] })],
       },
       alertes: [],
     });
@@ -653,9 +663,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
     fireEvent.change(screen.getByLabelText('Libellé du poste'), {
       target: { value: 'Directeur paie' },
     });
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.click(within(formulaire).getByLabelText('Juin'));
+    fireEvent.click(screen.getByTestId('ligne-pc-transport'));
+    const formulaire = screen.getByTestId('formulaire-pc-transport');
+    fireEvent.click(within(formulaire).getByLabelText('Décembre'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
 
     const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
@@ -663,20 +673,14 @@ describe('Rubrique emploi — Avantages en nature', () => {
     fireEvent.click(boutonEnregistrer);
 
     await waitFor(() => expect(modifierContratEmploi).toHaveBeenCalled());
-    await waitFor(() => expect(modifierAvantageEnNature).toHaveBeenCalled());
+    await waitFor(() => expect(modifierPrimeContractuelle).toHaveBeenCalled());
 
-    expect(modifierContratEmploi).toHaveBeenCalledWith(
+    expect(modifierPrimeContractuelle).toHaveBeenCalledWith(
       'soc-test',
       'emp-1',
-      7,
-      expect.objectContaining({ libellePoste: 'Directeur paie' })
-    );
-    expect(modifierAvantageEnNature).toHaveBeenCalledWith(
-      'soc-test',
-      'emp-1',
-      'av-voiture',
+      'pc-transport',
       8,
-      expect.objectContaining({ moisApplication: [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12] })
+      expect.objectContaining({ moisApplication: [6] })
     );
 
     const dernierEmploi = historiqueEmplois.at(-1)?.[0];
@@ -684,26 +688,16 @@ describe('Rubrique emploi — Avantages en nature', () => {
     expect(dernierEmploi?.version).toBe(9);
   });
 
-  it('AN15 — suppression immediate remonte les valeurs enregistrees de la ligne A modifiee localement', async () => {
+  it('PC16 — suppression immediate remonte les valeurs enregistrees de la ligne A modifiee localement', async () => {
     const emploi = emploiBase('emp-1', { version: 4 });
     const historiqueEmplois: EmploiFiche[][] = [];
 
-    impactSuppressionAvantageEnNature.mockResolvedValueOnce({
-      donnees: {
-        emploiId: 'emp-1',
-        ligneId: 'av-logement',
-        mode: 'supprimer',
-        message: 'Suppression logement.',
-        jetonConfirmation: 'jeton-logement',
-      },
-    });
-    supprimerAvantageEnNature.mockResolvedValueOnce({
+    supprimerPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 5,
-        avantagesEnNature: [
-          avantage({ id: 'av-voiture', natureRef: 'B02', montant: '3500.00' }),
-          avantage({ id: 'av-nourriture', natureRef: 'B03', montant: '800.00', etat: 'CLOTUREE' }),
+        primesContractuelles: [
+          prime({ id: 'pc-transport', primeRef: 'A15', moisApplication: [6, 12] }),
         ],
       },
       alertes: [],
@@ -720,26 +714,27 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
-    const formulaire = screen.getByTestId('formulaire-av-voiture');
-    fireEvent.change(within(formulaire).getByLabelText('Montant'), {
-      target: { value: '9999.00' },
-    });
+    fireEvent.click(screen.getByTestId('ligne-pc-tous'));
+    const formulaire = screen.getByTestId('formulaire-pc-tous');
+    fireEvent.click(within(formulaire).getByLabelText('Janvier'));
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
 
-    fireEvent.click(screen.getByTestId('supprimer-av-logement'));
-    await waitFor(() => expect(screen.getByText('Suppression logement.')).toBeTruthy());
-    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+    fireEvent.click(screen.getByTestId('supprimer-pc-vide'));
+    await waitFor(() =>
+      expect(screen.getByTestId('dialogue-suppression-differee-titre').textContent).toContain(
+        'Indemnité de représentation'
+      )
+    );
+    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
 
-    await waitFor(() => expect(supprimerAvantageEnNature).toHaveBeenCalled());
+    await waitFor(() => expect(supprimerPrimeContractuelle).toHaveBeenCalled());
 
     const dernierEmploi = historiqueEmplois.at(-1)?.[0];
-    const voitureParent = dernierEmploi?.avantagesEnNature?.find((l) => l.id === 'av-voiture');
-    expect(voitureParent?.montant).toBe('3500.00');
-    expect(dernierEmploi?.avantagesEnNature?.some((l) => l.id === 'av-logement')).toBe(false);
+    const tousParent = dernierEmploi?.primesContractuelles?.find((l) => l.id === 'pc-tous');
+    expect(tousParent?.moisApplication.length).toBe(12);
+    expect(dernierEmploi?.primesContractuelles?.some((l) => l.id === 'pc-vide')).toBe(false);
 
-    expect(screen.getByTestId('ligne-av-voiture').textContent).toContain('9');
-    expect(screen.getByTestId('ligne-av-voiture').textContent).toContain('999');
+    expect(screen.getByTestId('ligne-pc-tous').textContent).not.toContain('Tous les mois');
     await waitFor(() =>
       expect(screen.getByRole('button', { name: 'Enregistrer' }).hasAttribute('disabled')).toBe(
         false
@@ -747,34 +742,35 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
   });
 
-  it('AN16 — creer puis modifier envoie le PATCH sur l identifiant serveur', async () => {
-    const emploi = emploiBase('emp-1', { version: 5 });
-    creerAvantageEnNature.mockResolvedValueOnce({
+  it('PC17 — creer puis modifier envoie le PATCH sur l identifiant serveur', async () => {
+    const emploi = emploiBase('emp-1', {
+      version: 5,
+      primesContractuelles: [prime({ id: 'pc-transport' })],
+    });
+    creerPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 6,
-        avantagesEnNature: [
-          ...(emploi.avantagesEnNature ?? []),
-          avantage({
-            id: 'av-serveur-42',
-            natureRef: 'B01',
-            montant: '1500.00',
+        primesContractuelles: [
+          prime({ id: 'pc-transport' }),
+          prime({
+            id: 'pc-serveur-42',
+            primeRef: 'A04',
             moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
           }),
         ],
       },
       alertes: [],
     });
-    modifierAvantageEnNature.mockResolvedValueOnce({
+    modifierPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 7,
-        avantagesEnNature: [
-          ...(emploi.avantagesEnNature ?? []).filter((l) => l.id !== 'av-serveur-42'),
-          avantage({
-            id: 'av-serveur-42',
-            natureRef: 'B01',
-            montant: '1600.00',
+        primesContractuelles: [
+          prime({ id: 'pc-transport' }),
+          prime({
+            id: 'pc-serveur-42',
+            primeRef: 'A24',
             moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
           }),
         ],
@@ -791,22 +787,19 @@ describe('Rubrique emploi — Avantages en nature', () => {
 
     ouvrirAccordeon('emp-1');
     fireEvent.click(screen.getByTestId('ajouter-ligne'));
-    const formulaireCreation = screen.getByTestId(/formulaire-/);
-    fireEvent.change(within(formulaireCreation).getByLabelText('Montant'), {
-      target: { value: '1500.00' },
-    });
+    const formulaireCreation = screen.getByTestId(/formulaire-local-/);
     fireEvent.click(within(formulaireCreation).getByLabelText('Tous les mois'));
     fireEvent.click(within(formulaireCreation).getByTestId('valider-ligne'));
 
     const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
     await waitFor(() => expect(boutonEnregistrer.hasAttribute('disabled')).toBe(false));
     fireEvent.click(boutonEnregistrer);
-    await waitFor(() => expect(creerAvantageEnNature).toHaveBeenCalled());
+    await waitFor(() => expect(creerPrimeContractuelle).toHaveBeenCalled());
 
-    fireEvent.click(screen.getByTestId('ligne-av-serveur-42'));
-    const formulaireModification = screen.getByTestId('formulaire-av-serveur-42');
-    fireEvent.change(within(formulaireModification).getByLabelText('Montant'), {
-      target: { value: '1600.00' },
+    fireEvent.click(screen.getByTestId('ligne-pc-serveur-42'));
+    const formulaireModification = screen.getByTestId('formulaire-pc-serveur-42');
+    fireEvent.change(within(formulaireModification).getByLabelText('Prime'), {
+      target: { value: 'A24' },
     });
     fireEvent.click(within(formulaireModification).getByTestId('valider-ligne'));
 
@@ -814,48 +807,41 @@ describe('Rubrique emploi — Avantages en nature', () => {
     fireEvent.click(boutonEnregistrer);
 
     await waitFor(() =>
-      expect(modifierAvantageEnNature).toHaveBeenCalledWith(
+      expect(modifierPrimeContractuelle).toHaveBeenCalledWith(
         'soc-test',
         'emp-1',
-        'av-serveur-42',
+        'pc-serveur-42',
         6,
-        expect.objectContaining({ montant: '1600.00' })
+        expect.objectContaining({ primeRef: 'A24' })
       )
     );
   });
 
-  it('AN17 — creer puis supprimer immediatement vise l identifiant serveur', async () => {
-    const emploi = emploiBase('emp-1', { version: 5 });
-    creerAvantageEnNature.mockResolvedValueOnce({
+  it('PC18 — creer puis supprimer immediatement vise l identifiant serveur', async () => {
+    const emploi = emploiBase('emp-1', {
+      version: 5,
+      primesContractuelles: [prime({ id: 'pc-transport' })],
+    });
+    creerPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 6,
-        avantagesEnNature: [
-          ...(emploi.avantagesEnNature ?? []),
-          avantage({
-            id: 'av-serveur-99',
-            natureRef: 'B01',
-            montant: '1200.00',
+        primesContractuelles: [
+          prime({ id: 'pc-transport' }),
+          prime({
+            id: 'pc-serveur-99',
+            primeRef: 'A04',
             moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
           }),
         ],
       },
       alertes: [],
     });
-    impactSuppressionAvantageEnNature.mockResolvedValueOnce({
-      donnees: {
-        emploiId: 'emp-1',
-        ligneId: 'av-serveur-99',
-        mode: 'supprimer',
-        message: 'Suppression nouvel avantage.',
-        jetonConfirmation: 'jeton-nouveau',
-      },
-    });
-    supprimerAvantageEnNature.mockResolvedValueOnce({
+    supprimerPrimeContractuelle.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 7,
-        avantagesEnNature: emploi.avantagesEnNature ?? [],
+        primesContractuelles: [prime({ id: 'pc-transport' })],
       },
       alertes: [],
     });
@@ -869,52 +855,63 @@ describe('Rubrique emploi — Avantages en nature', () => {
 
     ouvrirAccordeon('emp-1');
     fireEvent.click(screen.getByTestId('ajouter-ligne'));
-    const formulaireCreation = screen.getByTestId(/formulaire-/);
-    fireEvent.change(within(formulaireCreation).getByLabelText('Montant'), {
-      target: { value: '1200.00' },
-    });
+    const formulaireCreation = screen.getByTestId(/formulaire-local-/);
     fireEvent.click(within(formulaireCreation).getByLabelText('Tous les mois'));
     fireEvent.click(within(formulaireCreation).getByTestId('valider-ligne'));
 
     const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
     await waitFor(() => expect(boutonEnregistrer.hasAttribute('disabled')).toBe(false));
     fireEvent.click(boutonEnregistrer);
-    await waitFor(() => expect(creerAvantageEnNature).toHaveBeenCalled());
-    await waitFor(() => expect(screen.getByTestId('ligne-av-serveur-99')).toBeTruthy());
+    await waitFor(() => expect(creerPrimeContractuelle).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByTestId('ligne-pc-serveur-99')).toBeTruthy());
 
-    fireEvent.click(screen.getByTestId('supprimer-av-serveur-99'));
-    await waitFor(() => expect(screen.getByText('Suppression nouvel avantage.')).toBeTruthy());
-
-    expect(impactSuppressionAvantageEnNature).toHaveBeenCalledWith(
-      'soc-test',
-      'emp-1',
-      'av-serveur-99'
-    );
-
-    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+    fireEvent.click(screen.getByTestId('supprimer-pc-serveur-99'));
     await waitFor(() =>
-      expect(supprimerAvantageEnNature).toHaveBeenCalledWith(
+      expect(screen.getByTestId('dialogue-suppression-differee-titre')).toBeTruthy()
+    );
+    fireEvent.click(screen.getByTestId('dialogue-suppression-differee-confirmer'));
+
+    await waitFor(() =>
+      expect(supprimerPrimeContractuelle).toHaveBeenCalledWith(
         'soc-test',
         'emp-1',
-        'av-serveur-99',
-        6,
-        'jeton-nouveau'
+        'pc-serveur-99',
+        6
       )
     );
   });
-});
 
-const MOIS_LABELS = [
-  'Janvier',
-  'Février',
-  'Mars',
-  'Avril',
-  'Mai',
-  'Juin',
-  'Juillet',
-  'Août',
-  'Septembre',
-  'Octobre',
-  'Novembre',
-  'Décembre',
-] as const;
+  it('PC19 — deux fois la meme prime : affichage et enregistrement sans avertissement', async () => {
+    const emploi = emploiBase('emp-1', {
+      version: 3,
+      primesContractuelles: [
+        prime({ id: 'pc-a', primeRef: 'A15', moisApplication: [1] }),
+        prime({ id: 'pc-b', primeRef: 'A15', moisApplication: [2] }),
+      ],
+    });
+    modifierPrimeContractuelle.mockResolvedValue({
+      donnees: { ...emploi, version: 4, primesContractuelles: emploi.primesContractuelles },
+      alertes: [],
+    });
+
+    render(
+      createElement(HarnessRubriqueSeule, {
+        emploi,
+        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+      })
+    );
+
+    expect(screen.getAllByText('Indemnité de transport').length).toBe(2);
+    expect(screen.queryByText(/avertissement/i)).toBeNull();
+
+    fireEvent.click(screen.getByTestId('ligne-pc-a'));
+    fireEvent.click(within(screen.getByTestId('formulaire-pc-a')).getByLabelText('Mars'));
+    fireEvent.click(within(screen.getByTestId('formulaire-pc-a')).getByTestId('valider-ligne'));
+
+    const boutonEnregistrer = screen.getByRole('button', { name: 'Enregistrer' });
+    await waitFor(() => expect(boutonEnregistrer.hasAttribute('disabled')).toBe(false));
+    fireEvent.click(boutonEnregistrer);
+
+    await waitFor(() => expect(modifierPrimeContractuelle).toHaveBeenCalled());
+  });
+});

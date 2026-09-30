@@ -6,42 +6,16 @@ import {
   libelleEtatLigneHistorise,
   type LigneTableauHistoriseBase,
 } from './lignes-tableau-historise-commun';
+import { moisApplicationEgaux } from './mois-application-commun';
 
 export { genererIdLocal, reinitialiserCompteurIdLocal } from './lignes-tableau-historise-commun';
-
-export const MOIS_APPLICATION = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
-
-const MOIS_ABREGE: readonly string[] = [
-  'Janv.',
-  'Févr.',
-  'Mars',
-  'Avr.',
-  'Mai',
-  'Juin',
-  'Juil.',
-  'Août',
-  'Sept.',
-  'Oct.',
-  'Nov.',
-  'Déc.',
-];
+export { MOIS_APPLICATION, afficherMoisApplication } from './mois-application-commun';
 
 export interface LigneAvantageEnNatureLocale extends LigneTableauHistoriseBase {
   readonly natureRef: string;
   readonly montant: string;
   readonly moisApplication: readonly number[];
   readonly moisEffetDebut: string;
-}
-
-export function afficherMoisApplication(mois: readonly number[]): string {
-  if (mois.length === 0) {
-    return '';
-  }
-  if (mois.length === 12) {
-    return 'Tous les mois';
-  }
-  const ordreCalendaire = [...mois].sort((a, b) => a - b);
-  return ordreCalendaire.map((numero) => MOIS_ABREGE[numero - 1] ?? String(numero)).join(', ');
 }
 
 export function creerLigneVide(natureRef: string): LigneAvantageEnNatureLocale {
@@ -87,15 +61,6 @@ export function trierAffichage(
   const enregistrees = lignes.filter((l) => l.etat !== 'NON_ENREGISTREE');
   const nonEnregistrees = lignes.filter((l) => l.etat === 'NON_ENREGISTREE');
   return [...enregistrees, ...nonEnregistrees];
-}
-
-export function moisApplicationEgaux(a: readonly number[], b: readonly number[]): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-  const triA = [...a].sort((x, y) => x - y);
-  const triB = [...b].sort((x, y) => x - y);
-  return triA.every((valeur, index) => valeur === triB[index]);
 }
 
 export function lignesEgales(

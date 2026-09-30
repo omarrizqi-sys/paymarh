@@ -7,6 +7,7 @@ import {
   listerLiensParente,
   listerMotifsSortie,
   listerNaturesAvantageEnNature,
+  listerPrimes,
   listerPays,
   listerSituationsFamiliales,
   listerStatutsParticuliers,
@@ -34,6 +35,7 @@ export default async function PageFicheSalarie({ params }: Props) {
       motifsSortie,
       statutsParticuliers,
       naturesAvantageEnNature,
+      primesReferentiel,
       etablissements,
     ] = await Promise.all([
       lireSalarie(companyId, salarieId),
@@ -46,6 +48,7 @@ export default async function PageFicheSalarie({ params }: Props) {
       listerMotifsSortie(),
       listerStatutsParticuliers(),
       listerNaturesAvantageEnNature(),
+      listerPrimes(),
       listerEtablissements(companyId),
     ]);
 
@@ -64,6 +67,7 @@ export default async function PageFicheSalarie({ params }: Props) {
           motifsSortie={motifsSortie.data.items}
           statutsParticuliers={statutsParticuliers.data.items}
           naturesAvantageEnNature={naturesAvantageEnNature.data.items}
+          primesReferentiel={primesReferentiel.data.items}
           etablissements={etablissements.data.items}
         />
       </div>

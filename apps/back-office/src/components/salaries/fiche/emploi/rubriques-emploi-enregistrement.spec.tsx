@@ -33,6 +33,9 @@ vi.mock('@/lib/api/emplois', () => ({
   supprimerAvantageEnNature: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
+  creerPrimeContractuelle: vi.fn(),
+  modifierPrimeContractuelle: vi.fn(),
+  supprimerPrimeContractuelle: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({
@@ -213,6 +216,7 @@ function HarnessEmplois({
         banques: [],
         comptesBancaires: [],
         naturesAvantageEnNature: [],
+        primesReferentiel: [],
         onEmploisChange: (maj) => {
           setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
         },

@@ -6,6 +6,7 @@ import type {
   ListResponse,
   MotifSortie,
   NatureAvantageEnNature,
+  PrimeReferentiel,
   Pays,
   SituationFamiliale,
   StatutParticulier,
@@ -70,6 +71,10 @@ export async function listerNaturesAvantageEnNature() {
   return appelerApiGet<ListResponse<NatureAvantageEnNature>>(
     '/referentiels/natures-avantage-en-nature'
   );
+}
+
+export async function listerPrimes() {
+  return appelerApiGet<ListResponse<PrimeReferentiel>>('/referentiels/primes');
 }
 
 /** Charge tous les referentiels necessaires aux ecrans fiche societe. */

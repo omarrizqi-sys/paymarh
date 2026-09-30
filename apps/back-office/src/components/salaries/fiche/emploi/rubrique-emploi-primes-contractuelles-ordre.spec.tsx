@@ -7,6 +7,7 @@ import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { RegistreFicheProvider } from '../registre-fiche-provider';
 import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
 import { BlocEmplois } from '../bloc-emplois';
+
 vi.mock('@/lib/api/emplois', () => ({
   modifierContratEmploi: vi.fn(),
   modifierAffectationEmploi: vi.fn(),
@@ -42,7 +43,7 @@ const MOTIFS_SORTIE = [{ id: 'ms-1', ordre: 1, code: 'DEMISSION', libelle: 'Dém
 
 const ETABLISSEMENTS = [{ id: 'etab-1', nom: 'Siège Casablanca' } as never];
 
-function emploiAvecAvantages(id: string): EmploiFiche {
+function emploiAvecPrimes(id: string): EmploiFiche {
   return {
     id,
     version: 3,
@@ -97,25 +98,21 @@ function emploiAvecAvantages(id: string): EmploiFiche {
       modePaiement: 'VIREMENT',
       compteBancaireId: null,
     },
-    avantagesEnNature: [
+    primesContractuelles: [
       {
-        id: 'av-1',
-        natureRef: 'B02',
-        montant: '3500.00',
-        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        moisEffetDebut: '2022-03',
-        moisEffetFin: null,
-        etat: 'ACTIVE',
+        id: 'pc-1',
+        primeRef: 'A15',
+        moisApplication: [6, 12],
       },
     ],
   };
 }
 
-describe('Rubrique emploi — ordre registre avantages en nature', () => {
+describe('Rubrique emploi — ordre registre primes contractuelles', () => {
   afterEach(() => cleanup());
 
-  it('ORD-AN01 — montage avec registre exige avantages-en-nature dans ORDRE_RUBRIQUES_EMPLOI', () => {
-    const emploi = emploiAvecAvantages('emp-1');
+  it('ORD-PC01 — montage avec registre exige primes-contractuelles dans ORDRE_RUBRIQUES_EMPLOI', () => {
+    const emploi = emploiAvecPrimes('emp-1');
     const operations: readonly Permission[] = [
       'salarie.lire',
       'salarie.remuneration.lire',
@@ -150,10 +147,10 @@ describe('Rubrique emploi — ordre registre avantages en nature', () => {
               etablissements: ETABLISSEMENTS,
               banques: [],
               comptesBancaires: [],
-              naturesAvantageEnNature: [
-                { id: 'n1', ordre: 1, code: 'B02', libelle: 'Voiture de fonction' },
+              naturesAvantageEnNature: [],
+              primesReferentiel: [
+                { id: 'p1', ordre: 20, code: 'A15', libelle: 'Indemnité de transport' },
               ],
-              primesReferentiel: [],
               onEmploisChange: (maj) => {
                 setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
               },
@@ -164,6 +161,6 @@ describe('Rubrique emploi — ordre registre avantages en nature', () => {
     }
 
     render(createElement(Harness));
-    expect(screen.getByTestId('avantages-en-nature-emp-1')).toBeTruthy();
+    expect(screen.getByTestId('primes-contractuelles-emp-1')).toBeTruthy();
   });
 });

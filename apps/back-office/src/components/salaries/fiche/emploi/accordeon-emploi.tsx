@@ -8,6 +8,7 @@ import type {
   MotifSortie,
   NatureAvantageEnNature,
   Permission,
+  PrimeReferentiel,
   TypeContrat,
 } from '@paymarh/shared-types';
 import { ChevronDown } from 'lucide-react';
@@ -18,6 +19,7 @@ import { RubriqueEmploiAffectation } from './rubrique-emploi-affectation';
 import { RubriqueEmploiContrat } from './rubrique-emploi-contrat';
 import { RubriqueEmploiRemuneration } from './rubrique-emploi-remuneration';
 import { RubriqueEmploiAvantagesEnNature } from './rubrique-emploi-avantages-en-nature';
+import { RubriqueEmploiPrimesContractuelles } from './rubrique-emploi-primes-contractuelles';
 
 interface Props {
   readonly companyId: string;
@@ -30,6 +32,7 @@ interface Props {
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
+  readonly primesReferentiel: readonly PrimeReferentiel[];
   readonly operations: readonly Permission[];
   readonly onEmploiChange: (maj: MiseAJourEmploiFiche) => void;
 }
@@ -57,6 +60,7 @@ export function AccordeonEmploi({
   comptesBancaires,
   banques,
   naturesAvantageEnNature,
+  primesReferentiel,
   operations,
   onEmploiChange,
 }: Props) {
@@ -104,6 +108,16 @@ export function AccordeonEmploi({
             paiement={emploi.paiement}
             comptesBancaires={comptesBancaires}
             banques={banques}
+            operations={operations}
+            onEmploiChange={onEmploiChange}
+          />
+        ) : null}
+        {'primesContractuelles' in emploi ? (
+          <RubriqueEmploiPrimesContractuelles
+            companyId={companyId}
+            emploi={emploi}
+            lignesServeur={emploi.primesContractuelles ?? []}
+            primes={primesReferentiel}
             operations={operations}
             onEmploiChange={onEmploiChange}
           />

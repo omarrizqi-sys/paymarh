@@ -141,6 +141,7 @@ function rendre(fiche: FicheSalarieAvecOperations = ficheBase()) {
         motifsSortie={[]}
         statutsParticuliers={[]}
         naturesAvantageEnNature={[]}
+        primesReferentiel={[]}
         etablissements={[]}
       />
     </NavigationGardeeTestProvider>

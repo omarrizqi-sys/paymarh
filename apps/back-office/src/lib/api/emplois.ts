@@ -211,3 +211,51 @@ export async function supprimerStatutParticulier(
     version
   );
 }
+
+export async function creerPrimeContractuelle(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    primeRef: string;
+    moisApplication: number[];
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePost<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/primes-contractuelles`,
+    corps,
+    version
+  );
+}
+
+export async function modifierPrimeContractuelle(
+  companyId: string,
+  emploiId: string,
+  ligneId: string,
+  version: number,
+  corps: {
+    primeRef?: string;
+    moisApplication?: number[];
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/primes-contractuelles/${ligneId}`,
+    corps,
+    version
+  );
+}
+
+export async function supprimerPrimeContractuelle(
+  companyId: string,
+  emploiId: string,
+  ligneId: string,
+  version: number
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalarieDelete(
+    companyId,
+    `/emplois/${emploiId}/primes-contractuelles/${ligneId}`,
+    version
+  );
+}

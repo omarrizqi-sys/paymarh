@@ -17,6 +17,7 @@ import type {
   LienParente,
   MotifSortie,
   NatureAvantageEnNature,
+  PrimeReferentiel,
   Pays,
   SituationFamiliale,
   StatutParticulier,
@@ -67,6 +68,7 @@ interface Props {
   readonly motifsSortie: readonly MotifSortie[];
   readonly statutsParticuliers: readonly StatutParticulier[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
+  readonly primesReferentiel: readonly PrimeReferentiel[];
   readonly etablissements: readonly Etablissement[];
 }
 
@@ -110,6 +112,7 @@ function ContenuFicheSalarie({
   typesContrat,
   motifsSortie,
   naturesAvantageEnNature,
+  primesReferentiel,
   etablissements,
   onFicheChange,
 }: {
@@ -124,6 +127,7 @@ function ContenuFicheSalarie({
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
+  readonly primesReferentiel: readonly PrimeReferentiel[];
   readonly etablissements: readonly Etablissement[];
   readonly onFicheChange: Dispatch<SetStateAction<FicheSalarieAvecOperations>>;
 }) {
@@ -340,6 +344,7 @@ function ContenuFicheSalarie({
               comptesBancaires={'comptesBancaires' in fiche ? fiche.comptesBancaires : undefined}
               banques={banques}
               naturesAvantageEnNature={naturesAvantageEnNature}
+              primesReferentiel={primesReferentiel}
               onEmploisChange={(maj) => {
                 if (typeof maj === 'function') {
                   onFicheChange((prev) => ({ ...prev, emplois: [...maj(prev.emplois)] }));
@@ -376,6 +381,7 @@ export function FicheSalarieClient({
   motifsSortie,
   statutsParticuliers: _statutsParticuliers,
   naturesAvantageEnNature,
+  primesReferentiel,
   etablissements,
 }: Props) {
   const [fiche, setFiche] = useState(initial);
@@ -413,6 +419,7 @@ export function FicheSalarieClient({
           typesContrat={typesContrat}
           motifsSortie={motifsSortie}
           naturesAvantageEnNature={naturesAvantageEnNature}
+          primesReferentiel={primesReferentiel}
           etablissements={etablissements}
           onFicheChange={setFiche}
         />

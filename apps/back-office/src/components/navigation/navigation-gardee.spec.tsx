@@ -402,6 +402,7 @@ describe('Navigation gardee — fiche client (lien retour integre)', () => {
           motifsSortie={[]}
           statutsParticuliers={[]}
           naturesAvantageEnNature={[]}
+          primesReferentiel={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>
@@ -438,6 +439,7 @@ describe('Navigation gardee — en-tete global', () => {
           motifsSortie={[]}
           statutsParticuliers={[]}
           naturesAvantageEnNature={[]}
+          primesReferentiel={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>
@@ -493,6 +495,7 @@ describe('Navigation gardee — en-tete global', () => {
           motifsSortie={[]}
           statutsParticuliers={[]}
           naturesAvantageEnNature={[]}
+          primesReferentiel={[]}
           etablissements={[]}
         />
       </CoquilleNavigationTest>

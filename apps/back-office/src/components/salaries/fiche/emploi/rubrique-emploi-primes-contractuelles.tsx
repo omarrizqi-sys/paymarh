@@ -3,77 +3,83 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   AlerteApi,
-  AvantageEnNatureFiche,
   EmploiFiche,
-  NatureAvantageEnNature,
   Permission,
+  PrimeContractuelleFiche,
+  PrimeReferentiel,
 } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { SaisieMoisApplication } from '@/components/salaries/fiche/saisie-mois-application';
 import {
   MessagesAlerteChamp,
   RegistreAlertesSalarie,
 } from '@/components/salaries/formulaire/messages-alerte-salarie';
-import { AppelApiEchoue } from '@/lib/api/client';
 import {
-  creerAvantageEnNature,
-  impactSuppressionAvantageEnNature,
-  modifierAvantageEnNature,
-  supprimerAvantageEnNature,
+  creerPrimeContractuelle,
+  modifierPrimeContractuelle,
+  supprimerPrimeContractuelle,
 } from '@/lib/api/emplois';
-import { afficherMontant } from '@/lib/affichage/montants';
 import { libelleReferentielParCode } from '@/lib/affichage/libelles-emploi';
+import { afficherMoisApplication } from '@/lib/fiche/mois-application-commun';
 import { envoyerLignesTableau } from '@/lib/fiche/envoi-lignes-tableau';
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
 import {
-  afficherMoisApplication,
   creerLigneVide,
   depuisServeur,
   estModifieeContreReference,
   extraireLigneReponse,
-  libelleEtatLigne,
   lignesEgales,
   trierAffichage,
   versCorpsCreation,
   versCorpsModification,
   versServeur,
-  type LigneAvantageEnNatureLocale,
-} from '@/lib/fiche/avantages-en-nature-lignes';
-import { estLigneTableauCloturee } from '@/lib/fiche/lignes-tableau-historise-commun';
+  type LignePrimeContractuelleLocale,
+} from '@/lib/fiche/primes-contractuelles-lignes';
 import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
 import type { MiseAJourEmploiFiche } from '@/lib/fiche/valeurs-emploi';
 import { possedePermission } from '@/lib/permissions';
+import type { TextesConfirmationSuppression } from '@/components/navigation/textes-suppression-tableau-historise';
+import { SaisieMoisApplication } from '@/components/salaries/fiche/saisie-mois-application';
 import { useFormulaireTableau } from '../contexte-formulaire-tableau';
 import { EnveloppeTableauRepetable } from '../enveloppe-tableau-repetable';
 import { useRegistreFiche } from '../registre-fiche-provider';
 import { TeteRubriqueFiche } from '../tete-rubrique-fiche';
-import {
-  PREAMBULE_SITUATION_CHANGEE,
-  textesSuppressionHistorisee,
-} from '@/components/navigation/textes-suppression-tableau-historise';
+
+const MESSAGE_SUPPRESSION_PRIME = (libellePrime: string): TextesConfirmationSuppression => ({
+  variante: 'differee',
+  titre: `Supprimer la prime « ${libellePrime} » ? La suppression est immédiate et définitive.`,
+  libelleConfirmer: 'Supprimer',
+  libelleAnnuler: 'Annuler',
+});
 
 interface Props {
   readonly companyId: string;
   readonly emploi: EmploiFiche;
-  readonly lignesServeur: readonly AvantageEnNatureFiche[];
-  readonly natures: readonly NatureAvantageEnNature[];
+  readonly lignesServeur: readonly PrimeContractuelleFiche[];
+  readonly primes: readonly PrimeReferentiel[];
   readonly operations: readonly Permission[];
   readonly onEmploiChange: (maj: MiseAJourEmploiFiche) => void;
 }
 
-function libelleNature(code: string, natures: readonly NatureAvantageEnNature[]): string {
-  return libelleReferentielParCode(natures, code);
+function libellePrime(code: string, primes: readonly PrimeReferentiel[]): string {
+  return libelleReferentielParCode(primes, code);
 }
 
-export function RubriqueEmploiAvantagesEnNature({
+function estInactive(_ligne: LignePrimeContractuelleLocale): boolean {
+  return false;
+}
+
+function libelleEtatLigne(_ligne: LignePrimeContractuelleLocale): string | null {
+  return null;
+}
+
+export function RubriqueEmploiPrimesContractuelles({
   companyId,
   emploi,
   lignesServeur,
-  natures,
+  primes,
   operations,
   onEmploiChange,
 }: Props) {
@@ -98,14 +104,13 @@ export function RubriqueEmploiAvantagesEnNature({
   const [alertesParLigne, setAlertesParLigne] = useState<Record<string, readonly AlerteApi[]>>({});
   const [erreurRubrique, setErreurRubrique] = useState<string | undefined>();
 
-  const jetonSuppressionRef = useRef('');
-  const snapshotsRef = useRef<Map<string, LigneAvantageEnNatureLocale>>(new Map());
+  const snapshotsRef = useRef<Map<string, LignePrimeContractuelleLocale>>(new Map());
   const courantRef = useRef(courant);
   const referenceRef = useRef(reference);
   courantRef.current = courant;
   referenceRef.current = reference;
 
-  const avantagesEnNatureEnregistres = useCallback((): AvantageEnNatureFiche[] => {
+  const primesContractuellesEnregistrees = useCallback((): PrimeContractuelleFiche[] => {
     return referenceRef.current
       .filter((ligne) => ligne.etat !== 'NON_ENREGISTREE')
       .map(versServeur);
@@ -120,11 +125,11 @@ export function RubriqueEmploiAvantagesEnNature({
         return {
           ...emploiCourant,
           version: nouvelleVersion,
-          avantagesEnNature: avantagesEnNatureEnregistres(),
+          primesContractuelles: primesContractuellesEnregistrees(),
         };
       });
     },
-    [avantagesEnNatureEnregistres, emploiId, onEmploiChange]
+    [emploiId, onEmploiChange, primesContractuellesEnregistrees]
   );
 
   const reinitialiserRubrique = useCallback(() => {
@@ -142,7 +147,7 @@ export function RubriqueEmploiAvantagesEnNature({
   const lignesAffichees = useMemo(() => trierAffichage(courant), [courant]);
 
   const modifierLigne = useCallback(
-    (id: string, patch: Partial<LigneAvantageEnNatureLocale>) => {
+    (id: string, patch: Partial<LignePrimeContractuelleLocale>) => {
       setCourant((prev) => {
         const suivant = prev.map((l) => (l.id === id ? { ...l, ...patch } : l));
         courantRef.current = suivant;
@@ -204,52 +209,6 @@ export function RubriqueEmploiAvantagesEnNature({
     });
   }, [enregistrerAvantEnvoi, fermerFormulaire, formulaireOuvertId]);
 
-  const appliquerLigneServeur = useCallback(
-    (ligneServeur: AvantageEnNatureFiche, nouvelleVersion: number) => {
-      const locale = depuisServeur(ligneServeur);
-      const prochainCourant = (prev: LigneAvantageEnNatureLocale[]) => {
-        const ids = prev.map((l) => l.id);
-        if (ids.includes(ligneServeur.id)) {
-          return prev.map((l) => (l.id === ligneServeur.id ? locale : l));
-        }
-        const remplace = prev.findIndex(
-          (l) =>
-            l.etat === 'NON_ENREGISTREE' &&
-            l.natureRef === locale.natureRef &&
-            l.montant === locale.montant
-        );
-        if (remplace >= 0) {
-          const copie = [...prev];
-          copie[remplace] = locale;
-          return copie;
-        }
-        return [...prev.filter((l) => l.id !== ligneServeur.id), locale];
-      };
-      const prochainReference = (prev: LigneAvantageEnNatureLocale[]) => {
-        if (prev.some((l) => l.id === locale.id)) {
-          return prev.map((l) => (l.id === locale.id ? locale : l));
-        }
-        return [...prev, locale];
-      };
-      const suivantCourant = prochainCourant(courantRef.current);
-      courantRef.current = suivantCourant;
-      setCourant((prev) => {
-        const suivant = prochainCourant(prev);
-        courantRef.current = suivant;
-        return suivant;
-      });
-      const suivantReference = prochainReference(referenceRef.current);
-      referenceRef.current = suivantReference;
-      setReference((prev) => {
-        const suivant = prochainReference(prev);
-        referenceRef.current = suivant;
-        return suivant;
-      });
-      propagerEmploiApresEcriture(nouvelleVersion);
-    },
-    [propagerEmploiApresEcriture]
-  );
-
   const envoyerRubrique = useCallback(
     async (versionEnvoi: number): Promise<EnvoiRubriqueResultat> => {
       const resultat = await envoyerLignesTableau({
@@ -263,7 +222,7 @@ export function RubriqueEmploiAvantagesEnNature({
         versCorpsCreation,
         versCorpsModification,
         creer: async (version, corps) => {
-          const reponse = await creerAvantageEnNature(
+          const reponse = await creerPrimeContractuelle(
             companyId,
             emploiId,
             version,
@@ -272,15 +231,15 @@ export function RubriqueEmploiAvantagesEnNature({
           return {
             version: reponse.donnees.version,
             alertes: reponse.alertes,
-            lignesTableau: reponse.donnees.avantagesEnNature ?? [],
+            lignesTableau: reponse.donnees.primesContractuelles ?? [],
           };
         },
         modifier: async (id, version, corps) => {
-          const reponse = await modifierAvantageEnNature(companyId, emploiId, id, version, corps);
+          const reponse = await modifierPrimeContractuelle(companyId, emploiId, id, version, corps);
           return {
             version: reponse.donnees.version,
             alertes: reponse.alertes,
-            lignesTableau: reponse.donnees.avantagesEnNature ?? [],
+            lignesTableau: reponse.donnees.primesContractuelles ?? [],
           };
         },
         extraireLigneReponse,
@@ -312,8 +271,8 @@ export function RubriqueEmploiAvantagesEnNature({
 
   useEffect(() => {
     const desenregistrer = enregistrerRubrique({
-      id: idRubriqueEmploi(emploiId, 'avantages-en-nature'),
-      libelle: libelleRubriqueEmploi('avantages-en-nature', libellePoste),
+      id: idRubriqueEmploi(emploiId, 'primes-contractuelles'),
+      libelle: libelleRubriqueEmploi('primes-contractuelles', libellePoste),
       entite: { kind: 'emploi', emploiId },
       estModifiee: () => estModifieeContreReference(courantRef.current, referenceRef.current),
       envoyer: envoyerRubrique,
@@ -325,110 +284,44 @@ export function RubriqueEmploiAvantagesEnNature({
   const colonnes = useMemo(
     () => [
       {
-        id: 'nature',
-        libelle: 'Nature',
-        render: (l: LigneAvantageEnNatureLocale) => libelleNature(l.natureRef, natures),
-      },
-      {
-        id: 'montant',
-        libelle: 'Montant',
-        render: (l: LigneAvantageEnNatureLocale) => afficherMontant(l.montant),
+        id: 'prime',
+        libelle: 'Prime',
+        render: (l: LignePrimeContractuelleLocale) => libellePrime(l.primeRef, primes),
       },
       {
         id: 'moisApplication',
         libelle: 'Mois d’application',
-        render: (l: LigneAvantageEnNatureLocale) => afficherMoisApplication(l.moisApplication),
+        render: (l: LignePrimeContractuelleLocale) => afficherMoisApplication(l.moisApplication),
       },
     ],
-    [natures]
+    [primes]
   );
 
   const suppression = useMemo(
     () => ({
-      preparer: async (ligne: LigneAvantageEnNatureLocale) => {
-        const reponse = await impactSuppressionAvantageEnNature(companyId, emploiId, ligne.id);
-        jetonSuppressionRef.current = reponse.donnees.jetonConfirmation;
-        return textesSuppressionHistorisee({
-          titre: 'Supprimer cet avantage en nature ?',
-          messageServeur: reponse.donnees.message,
-          rubriqueModifiee: estModifieeContreReference(courantRef.current, referenceRef.current),
-        });
+      preparer: async (ligne: LignePrimeContractuelleLocale) => {
+        return MESSAGE_SUPPRESSION_PRIME(libellePrime(ligne.primeRef, primes));
       },
-      confirmer: async (ligne: LigneAvantageEnNatureLocale) => {
+      confirmer: async (ligne: LignePrimeContractuelleLocale) => {
         const versionEmploi = lireVersion({ kind: 'emploi', emploiId });
-        try {
-          const reponse = await supprimerAvantageEnNature(
-            companyId,
-            emploiId,
-            ligne.id,
-            versionEmploi,
-            jetonSuppressionRef.current
-          );
-          const idsConnus = new Set(courantRef.current.map((l) => l.id));
-          const ligneServeur = extraireLigneReponse(
-            reponse.donnees.avantagesEnNature ?? [],
-            ligne.id,
-            idsConnus
-          );
-          if (ligneServeur !== undefined) {
-            appliquerLigneServeur(ligneServeur, reponse.donnees.version);
-            const locale = depuisServeur(ligneServeur);
-            const prochain = (prev: LigneAvantageEnNatureLocale[]) => {
-              const sans = prev.filter((l) => l.id !== ligne.id);
-              if (sans.some((l) => l.id === locale.id)) {
-                return sans.map((l) => (l.id === locale.id ? locale : l));
-              }
-              return [...sans, locale];
-            };
-            const suivantCourant = prochain(courantRef.current);
-            courantRef.current = suivantCourant;
-            setCourant((prev) => {
-              const suivant = prochain(prev);
-              courantRef.current = suivant;
-              return suivant;
-            });
-            const suivantReference = prochain(referenceRef.current);
-            referenceRef.current = suivantReference;
-            setReference((prev) => {
-              const suivant = prochain(prev);
-              referenceRef.current = suivant;
-              return suivant;
-            });
-          } else {
-            const suivantCourant = courantRef.current.filter((l) => l.id !== ligne.id);
-            const suivantReference = referenceRef.current.filter((l) => l.id !== ligne.id);
-            courantRef.current = suivantCourant;
-            referenceRef.current = suivantReference;
-            setCourant((prev) => {
-              const suivant = prev.filter((l) => l.id !== ligne.id);
-              courantRef.current = suivant;
-              return suivant;
-            });
-            setReference((prev) => {
-              const suivant = prev.filter((l) => l.id !== ligne.id);
-              referenceRef.current = suivant;
-              return suivant;
-            });
-            propagerEmploiApresEcriture(reponse.donnees.version);
-          }
-          notifierSommaire();
-          return { type: 'termine' as const };
-        } catch (erreur) {
-          if (erreur instanceof AppelApiEchoue && erreur.erreur.code === 'CONFIRMATION_OBSOLETE') {
-            return { type: 'recommencer' as const, preambule: PREAMBULE_SITUATION_CHANGEE };
-          }
-          throw erreur;
-        }
+        const reponse = await supprimerPrimeContractuelle(
+          companyId,
+          emploiId,
+          ligne.id,
+          versionEmploi
+        );
+        const suivantCourant = courantRef.current.filter((l) => l.id !== ligne.id);
+        const suivantReference = referenceRef.current.filter((l) => l.id !== ligne.id);
+        courantRef.current = suivantCourant;
+        referenceRef.current = suivantReference;
+        setCourant(suivantCourant);
+        setReference(suivantReference);
+        propagerEmploiApresEcriture(reponse.donnees.version);
+        notifierSommaire();
+        return { type: 'termine' as const };
       },
     }),
-    [
-      appliquerLigneServeur,
-      companyId,
-      emploiId,
-      lireVersion,
-      notifierSommaire,
-      propagerEmploiApresEcriture,
-    ]
+    [companyId, emploiId, lireVersion, notifierSommaire, primes, propagerEmploiApresEcriture]
   );
 
   const gererAttenteSuppression = useCallback(
@@ -442,28 +335,28 @@ export function RubriqueEmploiAvantagesEnNature({
     [signalerDebutEcritureHorsSequence, signalerFinEcritureHorsSequence]
   );
 
-  const natureParDefaut = natures[0]?.code ?? '';
+  const primeParDefaut = primes[0]?.code ?? '';
 
   return (
     <Rubrique
-      id={idRubriqueEmploi(emploiId, 'avantages-en-nature')}
-      titre={`Avantages en nature — ${libellePoste}`}
+      id={idRubriqueEmploi(emploiId, 'primes-contractuelles')}
+      titre={`Primes contractuelles — ${libellePoste}`}
     >
       <TeteRubriqueFiche
         erreur={erreurRubrique}
         alertes={alertes}
-        testidErreur={`erreur-rubrique-${emploiId}-avantages-en-nature`}
-        testidAlertes={`alertes-tete-${emploiId}-avantages-en-nature`}
+        testidErreur={`erreur-rubrique-${emploiId}-primes-contractuelles`}
+        testidAlertes={`alertes-tete-${emploiId}-primes-contractuelles`}
       />
 
       <EnveloppeTableauRepetable
         colonnes={colonnes}
         lignes={lignesAffichees}
         getLigneId={(l) => l.id}
-        estInactive={estLigneTableauCloturee}
+        estInactive={estInactive}
         estNonEnregistree={(l) => l.etat === 'NON_ENREGISTREE'}
         libelleEtatLigne={libelleEtatLigne}
-        idColonneMarque="nature"
+        idColonneMarque="prime"
         ligneEnErreur={(ligne) => (alertesParLigne[ligne.id]?.length ?? 0) > 0}
         formulaireOuvertId={formulaireOuvertId}
         onOuvrirFormulaire={ouvrirFormulaireLigne}
@@ -473,10 +366,10 @@ export function RubriqueEmploiAvantagesEnNature({
         suppression={suppression}
         onAttenteSuppressionChange={gererAttenteSuppression}
         peutModifier={peutEcrire}
-        testId={`avantages-en-nature-${emploiId}`}
+        testId={`primes-contractuelles-${emploiId}`}
         onAjouter={() => {
           if (enregistrementEnCours || !peutEcrire) return;
-          const nouvelle = creerLigneVide(natureParDefaut);
+          const nouvelle = creerLigneVide(primeParDefaut);
           setCourant((prev) => {
             const suivant = [...prev, nouvelle];
             courantRef.current = suivant;
@@ -496,9 +389,9 @@ export function RubriqueEmploiAvantagesEnNature({
           }
         }}
         renderFormulaire={(ligne, actions) => (
-          <FormulaireAvantageEnNature
+          <FormulairePrimeContractuelle
             ligne={ligne}
-            natures={natures}
+            primes={primes}
             alertes={alertesParLigne[ligne.id] ?? []}
             lectureSeule={actions.lectureSeule}
             onChange={(patch) => modifierLigne(ligne.id, patch)}
@@ -511,28 +404,27 @@ export function RubriqueEmploiAvantagesEnNature({
   );
 }
 
-function FormulaireAvantageEnNature({
+function FormulairePrimeContractuelle({
   ligne,
-  natures,
+  primes,
   alertes,
   lectureSeule,
   onChange,
   onValider,
   onAnnuler,
 }: {
-  readonly ligne: LigneAvantageEnNatureLocale;
-  readonly natures: readonly NatureAvantageEnNature[];
+  readonly ligne: LignePrimeContractuelleLocale;
+  readonly primes: readonly PrimeReferentiel[];
   readonly alertes: readonly AlerteApi[];
   readonly lectureSeule: boolean;
-  readonly onChange: (patch: Partial<LigneAvantageEnNatureLocale>) => void;
+  readonly onChange: (patch: Partial<LignePrimeContractuelleLocale>) => void;
   readonly onValider: () => void;
   readonly onAnnuler: () => void;
 }) {
   if (lectureSeule) {
     return (
       <div className="space-y-4" data-testid="formulaire-lecture-seule">
-        <p>Nature : {libelleNature(ligne.natureRef, natures)}</p>
-        <p>Montant : {afficherMontant(ligne.montant)}</p>
+        <p>Prime : {libellePrime(ligne.primeRef, primes)}</p>
         <p>Mois d’application : {afficherMoisApplication(ligne.moisApplication)}</p>
       </div>
     );
@@ -542,28 +434,19 @@ function FormulaireAvantageEnNature({
     <div className="space-y-4">
       <RegistreAlertesSalarie alertes={alertes} />
       <div className="space-y-2">
-        <Label htmlFor={`nature-${ligne.id}`}>Nature</Label>
+        <Label htmlFor={`prime-${ligne.id}`}>Prime</Label>
         <Select
-          id={`nature-${ligne.id}`}
-          value={ligne.natureRef}
-          onChange={(e) => onChange({ natureRef: e.target.value })}
+          id={`prime-${ligne.id}`}
+          value={ligne.primeRef}
+          onChange={(e) => onChange({ primeRef: e.target.value })}
         >
-          {natures.map((nature) => (
-            <option key={nature.code} value={nature.code}>
-              {nature.libelle}
+          {primes.map((prime) => (
+            <option key={prime.code} value={prime.code}>
+              {prime.libelle}
             </option>
           ))}
         </Select>
-        <MessagesAlerteChamp alertes={alertes} champ="natureRef" />
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor={`montant-${ligne.id}`}>Montant</Label>
-        <Input
-          id={`montant-${ligne.id}`}
-          value={ligne.montant}
-          onChange={(e) => onChange({ montant: e.target.value })}
-        />
-        <MessagesAlerteChamp alertes={alertes} champ="montant" />
+        <MessagesAlerteChamp alertes={alertes} champ="primeRef" />
       </div>
       <SaisieMoisApplication
         idPrefix={ligne.id}
