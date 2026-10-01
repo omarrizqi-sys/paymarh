@@ -10,6 +10,7 @@ import type {
   NatureAvantageEnNature,
   Permission,
   PrimeReferentiel,
+  StatutParticulier,
   TypeContrat,
 } from '@paymarh/shared-types';
 import {
@@ -36,6 +37,7 @@ interface Props {
   readonly banques: readonly Banque[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
   readonly primesReferentiel: readonly PrimeReferentiel[];
+  readonly statutsParticuliersReferentiel: readonly StatutParticulier[];
   readonly onEmploisChange: (maj: MiseAJourListeEmplois) => void;
 }
 
@@ -49,7 +51,7 @@ function emploiDeplieInitial(emplois: readonly EmploiFiche[]): string | null {
 export function BlocEmplois({
   companyId,
   emplois,
-  operations,
+  operations: _operationsFiche,
   typesContrat,
   motifsSortie,
   etablissements,
@@ -57,6 +59,7 @@ export function BlocEmplois({
   banques,
   naturesAvantageEnNature,
   primesReferentiel,
+  statutsParticuliersReferentiel,
   onEmploisChange,
 }: Props) {
   const remplacerEmploi = (maj: MiseAJourEmploiFiche) => {
@@ -101,7 +104,8 @@ export function BlocEmplois({
             banques={banques}
             naturesAvantageEnNature={naturesAvantageEnNature}
             primesReferentiel={primesReferentiel}
-            operations={operations}
+            statutsParticuliersReferentiel={statutsParticuliersReferentiel}
+            operations={emploi.operations ?? []}
             onEmploiChange={remplacerEmploi}
           />
         ))}
@@ -131,7 +135,8 @@ export function BlocEmplois({
                     banques={banques}
                     naturesAvantageEnNature={naturesAvantageEnNature}
                     primesReferentiel={primesReferentiel}
-                    operations={operations}
+                    statutsParticuliersReferentiel={statutsParticuliersReferentiel}
+                    operations={emploi.operations ?? []}
                     onEmploiChange={remplacerEmploi}
                   />
                 ))

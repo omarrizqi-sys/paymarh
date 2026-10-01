@@ -111,6 +111,7 @@ function ContenuFicheSalarie({
   typesSaisie,
   typesContrat,
   motifsSortie,
+  statutsParticuliers,
   naturesAvantageEnNature,
   primesReferentiel,
   etablissements,
@@ -126,6 +127,7 @@ function ContenuFicheSalarie({
   readonly typesSaisie: readonly TypeSaisieSurSalaire[];
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
+  readonly statutsParticuliers: readonly StatutParticulier[];
   readonly naturesAvantageEnNature: readonly NatureAvantageEnNature[];
   readonly primesReferentiel: readonly PrimeReferentiel[];
   readonly etablissements: readonly Etablissement[];
@@ -345,6 +347,7 @@ function ContenuFicheSalarie({
               banques={banques}
               naturesAvantageEnNature={naturesAvantageEnNature}
               primesReferentiel={primesReferentiel}
+              statutsParticuliersReferentiel={statutsParticuliers}
               onEmploisChange={(maj) => {
                 if (typeof maj === 'function') {
                   onFicheChange((prev) => ({ ...prev, emplois: [...maj(prev.emplois)] }));
@@ -379,7 +382,7 @@ export function FicheSalarieClient({
   typesSaisie,
   typesContrat,
   motifsSortie,
-  statutsParticuliers: _statutsParticuliers,
+  statutsParticuliers,
   naturesAvantageEnNature,
   primesReferentiel,
   etablissements,
@@ -418,6 +421,7 @@ export function FicheSalarieClient({
           typesSaisie={typesSaisie}
           typesContrat={typesContrat}
           motifsSortie={motifsSortie}
+          statutsParticuliers={statutsParticuliers}
           naturesAvantageEnNature={naturesAvantageEnNature}
           primesReferentiel={primesReferentiel}
           etablissements={etablissements}

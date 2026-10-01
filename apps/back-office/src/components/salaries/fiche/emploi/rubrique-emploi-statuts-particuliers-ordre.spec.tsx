@@ -7,7 +7,7 @@ import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { RegistreFicheProvider } from '../registre-fiche-provider';
 import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
 import {
-  OPERATIONS_EMPLOI_REMUNERATION,
+  OPERATIONS_EMPLOI_COMPLET,
   OPERATIONS_SALARIE_COMPLET,
   avecOperationsEmploi,
 } from '@/test/operations-harnais-fiche-emploi';
@@ -50,7 +50,7 @@ const MOTIFS_SORTIE = [{ id: 'ms-1', ordre: 1, code: 'DEMISSION', libelle: 'Dém
 
 const ETABLISSEMENTS = [{ id: 'etab-1', nom: 'Siège Casablanca' } as never];
 
-function emploiAvecPrimes(id: string): EmploiFiche {
+function emploiAvecStatuts(id: string): EmploiFiche {
   return {
     id,
     version: 3,
@@ -83,7 +83,16 @@ function emploiAvecPrimes(id: string): EmploiFiche {
       suivreJoursFeriesEtablissement: true,
       teletravailAutorise: null,
     },
-    statutsParticuliers: [],
+    statutsParticuliers: [
+      {
+        id: 'st-1',
+        statutCode: 'IDMAJ',
+        dateDebut: '2021-06-01',
+        dateFin: null,
+        origine: 'SAISIE_MANUELLE',
+        etat: 'ACTIVE',
+      },
+    ],
     resolutions: {
       dureeContractuelle: null,
       reposHebdomadaire: null,
@@ -91,35 +100,14 @@ function emploiAvecPrimes(id: string): EmploiFiche {
       grilleHoraire: null,
       joursFeriesTravailles: null,
     },
-    remuneration: {
-      modeDeterminationSalaire: 'BRUT_MENSUEL',
-      montant: '12000.00',
-      masquerNombreHeures: false,
-      masquerTauxHoraire: false,
-      bulletinTousLesMois: true,
-      moisProduction: [],
-      teletravailIndemniteVersee: null,
-      teletravailMontant: null,
-    },
-    paiement: {
-      modePaiement: 'VIREMENT',
-      compteBancaireId: null,
-    },
-    primesContractuelles: [
-      {
-        id: 'pc-1',
-        primeRef: 'A15',
-        moisApplication: [6, 12],
-      },
-    ],
   };
 }
 
-describe('Rubrique emploi — ordre registre primes contractuelles', () => {
+describe('Rubrique emploi — ordre registre statuts particuliers', () => {
   afterEach(() => cleanup());
 
-  it('ORD-PC01 — montage avec registre exige primes-contractuelles dans ORDRE_RUBRIQUES_EMPLOI', () => {
-    const emploi = avecOperationsEmploi(emploiAvecPrimes('emp-1'), OPERATIONS_EMPLOI_REMUNERATION);
+  it('SP21 — montage avec registre exige statuts-particuliers dans ORDRE_RUBRIQUES_EMPLOI', () => {
+    const emploi = avecOperationsEmploi(emploiAvecStatuts('emp-1'), OPERATIONS_EMPLOI_COMPLET);
     const operations: readonly Permission[] = [...OPERATIONS_SALARIE_COMPLET];
 
     function Harness() {
@@ -151,10 +139,10 @@ describe('Rubrique emploi — ordre registre primes contractuelles', () => {
               banques: [],
               comptesBancaires: [],
               naturesAvantageEnNature: [],
-              primesReferentiel: [
-                { id: 'p1', ordre: 20, code: 'A15', libelle: 'Indemnité de transport' },
+              primesReferentiel: [],
+              statutsParticuliersReferentiel: [
+                { id: 'st-ref', ordre: 1, code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
               ],
-              statutsParticuliersReferentiel: [],
               onEmploisChange: (maj) => {
                 setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
               },
@@ -165,6 +153,6 @@ describe('Rubrique emploi — ordre registre primes contractuelles', () => {
     }
 
     render(createElement(Harness));
-    expect(screen.getByTestId('primes-contractuelles-emp-1')).toBeTruthy();
+    expect(screen.getByTestId('statuts-particuliers-emp-1')).toBeTruthy();
   });
 });

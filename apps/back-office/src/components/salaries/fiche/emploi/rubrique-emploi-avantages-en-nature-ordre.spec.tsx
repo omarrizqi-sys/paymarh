@@ -6,6 +6,11 @@ import type { EmploiFiche, Permission } from '@paymarh/shared-types';
 import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { RegistreFicheProvider } from '../registre-fiche-provider';
 import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
+import {
+  OPERATIONS_EMPLOI_REMUNERATION,
+  OPERATIONS_SALARIE_COMPLET,
+  avecOperationsEmploi,
+} from '@/test/operations-harnais-fiche-emploi';
 import { BlocEmplois } from '../bloc-emplois';
 vi.mock('@/lib/api/emplois', () => ({
   modifierContratEmploi: vi.fn(),
@@ -17,6 +22,8 @@ vi.mock('@/lib/api/emplois', () => ({
   supprimerEmploi: vi.fn(),
   impactSuppressionAvantageEnNature: vi.fn(),
   supprimerAvantageEnNature: vi.fn(),
+  creerStatutParticulier: vi.fn(),
+  modifierStatutParticulier: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
   creerPrimeContractuelle: vi.fn(),
@@ -115,12 +122,11 @@ describe('Rubrique emploi — ordre registre avantages en nature', () => {
   afterEach(() => cleanup());
 
   it('ORD-AN01 — montage avec registre exige avantages-en-nature dans ORDRE_RUBRIQUES_EMPLOI', () => {
-    const emploi = emploiAvecAvantages('emp-1');
-    const operations: readonly Permission[] = [
-      'salarie.lire',
-      'salarie.remuneration.lire',
-      'salarie.remuneration.ecrire',
-    ];
+    const emploi = avecOperationsEmploi(
+      emploiAvecAvantages('emp-1'),
+      OPERATIONS_EMPLOI_REMUNERATION
+    );
+    const operations: readonly Permission[] = [...OPERATIONS_SALARIE_COMPLET];
 
     function Harness() {
       const [emplois, setEmplois] = useState([emploi]);
@@ -154,6 +160,7 @@ describe('Rubrique emploi — ordre registre avantages en nature', () => {
                 { id: 'n1', ordre: 1, code: 'B02', libelle: 'Voiture de fonction' },
               ],
               primesReferentiel: [],
+              statutsParticuliersReferentiel: [],
               onEmploisChange: (maj) => {
                 setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
               },

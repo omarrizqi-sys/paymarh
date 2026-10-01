@@ -18,6 +18,11 @@ import { RailActionsFiche } from '../rail-actions-fiche';
 import { BlocEmplois } from '../bloc-emplois';
 import { RubriqueEmploiPrimesContractuelles } from './rubrique-emploi-primes-contractuelles';
 import { reinitialiserCompteurIdLocal } from '@/lib/fiche/primes-contractuelles-lignes';
+import {
+  OPERATIONS_EMPLOI_REMUNERATION,
+  OPERATIONS_SALARIE_COMPLET,
+  avecOperationsEmploi,
+} from '@/test/operations-harnais-fiche-emploi';
 
 const PRIMES: readonly PrimeReferentiel[] = [
   { id: 'p1', ordre: 10, code: 'A04', libelle: 'Prime de panier' },
@@ -55,6 +60,8 @@ vi.mock('@/lib/api/emplois', () => ({
   supprimerEmploi: vi.fn(),
   impactSuppressionAvantageEnNature: vi.fn(),
   supprimerAvantageEnNature: vi.fn(),
+  creerStatutParticulier: vi.fn(),
+  modifierStatutParticulier: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
   creerPrimeContractuelle: (...args: unknown[]) => creerPrimeContractuelle(...args),
@@ -98,8 +105,10 @@ function emploiBase(
     readonly libellePoste?: string;
     readonly primesContractuelles?: readonly PrimeContractuelleFiche[];
     readonly sansPrimes?: boolean;
+    readonly operationsEmploi?: readonly Permission[];
   } = {}
 ): EmploiFiche {
+  const operationsEmploi = surcharges.operationsEmploi ?? OPERATIONS_EMPLOI_REMUNERATION;
   const base: EmploiFiche = {
     id,
     version: surcharges.version ?? 5,
@@ -151,25 +160,31 @@ function emploiBase(
   };
 
   if (surcharges.sansPrimes) {
-    return base;
+    return avecOperationsEmploi(base, operationsEmploi);
   }
 
   if (surcharges.primesContractuelles !== undefined) {
-    return { ...base, primesContractuelles: surcharges.primesContractuelles };
+    return avecOperationsEmploi(
+      { ...base, primesContractuelles: surcharges.primesContractuelles },
+      operationsEmploi
+    );
   }
 
-  return {
-    ...base,
-    primesContractuelles: [
-      prime({ id: 'pc-transport', primeRef: 'A15', moisApplication: [6, 12] }),
-      prime({
-        id: 'pc-tous',
-        primeRef: 'A04',
-        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-      }),
-      prime({ id: 'pc-vide', primeRef: 'A24', moisApplication: [] }),
-    ],
-  };
+  return avecOperationsEmploi(
+    {
+      ...base,
+      primesContractuelles: [
+        prime({ id: 'pc-transport', primeRef: 'A15', moisApplication: [6, 12] }),
+        prime({
+          id: 'pc-tous',
+          primeRef: 'A04',
+          moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        }),
+        prime({ id: 'pc-vide', primeRef: 'A24', moisApplication: [] }),
+      ],
+    },
+    operationsEmploi
+  );
 }
 
 function DeclarerGarde() {
@@ -220,6 +235,7 @@ function Harness({
           comptesBancaires: [],
           naturesAvantageEnNature: [],
           primesReferentiel: PRIMES,
+          statutsParticuliersReferentiel: [],
           onEmploisChange: (maj) => {
             setEmplois((prev) => {
               const copie = [...(typeof maj === 'function' ? maj(prev) : maj)];
@@ -239,14 +255,9 @@ function Harness({
   );
 }
 
-function HarnessRubriqueSeule({
-  emploi,
-  operations,
-}: {
-  readonly emploi: EmploiFiche;
-  readonly operations: readonly Permission[];
-}) {
+function HarnessRubriqueSeule({ emploi }: { readonly emploi: EmploiFiche }) {
   const [courant, setCourant] = useState(emploi);
+  const operationsEmploi = courant.operations ?? [];
 
   return createElement(
     NavigationGardeeTestProvider,
@@ -273,13 +284,13 @@ function HarnessRubriqueSeule({
           emploi: courant,
           lignesServeur: courant.primesContractuelles ?? [],
           primes: PRIMES,
-          operations,
+          operations: operationsEmploi,
           onEmploiChange: (maj) => {
             setCourant((prev) => (typeof maj === 'function' ? maj(prev) : maj));
           },
         }),
         createElement(RailActionsFiche, {
-          operations: [...operations, 'salarie.modifier', 'salarie.supprimer'],
+          operations: [...OPERATIONS_SALARIE_COMPLET],
           companyId: 'soc-test',
           salarieId: 'sal-test',
         })
@@ -310,7 +321,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -325,7 +336,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -342,7 +353,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -360,7 +371,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -380,7 +391,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -419,7 +430,6 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi,
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -451,7 +461,6 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi: emploiBase('emp-1'),
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -475,7 +484,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
         Harness,
         {
           emploisInitiaux: [emploiBase('emp-1')],
-          operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+          operations: OPERATIONS_SALARIE_COMPLET,
         },
         createElement(LienGarde, { href: '/societes/soc-test/salaries' }, 'Retour liste')
       )
@@ -507,7 +516,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -539,7 +548,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -557,7 +566,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-2', { primesContractuelles: [] })],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -585,8 +594,8 @@ describe('Rubrique emploi — Primes contractuelles', () => {
   it('PC13 — lecture seule sans bouton Ajouter ni Supprimer', () => {
     render(
       createElement(Harness, {
-        emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire'],
+        emploisInitiaux: [emploiBase('emp-1', { operationsEmploi: ['salarie.remuneration.lire'] })],
+        operations: ['salarie.lire'],
       })
     );
 
@@ -609,7 +618,6 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi: emploiBase('emp-1'),
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -652,7 +660,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
         onEmploisChangeCapture: (prochains) => {
           historiqueEmplois.push(prochains.map((e) => structuredClone(e)));
         },
@@ -706,7 +714,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
         onEmploisChangeCapture: (prochains) => {
           historiqueEmplois.push(prochains.map((e) => structuredClone(e)));
         },
@@ -781,7 +789,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -849,7 +857,7 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -897,7 +905,6 @@ describe('Rubrique emploi — Primes contractuelles', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi,
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 

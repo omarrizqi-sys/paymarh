@@ -186,6 +186,43 @@ export async function supprimerAvantageEnNature(
   );
 }
 
+export async function creerStatutParticulier(
+  companyId: string,
+  emploiId: string,
+  version: number,
+  corps: {
+    statutCode: string;
+    dateDebut: string;
+    dateFin: string | null;
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePost<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/statuts-particuliers`,
+    corps,
+    version
+  );
+}
+
+export async function modifierStatutParticulier(
+  companyId: string,
+  emploiId: string,
+  ligneId: string,
+  version: number,
+  corps: {
+    statutCode?: string;
+    dateDebut?: string;
+    dateFin?: string | null;
+  }
+): Promise<ReponseEcriture<EmploiFiche>> {
+  return appelerSalariePatch<EmploiFiche>(
+    companyId,
+    `/emplois/${emploiId}/statuts-particuliers/${ligneId}`,
+    corps,
+    version
+  );
+}
+
 export async function impactSuppressionStatutParticulier(
   companyId: string,
   emploiId: string,

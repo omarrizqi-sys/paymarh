@@ -2,7 +2,12 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { EmploiFiche, Permission } from '@paymarh/shared-types';
+import {
+  OPERATIONS_EMPLOI_COMPLET,
+  avecOperationsEmploi,
+} from '@/test/operations-harnais-fiche-emploi';
 import { BlocEmplois } from './bloc-emplois';
+import { FormulaireTableauProvider } from './contexte-formulaire-tableau';
 import { RegistreFicheProvider } from './registre-fiche-provider';
 
 const TYPES_CONTRAT = [
@@ -33,89 +38,96 @@ function emploiBase(
     readonly paiement?: EmploiFiche['paiement'];
     readonly affectation?: Partial<EmploiFiche['affectation']>;
     readonly resolutions?: EmploiFiche['resolutions'];
+    readonly operationsEmploi?: readonly Permission[];
   } = {}
 ): EmploiFiche {
-  return {
-    id,
-    version: 1,
-    numeroOrdre: surcharges.numeroOrdre ?? 1,
-    contrat: {
-      libellePoste: `Poste ${id}`,
-      dateDebut: '2025-01-01',
-      dateFin: null,
-      typeContratCode: 'CDI',
-      periodeEssaiDateFin: null,
-      periodeEssaiDureeJours: null,
-      renouvellementEssaiDateFin: null,
-      statutCadre: null,
-      coefficient: null,
-      position: null,
-      indice: null,
-      dateSortie: null,
-      motifSortieCode: null,
-      estOuvert: true,
-      ...surcharges.contrat,
+  return avecOperationsEmploi(
+    {
+      id,
+      version: 1,
+      numeroOrdre: surcharges.numeroOrdre ?? 1,
+      contrat: {
+        libellePoste: `Poste ${id}`,
+        dateDebut: '2025-01-01',
+        dateFin: null,
+        typeContratCode: 'CDI',
+        periodeEssaiDateFin: null,
+        periodeEssaiDureeJours: null,
+        renouvellementEssaiDateFin: null,
+        statutCadre: null,
+        coefficient: null,
+        position: null,
+        indice: null,
+        dateSortie: null,
+        motifSortieCode: null,
+        estOuvert: true,
+        ...surcharges.contrat,
+      },
+      affectation: {
+        etablissementId: 'etab-1',
+        departementRef: null,
+        serviceRef: null,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+        dureeContractuelle: null,
+        dureeDansAutreBase: null,
+        repartitionHoraireRef: null,
+        reposHebdomadaire: null,
+        suivreJoursFeriesEtablissement: true,
+        teletravailAutorise: null,
+        ...surcharges.affectation,
+      },
+      statutsParticuliers: [],
+      resolutions: surcharges.resolutions ?? resolutionsVides(),
+      remuneration: surcharges.remuneration ?? {
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: '12000.00',
+        masquerNombreHeures: false,
+        masquerTauxHoraire: false,
+        bulletinTousLesMois: true,
+        moisProduction: [],
+        teletravailIndemniteVersee: null,
+        teletravailMontant: null,
+      },
+      paiement: surcharges.paiement ?? {
+        modePaiement: 'VIREMENT',
+        compteBancaireId: null,
+      },
     },
-    affectation: {
-      etablissementId: 'etab-1',
-      departementRef: null,
-      serviceRef: null,
-      baseSaisieDuree: 'HEBDOMADAIRE',
-      dureeContractuelle: null,
-      dureeDansAutreBase: null,
-      repartitionHoraireRef: null,
-      reposHebdomadaire: null,
-      suivreJoursFeriesEtablissement: true,
-      teletravailAutorise: null,
-      ...surcharges.affectation,
-    },
-    statutsParticuliers: [],
-    resolutions: surcharges.resolutions ?? resolutionsVides(),
-    remuneration: surcharges.remuneration ?? {
-      modeDeterminationSalaire: 'BRUT_MENSUEL',
-      montant: '12000.00',
-      masquerNombreHeures: false,
-      masquerTauxHoraire: false,
-      bulletinTousLesMois: true,
-      moisProduction: [],
-      teletravailIndemniteVersee: null,
-      teletravailMontant: null,
-    },
-    paiement: surcharges.paiement ?? {
-      modePaiement: 'VIREMENT',
-      compteBancaireId: null,
-    },
-  };
+    surcharges.operationsEmploi ?? OPERATIONS_EMPLOI_COMPLET
+  );
 }
 
 function rendre(
   emplois: readonly EmploiFiche[],
-  operations: readonly Permission[] = ['salarie.lire', 'salarie.remuneration.lire'],
+  operations: readonly Permission[] = ['salarie.lire'],
   onEmploisChange = vi.fn()
 ) {
   return render(
-    <RegistreFicheProvider
-      versionInitiale={1}
-      emplois={emplois.map((emploi) => ({
-        id: emploi.id,
-        libellePoste: emploi.contrat.libellePoste,
-        version: emploi.version,
-      }))}
-      onRechargerServeur={vi.fn(async () => undefined)}
-    >
-      <BlocEmplois
-        companyId="soc-test"
-        emplois={emplois}
-        operations={operations}
-        typesContrat={TYPES_CONTRAT}
-        motifsSortie={MOTIFS_SORTIE}
-        etablissements={ETABLISSEMENTS}
-        banques={[]}
-        naturesAvantageEnNature={[]}
-        primesReferentiel={[]}
-        onEmploisChange={onEmploisChange}
-      />
-    </RegistreFicheProvider>
+    <FormulaireTableauProvider>
+      <RegistreFicheProvider
+        versionInitiale={1}
+        emplois={emplois.map((emploi) => ({
+          id: emploi.id,
+          libellePoste: emploi.contrat.libellePoste,
+          version: emploi.version,
+        }))}
+        onRechargerServeur={vi.fn(async () => undefined)}
+      >
+        <BlocEmplois
+          companyId="soc-test"
+          emplois={emplois}
+          operations={operations}
+          typesContrat={TYPES_CONTRAT}
+          motifsSortie={MOTIFS_SORTIE}
+          etablissements={ETABLISSEMENTS}
+          banques={[]}
+          naturesAvantageEnNature={[]}
+          primesReferentiel={[]}
+          statutsParticuliersReferentiel={[]}
+          onEmploisChange={onEmploisChange}
+        />
+      </RegistreFicheProvider>
+    </FormulaireTableauProvider>
   );
 }
 
@@ -207,7 +219,7 @@ describe('BlocEmplois', () => {
   });
 
   it('sans salarie.remuneration.lire : la rubrique remuneration absente du DOM', () => {
-    rendre([emploiBase('emp-1')], ['salarie.lire']);
+    rendre([emploiBase('emp-1', { operationsEmploi: [] })], ['salarie.lire']);
 
     expect(document.getElementById('emp-1/contrat')).toBeTruthy();
     expect(document.getElementById('emp-1/affectation')).toBeTruthy();
@@ -302,7 +314,10 @@ describe('BlocEmplois', () => {
   });
 
   it('affiche le montant formate en lecture seule sans droit d ecriture remuneration', () => {
-    rendre([emploiBase('emp-1')], ['salarie.lire', 'salarie.remuneration.lire']);
+    rendre(
+      [emploiBase('emp-1', { operationsEmploi: ['salarie.remuneration.lire'] })],
+      ['salarie.lire']
+    );
 
     expect(screen.getByTestId('emp-1-montant').textContent).toBe('12\u202f000,00');
   });

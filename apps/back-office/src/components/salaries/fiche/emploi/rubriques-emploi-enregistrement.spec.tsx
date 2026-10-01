@@ -9,7 +9,12 @@ import { useDeclarerSaisiePerdable } from '@/components/navigation/saisie-perdab
 import { NavigationGardeeTestProvider } from '@/test/navigation-gardee-test';
 import { RegistreFicheProvider, useRegistreFiche } from '../registre-fiche-provider';
 import { RailActionsFiche } from '../rail-actions-fiche';
+import {
+  OPERATIONS_EMPLOI_COMPLET,
+  avecOperationsEmploi,
+} from '@/test/operations-harnais-fiche-emploi';
 import { BlocEmplois } from '../bloc-emplois';
+import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
 
 const routerPush = vi.fn();
 
@@ -31,6 +36,8 @@ vi.mock('@/lib/api/emplois', () => ({
   supprimerEmploi: vi.fn(),
   impactSuppressionAvantageEnNature: vi.fn(),
   supprimerAvantageEnNature: vi.fn(),
+  creerStatutParticulier: vi.fn(),
+  modifierStatutParticulier: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
   creerPrimeContractuelle: vi.fn(),
@@ -83,57 +90,61 @@ function emploiBase(
     readonly libellePoste?: string;
     readonly numeroOrdre?: number;
     readonly dureeContractuelle?: string | null;
+    readonly operationsEmploi?: readonly Permission[];
   } = {}
 ): EmploiFiche {
-  return {
-    id,
-    version: surcharges.version ?? 5,
-    numeroOrdre: surcharges.numeroOrdre ?? 1,
-    contrat: {
-      libellePoste: surcharges.libellePoste ?? `Poste ${id}`,
-      dateDebut: '2025-01-01',
-      dateFin: null,
-      typeContratCode: 'CDI',
-      periodeEssaiDateFin: null,
-      periodeEssaiDureeJours: null,
-      renouvellementEssaiDateFin: null,
-      statutCadre: null,
-      coefficient: null,
-      position: null,
-      indice: null,
-      dateSortie: null,
-      motifSortieCode: null,
-      estOuvert: true,
+  return avecOperationsEmploi(
+    {
+      id,
+      version: surcharges.version ?? 5,
+      numeroOrdre: surcharges.numeroOrdre ?? 1,
+      contrat: {
+        libellePoste: surcharges.libellePoste ?? `Poste ${id}`,
+        dateDebut: '2025-01-01',
+        dateFin: null,
+        typeContratCode: 'CDI',
+        periodeEssaiDateFin: null,
+        periodeEssaiDureeJours: null,
+        renouvellementEssaiDateFin: null,
+        statutCadre: null,
+        coefficient: null,
+        position: null,
+        indice: null,
+        dateSortie: null,
+        motifSortieCode: null,
+        estOuvert: true,
+      },
+      affectation: {
+        etablissementId: 'etab-1',
+        departementRef: null,
+        serviceRef: null,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+        dureeContractuelle: surcharges.dureeContractuelle ?? null,
+        dureeDansAutreBase: null,
+        repartitionHoraireRef: null,
+        reposHebdomadaire: null,
+        suivreJoursFeriesEtablissement: true,
+        teletravailAutorise: null,
+      },
+      statutsParticuliers: [],
+      resolutions: resolutionsVides(),
+      remuneration: {
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: '12000.00',
+        masquerNombreHeures: false,
+        masquerTauxHoraire: false,
+        bulletinTousLesMois: true,
+        moisProduction: [],
+        teletravailIndemniteVersee: null,
+        teletravailMontant: null,
+      },
+      paiement: {
+        modePaiement: 'VIREMENT',
+        compteBancaireId: null,
+      },
     },
-    affectation: {
-      etablissementId: 'etab-1',
-      departementRef: null,
-      serviceRef: null,
-      baseSaisieDuree: 'HEBDOMADAIRE',
-      dureeContractuelle: surcharges.dureeContractuelle ?? null,
-      dureeDansAutreBase: null,
-      repartitionHoraireRef: null,
-      reposHebdomadaire: null,
-      suivreJoursFeriesEtablissement: true,
-      teletravailAutorise: null,
-    },
-    statutsParticuliers: [],
-    resolutions: resolutionsVides(),
-    remuneration: {
-      modeDeterminationSalaire: 'BRUT_MENSUEL',
-      montant: '12000.00',
-      masquerNombreHeures: false,
-      masquerTauxHoraire: false,
-      bulletinTousLesMois: true,
-      moisProduction: [],
-      teletravailIndemniteVersee: null,
-      teletravailMontant: null,
-    },
-    paiement: {
-      modePaiement: 'VIREMENT',
-      compteBancaireId: null,
-    },
-  };
+    surcharges.operationsEmploi ?? OPERATIONS_EMPLOI_COMPLET
+  );
 }
 
 function DeclarerGarde() {
@@ -194,39 +205,44 @@ function HarnessEmplois({
     NavigationGardeeTestProvider,
     null,
     createElement(
-      RegistreFicheProvider,
-      {
-        versionInitiale: 10,
-        emplois: emplois.map((emploi) => ({
-          id: emploi.id,
-          libellePoste: emploi.contrat.libellePoste,
-          version: emploi.version,
-        })),
-        onRechargerServeur: vi.fn(async () => undefined),
-      },
-      createElement(DeclarerGarde),
-      avecIdentite ? createElement(RubriqueIdentiteModifiable) : null,
-      createElement(BlocEmplois, {
-        companyId: 'soc-test',
-        emplois,
-        operations,
-        typesContrat: TYPES_CONTRAT,
-        motifsSortie: MOTIFS_SORTIE,
-        etablissements: ETABLISSEMENTS,
-        banques: [],
-        comptesBancaires: [],
-        naturesAvantageEnNature: [],
-        primesReferentiel: [],
-        onEmploisChange: (maj) => {
-          setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
+      FormulaireTableauProvider,
+      null,
+      createElement(
+        RegistreFicheProvider,
+        {
+          versionInitiale: 10,
+          emplois: emplois.map((emploi) => ({
+            id: emploi.id,
+            libellePoste: emploi.contrat.libellePoste,
+            version: emploi.version,
+          })),
+          onRechargerServeur: vi.fn(async () => undefined),
         },
-      }),
-      children,
-      createElement(RailActionsFiche, {
-        operations: [...operations, 'salarie.modifier', 'salarie.supprimer'],
-        companyId: 'soc-test',
-        salarieId: 'sal-test',
-      })
+        createElement(DeclarerGarde),
+        avecIdentite ? createElement(RubriqueIdentiteModifiable) : null,
+        createElement(BlocEmplois, {
+          companyId: 'soc-test',
+          emplois,
+          operations,
+          typesContrat: TYPES_CONTRAT,
+          motifsSortie: MOTIFS_SORTIE,
+          etablissements: ETABLISSEMENTS,
+          banques: [],
+          comptesBancaires: [],
+          naturesAvantageEnNature: [],
+          primesReferentiel: [],
+          statutsParticuliersReferentiel: [],
+          onEmploisChange: (maj) => {
+            setEmplois((prev) => [...(typeof maj === 'function' ? maj(prev) : maj)]);
+          },
+        }),
+        children,
+        createElement(RailActionsFiche, {
+          operations: [...operations, 'salarie.modifier', 'salarie.supprimer'],
+          companyId: 'soc-test',
+          salarieId: 'sal-test',
+        })
+      )
     )
   );
 }
@@ -400,8 +416,8 @@ describe('Rubriques emploi — enregistrement', () => {
   it('E06 — sans salarie.remuneration.ecrire la rubrique remuneration n est pas modifiable', () => {
     render(
       createElement(HarnessEmplois, {
-        emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire'],
+        emploisInitiaux: [emploiBase('emp-1', { operationsEmploi: ['salarie.remuneration.lire'] })],
+        operations: ['salarie.lire'],
       })
     );
 

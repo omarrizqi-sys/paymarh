@@ -18,6 +18,11 @@ import { RailActionsFiche } from '../rail-actions-fiche';
 import { BlocEmplois } from '../bloc-emplois';
 import { RubriqueEmploiAvantagesEnNature } from './rubrique-emploi-avantages-en-nature';
 import { reinitialiserCompteurIdLocal } from '@/lib/fiche/avantages-en-nature-lignes';
+import {
+  OPERATIONS_EMPLOI_REMUNERATION,
+  OPERATIONS_SALARIE_COMPLET,
+  avecOperationsEmploi,
+} from '@/test/operations-harnais-fiche-emploi';
 
 const NATURES: readonly NatureAvantageEnNature[] = [
   { id: 'n1', ordre: 1, code: 'B01', libelle: 'Logement de fonction' },
@@ -58,6 +63,8 @@ vi.mock('@/lib/api/emplois', () => ({
   impactSuppressionAvantageEnNature: (...args: unknown[]) =>
     impactSuppressionAvantageEnNature(...args),
   supprimerAvantageEnNature: (...args: unknown[]) => supprimerAvantageEnNature(...args),
+  creerStatutParticulier: vi.fn(),
+  modifierStatutParticulier: vi.fn(),
   impactSuppressionStatutParticulier: vi.fn(),
   supprimerStatutParticulier: vi.fn(),
   creerPrimeContractuelle: vi.fn(),
@@ -105,8 +112,10 @@ function emploiBase(
     readonly libellePoste?: string;
     readonly avantagesEnNature?: readonly AvantageEnNatureFiche[];
     readonly sansAvantages?: boolean;
+    readonly operationsEmploi?: readonly Permission[];
   } = {}
 ): EmploiFiche {
+  const operationsEmploi = surcharges.operationsEmploi ?? OPERATIONS_EMPLOI_REMUNERATION;
   const base: EmploiFiche = {
     id,
     version: surcharges.version ?? 5,
@@ -158,28 +167,34 @@ function emploiBase(
   };
 
   if (surcharges.sansAvantages) {
-    return base;
+    return avecOperationsEmploi(base, operationsEmploi);
   }
 
   if (surcharges.avantagesEnNature !== undefined) {
-    return { ...base, avantagesEnNature: surcharges.avantagesEnNature };
+    return avecOperationsEmploi(
+      { ...base, avantagesEnNature: surcharges.avantagesEnNature },
+      operationsEmploi
+    );
   }
 
-  return {
-    ...base,
-    avantagesEnNature: [
-      avantage({ id: 'av-voiture', natureRef: 'B02' }),
-      avantage({ id: 'av-logement', natureRef: 'B01', montant: '2000.00' }),
-      avantage({
-        id: 'av-nourriture',
-        natureRef: 'B03',
-        montant: '800.00',
-        moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-        moisEffetFin: '2022-02',
-        etat: 'CLOTUREE',
-      }),
-    ],
-  };
+  return avecOperationsEmploi(
+    {
+      ...base,
+      avantagesEnNature: [
+        avantage({ id: 'av-voiture', natureRef: 'B02' }),
+        avantage({ id: 'av-logement', natureRef: 'B01', montant: '2000.00' }),
+        avantage({
+          id: 'av-nourriture',
+          natureRef: 'B03',
+          montant: '800.00',
+          moisApplication: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+          moisEffetFin: '2022-02',
+          etat: 'CLOTUREE',
+        }),
+      ],
+    },
+    operationsEmploi
+  );
 }
 
 function DeclarerGarde() {
@@ -230,6 +245,7 @@ function Harness({
           comptesBancaires: [],
           naturesAvantageEnNature: NATURES,
           primesReferentiel: [],
+          statutsParticuliersReferentiel: [],
           onEmploisChange: (maj) => {
             setEmplois((prev) => {
               const copie = [...(typeof maj === 'function' ? maj(prev) : maj)];
@@ -256,14 +272,9 @@ function ouvrirAccordeon(emploiId: string) {
   }
 }
 
-function HarnessRubriqueSeule({
-  emploi,
-  operations,
-}: {
-  readonly emploi: EmploiFiche;
-  readonly operations: readonly Permission[];
-}) {
+function HarnessRubriqueSeule({ emploi }: { readonly emploi: EmploiFiche }) {
   const [courant, setCourant] = useState(emploi);
+  const operationsEmploi = courant.operations ?? [];
 
   return createElement(
     NavigationGardeeTestProvider,
@@ -290,13 +301,13 @@ function HarnessRubriqueSeule({
           emploi: courant,
           lignesServeur: courant.avantagesEnNature ?? [],
           natures: NATURES,
-          operations,
+          operations: operationsEmploi,
           onEmploiChange: (maj) => {
             setCourant((prev) => (typeof maj === 'function' ? maj(prev) : maj));
           },
         }),
         createElement(RailActionsFiche, {
-          operations: [...operations, 'salarie.modifier', 'salarie.supprimer'],
+          operations: [...OPERATIONS_SALARIE_COMPLET],
           companyId: 'soc-test',
           salarieId: 'sal-test',
         })
@@ -321,7 +332,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -337,7 +348,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -353,7 +364,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -376,7 +387,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -411,7 +422,6 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi,
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -441,7 +451,6 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi: emploiBase('emp-1'),
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -465,7 +474,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
         Harness,
         {
           emploisInitiaux: [emploiBase('emp-1')],
-          operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+          operations: OPERATIONS_SALARIE_COMPLET,
         },
         createElement(LienGarde, { href: '/societes/soc-test/salaries' }, 'Retour liste')
       )
@@ -506,7 +515,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -527,7 +536,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-2', { avantagesEnNature: [] })],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -555,8 +564,8 @@ describe('Rubrique emploi — Avantages en nature', () => {
   it('AN11 — lecture seule sans bouton Ajouter ni Supprimer', () => {
     render(
       createElement(Harness, {
-        emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire'],
+        emploisInitiaux: [emploiBase('emp-1', { operationsEmploi: ['salarie.remuneration.lire'] })],
+        operations: ['salarie.lire'],
       })
     );
 
@@ -571,7 +580,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiBase('emp-1')],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -594,7 +603,6 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(HarnessRubriqueSeule, {
         emploi: emploiBase('emp-1'),
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
       })
     );
 
@@ -642,7 +650,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
         onEmploisChangeCapture: (prochains) => {
           historiqueEmplois.push(prochains.map((e) => structuredClone(e)));
         },
@@ -712,7 +720,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
         onEmploisChangeCapture: (prochains) => {
           historiqueEmplois.push(prochains.map((e) => structuredClone(e)));
         },
@@ -785,7 +793,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
@@ -863,7 +871,7 @@ describe('Rubrique emploi — Avantages en nature', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploi],
-        operations: ['salarie.lire', 'salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+        operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
