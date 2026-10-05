@@ -1,5 +1,7 @@
 # ADR 0018 — Propagation de l'exonération TAHFIZ
 
+> **Note — 2026-10-05.** Complété par l'[ADR 0033](0033-tahfiz-periodes-cdi-idmaj-contrat-insertion.md) : la propagation ne vise plus les emplois ouverts mais les **périodes en CDI** de tous les emplois, ouverts ou terminés, et se déclenche aussi à la création d'un emploi et au `PATCH /emplois/:id/contrat`. Les sections « Qui est concerné » et « Activation et dates » ci-dessous sont remplacées sur ces points ; le retrait, la lecture seule et la transaction unique restent valables.
+
 - **Statut :** accepté
 - **Date :** 2026-09-03
 - **Portée :** module 2 (propagation) + déclenchement depuis le module 1 (paramétrage société)

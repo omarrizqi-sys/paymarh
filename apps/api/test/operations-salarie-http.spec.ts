@@ -4,7 +4,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { HEADER_PERMISSIONS_REFUSEES } from '../src/common/permissions/permissions-refusees.header.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
 import {
-  creerEmploiOuvert,
+  creerEmploiInsertion,
   creerSalarieMin,
   creerSocieteTest,
 } from './support/fiche-salarie-fixtures.js';
@@ -58,7 +58,7 @@ describe('API salarié — operations autorisées (2.1.c-1 temps 1.1)', () => {
     });
     salarieAId = salarie.id;
 
-    const emploi = await creerEmploiOuvert(
+    const emploi = await creerEmploiInsertion(
       prisma,
       salarie.id,
       societeA.etablissementPrincipalId,

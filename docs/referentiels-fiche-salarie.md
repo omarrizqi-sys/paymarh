@@ -217,17 +217,19 @@ Le libellé « Palestine » est volontairement différent de celui de la norme I
 
 Liste **ouverte** : elle n'est pas figée en phase 2. Elle doit rester extensible sans migration.
 
-| code    | libellé                                    |
-| ------- | ------------------------------------------ |
-| CDI     | Contrat à durée indéterminée               |
-| CDD     | Contrat à durée déterminée                 |
-| CTT     | Contrat de travail temporaire              |
-| INT_CDI | Intérimaire — contrat à durée indéterminée |
-| OBJ     | Contrat à objet défini                     |
-| STAGE   | Convention de stage                        |
-| MANDAT  | Mandataire social                          |
+| code      | libellé                                    |
+| --------- | ------------------------------------------ |
+| CDI       | Contrat à durée indéterminée               |
+| CDD       | Contrat à durée déterminée                 |
+| CTT       | Contrat de travail temporaire              |
+| INT_CDI   | Intérimaire — contrat à durée indéterminée |
+| OBJ       | Contrat à objet défini                     |
+| STAGE     | Convention de stage                        |
+| INSERTION | Contrat d’insertion                        |
+| MANDAT    | Mandataire social                          |
 
-> Il n'existe **ni contrat d'apprentissage ni contrat d'insertion** au Maroc. Ne pas en ajouter.
+> Il n'existe **pas de contrat d'apprentissage** au Maroc. Ne pas en ajouter.
+> Le **contrat d’insertion** est le contrat du dispositif IDMAJ (ANAPEC) : c'est le seul type de contrat sur lequel le statut IDMAJ peut être saisi (ADR 0033).
 
 ---
 

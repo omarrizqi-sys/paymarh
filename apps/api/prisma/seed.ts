@@ -4,10 +4,15 @@ import { config as chargerEnv } from 'dotenv';
 import { Decimal } from 'decimal.js';
 import { PrismaClient } from '../src/generated/prisma/client.js';
 import { heuresHebdomadairesVersMensuelles } from '../src/modules/companies/heures-mensuelles.js';
+import { resoudreLigneHistorique } from '../src/modules/companies/historisation.js';
 import {
   incrementerCompteurMatricule,
   marquerMatriculeConsomme,
 } from '../src/modules/salaries/compteurs-salarie.js';
+import {
+  calculerLignesTahfiz,
+  type PeriodeTahfizSociete,
+} from '../src/modules/salaries/tahfiz/periodes-tahfiz.js';
 import {
   BANQUES,
   FORMES_JURIDIQUES,
@@ -36,7 +41,8 @@ import {
 // - un compte CABINET, un super-admin, un admin de compte ;
 // - une societe complete : 2 etablissements, 2 comptes bancaires, grille
 //   horaire 44 h, feries coches, historique societe et siege multi-mois ;
-// - trois salaries de demonstration (complet actif, minimal sans emploi, sortie).
+// - quatre salaries de demonstration (complet actif, minimal sans emploi, sortie,
+//   CDI sous TAHFIZ) ; les lignes TAHFIZ sont calculees par calculerLignesTahfiz.
 //
 // Idempotent : on peut relancer sans creer de doublon.
 // Lancement : pnpm db:seed
@@ -66,6 +72,8 @@ const SALARIE_MINIMAL_NOM = 'Tazi';
 const SALARIE_MINIMAL_PRENOM = 'Said';
 const SALARIE_SORTIE_NOM = 'El Fassi';
 const SALARIE_SORTIE_PRENOM = 'Amina';
+const SALARIE_CDI_NOM = 'Alaoui';
+const SALARIE_CDI_PRENOM = 'Karim';
 
 async function seedReferences(): Promise<{
   formeSarlId: string;
@@ -795,7 +803,7 @@ async function seedSalariesDemo(
         moisEffet: '2022-03',
         libellePoste: 'Responsable paie',
         dateDebut: new Date('2022-03-01'),
-        typeContratCode: 'CDI',
+        typeContratCode: 'INSERTION',
       },
     });
     await prisma.emploiRemunerationVersion.create({
@@ -817,6 +825,11 @@ async function seedSalariesDemo(
       },
     });
   }
+  // Une base semee avant l introduction du contrat d insertion portait cet emploi en CDI.
+  await prisma.emploiContratVersion.updateMany({
+    where: { emploi: { salarieId: complet.id, numeroOrdre: 1 } },
+    data: { typeContratCode: 'INSERTION' },
+  });
 
   await seedTableauxEtSecondEmploiDemo(complet.id, etablissementPrincipalId);
 
@@ -887,9 +900,133 @@ async function seedSalariesDemo(
     });
   }
 
-  console.log(
-    `Salaries de demonstration : ${complet.matricule} ${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM} (complet), ${minimal.matricule} ${SALARIE_MINIMAL_PRENOM} ${SALARIE_MINIMAL_NOM} (minimal), ${sortie.matricule} ${SALARIE_SORTIE_PRENOM} ${SALARIE_SORTIE_NOM} (sortie).`
+  const cdi = await trouverOuCreerSalarieDemo(
+    companyId,
+    societe.matriculePrefixe,
+    societe.matriculeLongueur,
+    { nom: SALARIE_CDI_NOM, prenom: SALARIE_CDI_PRENOM },
+    {
+      nom: SALARIE_CDI_NOM,
+      prenom: SALARIE_CDI_PRENOM,
+      sexe: 'HOMME',
+      dateEntree: new Date('2024-01-01'),
+      dateAnciennete: new Date('2024-01-01'),
+    }
   );
+
+  const emploiCdi = await prisma.emploi.findFirst({ where: { salarieId: cdi.id } });
+  if (!emploiCdi) {
+    const emploi = await prisma.emploi.create({
+      data: { salarieId: cdi.id, numeroOrdre: 1 },
+    });
+    await prisma.emploiContratVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2024-01',
+        libellePoste: 'Comptable',
+        dateDebut: new Date('2024-01-01'),
+        typeContratCode: 'CDI',
+      },
+    });
+    await prisma.emploiRemunerationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2024-01',
+        modeDeterminationSalaire: 'BRUT_MENSUEL',
+        montant: new Decimal('9000.00'),
+      },
+    });
+    await prisma.emploiAffectationVersion.create({
+      data: {
+        emploiId: emploi.id,
+        moisEffet: '2024-01',
+        etablissementId: etablissementPrincipalId,
+        baseSaisieDuree: 'HEBDOMADAIRE',
+        dureeContractuelle: null,
+        reposHebdomadaire: null,
+      },
+    });
+  }
+
+  const lignesTahfiz = await synchroniserTahfizDemo(companyId);
+
+  console.log(
+    `Salaries de demonstration : ${complet.matricule} ${SALARIE_COMPLET_PRENOM} ${SALARIE_COMPLET_NOM} (complet), ${minimal.matricule} ${SALARIE_MINIMAL_PRENOM} ${SALARIE_MINIMAL_NOM} (minimal), ${sortie.matricule} ${SALARIE_SORTIE_PRENOM} ${SALARIE_SORTIE_NOM} (sortie), ${cdi.matricule} ${SALARIE_CDI_PRENOM} ${SALARIE_CDI_NOM} (CDI sous TAHFIZ) ; ${lignesTahfiz} ligne(s) TAHFIZ propagee(s).`
+  );
+}
+
+/**
+ * Lignes TAHFIZ de la societe de demonstration, calculees par la meme fonction
+ * que l API (parametrage applicable au mois en cours societe). Aucun bulletin
+ * n existe dans le seed : les lignes sont exactement le resultat du calcul.
+ */
+async function synchroniserTahfizDemo(companyId: string): Promise<number> {
+  const societe = await prisma.company.findUniqueOrThrow({
+    where: { id: companyId },
+    select: { moisEnCours: true },
+  });
+  const tahfiz = await prisma.typeExoneration.findUniqueOrThrow({
+    where: { code: 'TAHFIZ' },
+    select: { id: true },
+  });
+  const parametrages = await prisma.companyParametrageHistorique.findMany({
+    where: { companyId },
+  });
+  const applicable = resoudreLigneHistorique(parametrages, societe.moisEnCours);
+  const periode: PeriodeTahfizSociete | null =
+    applicable !== null &&
+    applicable.typeExonerationId === tahfiz.id &&
+    applicable.exonerationDateDebut !== null
+      ? { moisDebut: applicable.exonerationDateDebut, moisFin: applicable.exonerationDateFin }
+      : null;
+
+  const emplois = await prisma.emploi.findMany({
+    where: { salarie: { companyId } },
+    select: {
+      id: true,
+      contratVersions: {
+        select: { moisEffet: true, typeContratCode: true, dateDebut: true, dateSortie: true },
+      },
+      statutsParticuliers: {
+        where: { statutCode: 'TAHFIZ', origine: 'PROPAGE_SOCIETE' },
+        orderBy: { dateDebut: 'asc' },
+        select: { id: true, dateDebut: true, dateFin: true },
+      },
+    },
+  });
+
+  let total = 0;
+  for (const emploi of emplois) {
+    const voulues = calculerLignesTahfiz(emploi.contratVersions, periode);
+    total += voulues.length;
+    const identiques =
+      voulues.length === emploi.statutsParticuliers.length &&
+      voulues.every((voulue, index) => {
+        const existante = emploi.statutsParticuliers[index];
+        return (
+          existante !== undefined &&
+          existante.dateDebut.getTime() === voulue.dateDebut.getTime() &&
+          (existante.dateFin?.getTime() ?? null) === (voulue.dateFin?.getTime() ?? null)
+        );
+      });
+    if (identiques) continue;
+
+    await prisma.$transaction([
+      prisma.statutParticulierLigne.deleteMany({
+        where: { id: { in: emploi.statutsParticuliers.map((l) => l.id) } },
+      }),
+      prisma.statutParticulierLigne.createMany({
+        data: voulues.map((voulue) => ({
+          emploiId: emploi.id,
+          statutCode: 'TAHFIZ',
+          dateDebut: voulue.dateDebut,
+          dateFin: voulue.dateFin,
+          origine: 'PROPAGE_SOCIETE' as const,
+        })),
+      }),
+    ]);
+  }
+  return total;
 }
 
 async function seedTableauxEtSecondEmploiDemo(
@@ -997,25 +1134,6 @@ async function seedTableauxEtSecondEmploiDemo(
         dateDebut: new Date('2023-01-01'),
         dateFin: null,
         origine: 'SAISIE_MANUELLE',
-      },
-    });
-  }
-
-  const statutPropage = await prisma.statutParticulierLigne.findFirst({
-    where: {
-      emploiId: emploiOuvert.id,
-      statutCode: 'TAHFIZ',
-      origine: 'PROPAGE_SOCIETE',
-    },
-  });
-  if (statutPropage === null) {
-    await prisma.statutParticulierLigne.create({
-      data: {
-        emploiId: emploiOuvert.id,
-        statutCode: 'TAHFIZ',
-        dateDebut: new Date('2025-07-01'),
-        dateFin: null,
-        origine: 'PROPAGE_SOCIETE',
       },
     });
   }

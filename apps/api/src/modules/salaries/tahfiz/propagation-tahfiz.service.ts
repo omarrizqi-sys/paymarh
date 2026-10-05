@@ -1,21 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { resoudreLigneHistorique } from '../../companies/historisation.js';
 import type { PrismaService } from '../../../common/prisma/prisma.service.js';
+import type { Prisma } from '../../../generated/prisma/client.js';
 import {
   BULLETIN_PORT,
   EtatBulletin,
   type BulletinPort,
   type MoisBulletin,
 } from '../bulletin/bulletin.port.js';
-import { emploiEstOuvert } from '../deductions-salarie.js';
 import { ligneUtiliseeParBulletin } from '../deductions-tableaux.js';
 import { CODE_STATUT_TAHFIZ, CODE_TYPE_EXONERATION_TAHFIZ } from './codes-tahfiz.js';
 import {
   ajusterDatesLignePropagee,
-  dateDebutDepuisMois,
   dateFinDepuisMois,
   ligneStatutVersMois,
 } from './dates-exoneration.js';
+import {
+  calculerLignesTahfiz,
+  type LigneTahfizCalculee,
+  type PeriodeTahfizSociete,
+} from './periodes-tahfiz.js';
 
 interface ExonerationSaisie {
   readonly typeExonerationId: string | null;
@@ -32,13 +36,19 @@ type ClientEcriture = Pick<
   | 'company'
 >;
 
+interface LignePropagee {
+  readonly id: string;
+  readonly dateDebut: Date;
+  readonly dateFin: Date | null;
+}
+
 @Injectable()
 export class PropagationTahfizService {
   constructor(@Inject(BULLETIN_PORT) private readonly bulletins: BulletinPort) {}
 
   /**
-   * Synchronise les lignes propagees avec l exoneration societe, dans la
-   * transaction d ecriture du parametrage (tout ou rien).
+   * Synchronise les lignes propagees de tous les emplois de la societe avec
+   * l exoneration saisie, dans la transaction d ecriture du parametrage.
    */
   async synchroniserDansTransaction(
     tx: ClientEcriture,
@@ -46,46 +56,30 @@ export class PropagationTahfizService {
     saisie: ExonerationSaisie,
     moisEnCoursSociete: string
   ): Promise<void> {
-    const tahfiz = await tx.typeExoneration.findFirst({
-      where: { code: CODE_TYPE_EXONERATION_TAHFIZ },
-      select: { id: true },
-    });
-    if (tahfiz === null) {
-      return;
-    }
+    const tahfizId = await this.idTypeExonerationTahfiz(tx);
+    if (tahfizId === null) return;
 
-    const active = saisie.typeExonerationId === tahfiz.id;
-    if (active) {
+    let periode: PeriodeTahfizSociete | null = null;
+    if (saisie.typeExonerationId === tahfizId) {
       const debut = saisie.exonerationDateDebut;
-      if (debut === null || debut.length === 0) {
-        return;
-      }
-      await this.poserOuMettreAJour(
-        tx,
-        companyId,
-        dateDebutDepuisMois(debut),
-        dateFinDepuisMois(saisie.exonerationDateFin)
-      );
-      return;
+      if (debut === null || debut.length === 0) return;
+      periode = { moisDebut: debut, moisFin: saisie.exonerationDateFin };
     }
 
-    await this.retirer(tx, companyId, moisEnCoursSociete);
+    await this.synchroniserEmplois(tx, { salarie: { companyId } }, periode, moisEnCoursSociete);
   }
 
-  /** Pose une ligne sur un emploi nouvellement ouvert si TAHFIZ est actif. */
-  async poserSurNouvelEmploi(
+  /**
+   * Synchronise un seul emploi (creation, modification du contrat) avec le
+   * parametrage societe applicable au mois en cours de la societe.
+   */
+  async synchroniserEmploiDansTransaction(
     tx: ClientEcriture,
     companyId: string,
-    emploiId: string,
-    emploiOuvert: boolean
+    emploiId: string
   ): Promise<void> {
-    if (!emploiOuvert) return;
-
-    const tahfiz = await tx.typeExoneration.findFirst({
-      where: { code: CODE_TYPE_EXONERATION_TAHFIZ },
-      select: { id: true },
-    });
-    if (tahfiz === null) return;
+    const tahfizId = await this.idTypeExonerationTahfiz(tx);
+    if (tahfizId === null) return;
 
     const societe = await tx.company.findFirst({
       where: { id: companyId },
@@ -97,151 +91,140 @@ export class PropagationTahfizService {
       where: { companyId },
     });
     const applicable = resoudreLigneHistorique(lignes, societe.moisEnCours);
-    if (applicable === null || applicable.typeExonerationId !== tahfiz.id) {
-      return;
-    }
-    if (applicable.exonerationDateDebut === null) return;
+    const periode: PeriodeTahfizSociete | null =
+      applicable !== null &&
+      applicable.typeExonerationId === tahfizId &&
+      applicable.exonerationDateDebut !== null
+        ? { moisDebut: applicable.exonerationDateDebut, moisFin: applicable.exonerationDateFin }
+        : null;
 
-    const deja = await tx.statutParticulierLigne.findFirst({
-      where: {
-        emploiId,
-        statutCode: CODE_STATUT_TAHFIZ,
-        origine: 'PROPAGE_SOCIETE',
-      },
-      select: { id: true },
-    });
-    if (deja !== null) return;
-
-    await tx.statutParticulierLigne.create({
-      data: {
-        emploiId,
-        statutCode: CODE_STATUT_TAHFIZ,
-        dateDebut: dateDebutDepuisMois(applicable.exonerationDateDebut),
-        dateFin: dateFinDepuisMois(applicable.exonerationDateFin),
-        origine: 'PROPAGE_SOCIETE',
-      },
-    });
+    await this.synchroniserEmplois(
+      tx,
+      { id: emploiId, salarie: { companyId } },
+      periode,
+      societe.moisEnCours
+    );
   }
 
-  private async poserOuMettreAJour(
+  /**
+   * Rend les lignes propagees de chaque emploi egales au calcul : creation des
+   * manquantes, mise a jour des dates (sans retracter en deca d un bulletin),
+   * retrait des lignes sans objet (suppression, ou cloture si un bulletin les
+   * couvre). Ecritures en lot : une creation, une suppression, une cloture,
+   * une mise a jour par couple de dates.
+   */
+  private async synchroniserEmplois(
     tx: ClientEcriture,
-    companyId: string,
-    dateDebut: Date,
-    dateFin: Date | null
+    filtre: Prisma.EmploiWhereInput,
+    periode: PeriodeTahfizSociete | null,
+    moisEnCoursSociete: string
   ): Promise<void> {
-    const existantes = await tx.statutParticulierLigne.findMany({
-      where: {
-        statutCode: CODE_STATUT_TAHFIZ,
-        origine: 'PROPAGE_SOCIETE',
-        emploi: { salarie: { companyId } },
-      },
+    const emplois = await tx.emploi.findMany({
+      where: filtre,
       select: {
         id: true,
-        emploiId: true,
-        dateDebut: true,
-        dateFin: true,
-        emploi: { select: { salarieId: true } },
+        salarieId: true,
+        contratVersions: {
+          select: { moisEffet: true, typeContratCode: true, dateDebut: true, dateSortie: true },
+        },
+        statutsParticuliers: {
+          where: { statutCode: CODE_STATUT_TAHFIZ, origine: 'PROPAGE_SOCIETE' },
+          select: { id: true, dateDebut: true, dateFin: true },
+        },
       },
     });
 
-    if (existantes.length > 0) {
-      const salarieIds = [...new Set(existantes.map((l) => l.emploi.salarieId))];
-      const bulletinsParSalarie = await this.chargerBulletinsParSalaries(salarieIds);
+    const salariesAvecLignes = [
+      ...new Set(emplois.filter((e) => e.statutsParticuliers.length > 0).map((e) => e.salarieId)),
+    ];
+    const bulletinsParSalarie = await this.chargerBulletinsParSalaries(salariesAvecLignes);
+    const dateCloture = dateFinDepuisMois(moisEnCoursSociete);
 
-      const groupes = new Map<string, { ids: string[]; dateDebut: Date; dateFin: Date | null }>();
-      for (const ligne of existantes) {
-        const bulletins = bulletinsParSalarie[ligne.emploi.salarieId] ?? [];
+    const aCreer: { emploiId: string; dateDebut: Date; dateFin: Date | null }[] = [];
+    const aMettreAJour = new Map<
+      string,
+      { ids: string[]; dateDebut: Date; dateFin: Date | null }
+    >();
+    const aSupprimer: string[] = [];
+    const aClore: string[] = [];
+
+    for (const emploi of emplois) {
+      const voulues = calculerLignesTahfiz(emploi.contratVersions, periode);
+      const bulletins = bulletinsParSalarie[emploi.salarieId] ?? [];
+      const restantes: LignePropagee[] = [...emploi.statutsParticuliers].sort(
+        (a, b) => a.dateDebut.getTime() - b.dateDebut.getTime()
+      );
+
+      for (const voulue of voulues) {
+        const index = restantes.findIndex((ligne) => chevauche(ligne, voulue));
+        const ligne = index === -1 ? undefined : restantes.splice(index, 1)[0];
+        if (ligne === undefined) {
+          aCreer.push({ emploiId: emploi.id, ...voulue });
+          continue;
+        }
+
         const bornes = moisBulletinsCouvrant(bulletins, ligne);
         const ajustees = ajusterDatesLignePropagee({
-          dateDebutDesiree: dateDebut,
-          dateFinDesiree: dateFin,
+          dateDebutDesiree: voulue.dateDebut,
+          dateFinDesiree: voulue.dateFin,
           moisPremierBulletin: bornes.premier,
           moisDernierBulletin: bornes.dernier,
         });
+        if (memesDates(ligne, ajustees)) continue;
+
         const cle = `${ajustees.dateDebut.toISOString()}|${ajustees.dateFin?.toISOString() ?? ''}`;
-        const groupe = groupes.get(cle);
+        const groupe = aMettreAJour.get(cle);
         if (groupe !== undefined) {
           groupe.ids.push(ligne.id);
         } else {
-          groupes.set(cle, {
-            ids: [ligne.id],
-            dateDebut: ajustees.dateDebut,
-            dateFin: ajustees.dateFin,
-          });
+          aMettreAJour.set(cle, { ids: [ligne.id], ...ajustees });
         }
       }
 
-      for (const groupe of groupes.values()) {
-        await tx.statutParticulierLigne.updateMany({
-          where: { id: { in: groupe.ids } },
-          data: { dateDebut: groupe.dateDebut, dateFin: groupe.dateFin },
-        });
-      }
-    }
-
-    const emploisDejaCouverts = new Set(existantes.map((l) => l.emploiId));
-    const ouverts = await this.listerEmploisOuverts(tx, companyId);
-    const aCreer = ouverts.filter((emploi) => !emploisDejaCouverts.has(emploi.id));
-
-    if (aCreer.length === 0) return;
-
-    await tx.statutParticulierLigne.createMany({
-      data: aCreer.map((emploi) => ({
-        emploiId: emploi.id,
-        statutCode: CODE_STATUT_TAHFIZ,
-        dateDebut,
-        dateFin,
-        origine: 'PROPAGE_SOCIETE' as const,
-      })),
-    });
-  }
-
-  private async retirer(
-    tx: ClientEcriture,
-    companyId: string,
-    moisEnCoursSociete: string
-  ): Promise<void> {
-    const lignes = await tx.statutParticulierLigne.findMany({
-      where: {
-        statutCode: CODE_STATUT_TAHFIZ,
-        origine: 'PROPAGE_SOCIETE',
-        emploi: { salarie: { companyId } },
-      },
-      select: {
-        id: true,
-        dateDebut: true,
-        dateFin: true,
-        emploi: { select: { salarieId: true } },
-      },
-    });
-
-    if (lignes.length === 0) return;
-
-    const salarieIds = [...new Set(lignes.map((l) => l.emploi.salarieId))];
-    const bulletinsParSalarie = await this.chargerBulletinsParSalaries(salarieIds);
-
-    const aSupprimer: string[] = [];
-    const aInactiver: string[] = [];
-
-    for (const ligne of lignes) {
-      const bulletins = bulletinsParSalarie[ligne.emploi.salarieId] ?? [];
-      if (ligneUtiliseeParBulletin(bulletins, ligneStatutVersMois(ligne))) {
-        aInactiver.push(ligne.id);
-      } else {
-        aSupprimer.push(ligne.id);
+      for (const ligne of restantes) {
+        if (!ligneUtiliseeParBulletin(bulletins, ligneStatutVersMois(ligne))) {
+          aSupprimer.push(ligne.id);
+        } else if (
+          dateCloture !== null &&
+          (ligne.dateFin === null || ligne.dateFin.getTime() > dateCloture.getTime())
+        ) {
+          aClore.push(ligne.id);
+        }
       }
     }
 
     if (aSupprimer.length > 0) {
       await tx.statutParticulierLigne.deleteMany({ where: { id: { in: aSupprimer } } });
     }
-
-    if (aInactiver.length > 0) {
+    if (aClore.length > 0) {
       await tx.statutParticulierLigne.updateMany({
-        where: { id: { in: aInactiver } },
-        data: { dateFin: dateFinDepuisMois(moisEnCoursSociete) },
+        where: { id: { in: aClore } },
+        data: { dateFin: dateCloture },
       });
     }
+    for (const groupe of aMettreAJour.values()) {
+      await tx.statutParticulierLigne.updateMany({
+        where: { id: { in: groupe.ids } },
+        data: { dateDebut: groupe.dateDebut, dateFin: groupe.dateFin },
+      });
+    }
+    if (aCreer.length > 0) {
+      await tx.statutParticulierLigne.createMany({
+        data: aCreer.map((ligne) => ({
+          ...ligne,
+          statutCode: CODE_STATUT_TAHFIZ,
+          origine: 'PROPAGE_SOCIETE' as const,
+        })),
+      });
+    }
+  }
+
+  private async idTypeExonerationTahfiz(tx: ClientEcriture): Promise<string | null> {
+    const tahfiz = await tx.typeExoneration.findFirst({
+      where: { code: CODE_TYPE_EXONERATION_TAHFIZ },
+      select: { id: true },
+    });
+    return tahfiz?.id ?? null;
   }
 
   private async chargerBulletinsParSalaries(
@@ -252,28 +235,19 @@ export class PropagationTahfizService {
     }
     return this.bulletins.listerBulletinsParSalaries(salarieIds);
   }
+}
 
-  private async listerEmploisOuverts(
-    tx: ClientEcriture,
-    companyId: string
-  ): Promise<readonly { id: string }[]> {
-    const emplois = await tx.emploi.findMany({
-      where: { salarie: { companyId } },
-      select: {
-        id: true,
-        contratVersions: {
-          orderBy: { moisEffet: 'desc' },
-          take: 1,
-          select: { dateSortie: true },
-        },
-      },
-    });
+function chevauche(ligne: LignePropagee, voulue: LigneTahfizCalculee): boolean {
+  const finLigne = ligne.dateFin?.getTime() ?? Number.POSITIVE_INFINITY;
+  const finVoulue = voulue.dateFin?.getTime() ?? Number.POSITIVE_INFINITY;
+  return ligne.dateDebut.getTime() <= finVoulue && voulue.dateDebut.getTime() <= finLigne;
+}
 
-    return emplois.filter((emploi) => {
-      const contrat = emploi.contratVersions[0];
-      return contrat !== undefined && emploiEstOuvert(contrat.dateSortie);
-    });
-  }
+function memesDates(ligne: LignePropagee, dates: LigneTahfizCalculee): boolean {
+  return (
+    ligne.dateDebut.getTime() === dates.dateDebut.getTime() &&
+    (ligne.dateFin?.getTime() ?? null) === (dates.dateFin?.getTime() ?? null)
+  );
 }
 
 function moisBulletinsCouvrant(

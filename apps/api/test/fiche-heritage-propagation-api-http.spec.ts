@@ -15,6 +15,7 @@ import { PropagationTahfizService } from '../src/modules/salaries/tahfiz/propaga
 import { creerAppHttp, urlLocale } from './support/app-http.js';
 import { appelerApi } from './support/http-client.js';
 import {
+  creerEmploiInsertion,
   creerEmploiOuvert,
   creerSalarieMin,
   creerSocieteTest,
@@ -348,7 +349,7 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     expect(corps.alertes.map((a) => a.code)).not.toContain('REPOS_HEBDOMADAIRE_JOUR_TRAVAILLE');
   });
 
-  it('8 et 10 — TAHFIZ : ligne chez les emplois ouverts seulement', async () => {
+  it('8 et 10 — TAHFIZ : une ligne sur l emploi CDI ouvert, aucune sur l emploi CDI sorti avant le debut de l exoneration', async () => {
     const ouvert = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-T-OUV`,
     });
@@ -543,7 +544,12 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-ETAT-INACT`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const creation = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -574,7 +580,12 @@ describe('heritage, C24 et propagation TAHFIZ (2.1.b-5)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-ETAT-ACT`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const creation = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -1010,7 +1021,7 @@ describe('TAHFIZ — transaction unique avec le parametrage societe', () => {
           await inner.synchroniserDansTransaction(tx, companyId, saisie, moisEnCoursSociete);
           throw new Error('echec volontaire milieu de propagation');
         },
-        poserSurNouvelEmploi: inner.poserSurNouvelEmploi.bind(inner),
+        synchroniserEmploiDansTransaction: inner.synchroniserEmploiDansTransaction.bind(inner),
       })
       .compile();
     app = compiled.createNestApplication();

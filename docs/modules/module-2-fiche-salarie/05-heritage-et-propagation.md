@@ -42,10 +42,14 @@ Alerte `REPOS_HEBDOMADAIRE_JOUR_TRAVAILLE` si le repos résolu tombe un jour où
 
 ## Propagation TAHFIZ
 
-Déclenchée par `PUT /societes/:id/parametrage` (même transaction) :
+Lignes `PROPAGE_SOCIETE` / code technique `TAHFIZ`, calculées sur les **périodes en CDI** de chaque emploi, ouvert ou terminé (ADR 0033). La ligne commence au plus tardif du début de l'exonération, du début de l'emploi et du passage en CDI ; elle finit au plus précoce de la fin de l'exonération, de la date de sortie et de la sortie du CDI.
 
-1. **Activation / dates** — lignes `PROPAGE_SOCIETE` / code technique `TAHFIZ` sur les emplois ouverts ; mises à jour de dates sur toutes les lignes déjà propagées.
-2. **Nouvel emploi ouvert** — pose la ligne si l'exonération société est active.
-3. **Retrait** — suppression si jamais utilisée par un bulletin ; sinon `dateFin` au mois en cours société.
+Synchronisation déclenchée, chacune dans la transaction de l'écriture :
+
+1. **`PUT /societes/:id/parametrage`** — tous les emplois de la société (activation, changement de dates, retrait).
+2. **Création d'un emploi** — l'emploi créé, selon le paramétrage applicable au mois en cours société.
+3. **`PATCH /emplois/:id/contrat`** — l'emploi modifié (changement de type, de date de début ou de date de sortie).
+
+Lignes en trop : suppression si jamais utilisées par un bulletin ; sinon `dateFin` au mois en cours société. Une ligne n'est jamais rétrécie en deçà d'un bulletin.
 
 Pas de bouton « tout hériter », pas de file d'attente.

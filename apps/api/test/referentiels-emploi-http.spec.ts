@@ -40,7 +40,7 @@ describe('GET /referentiels/types-contrat, /motifs-sortie et /statuts-particulie
     await app?.close();
   });
 
-  it('E1 — GET /referentiels/types-contrat rend sept entrees dans l ordre et refuse sans tenant', async () => {
+  it('E1 — GET /referentiels/types-contrat rend huit entrees dans l ordre et refuse sans tenant', async () => {
     const sansTenant = await fetch(urlLocale(app, '/referentiels/types-contrat'));
     expect(sansTenant.status).toBe(401);
 
@@ -54,6 +54,19 @@ describe('GET /referentiels/types-contrat, /motifs-sortie et /statuts-particulie
     expect(corps.data.total).toBe(TYPES_CONTRAT.length);
     expect(corps.data.items.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))).toEqual(
       TYPES_CONTRAT.map(({ code, libelle, ordre }) => ({ code, libelle, ordre }))
+    );
+    expect(corps.data.items.map((item) => item.code)).toEqual([
+      'CDI',
+      'CDD',
+      'CTT',
+      'INT_CDI',
+      'OBJ',
+      'STAGE',
+      'INSERTION',
+      'MANDAT',
+    ]);
+    expect(corps.data.items.find((item) => item.code === 'INSERTION')?.libelle).toBe(
+      'Contrat d’insertion'
     );
   });
 

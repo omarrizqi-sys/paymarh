@@ -1,4 +1,5 @@
 import { Decimal } from 'decimal.js';
+import { TYPES_CONTRAT } from '../../prisma/reference-data-fiche-salarie.js';
 import type { PrismaClient } from '../../src/generated/prisma/client.js';
 
 export interface SocieteTest {
@@ -100,6 +101,17 @@ export async function creerSalarieMin(
   });
 }
 
+/** Charge les types de contrat du referentiel (cle etrangere), au cas ou la base n a pas ete re-semee. */
+export async function assurerTypesContrat(prisma: PrismaClient): Promise<void> {
+  for (const type of TYPES_CONTRAT) {
+    await prisma.typeContrat.upsert({
+      where: { code: type.code },
+      update: { ordre: type.ordre, libelle: type.libelle },
+      create: { ordre: type.ordre, code: type.code, libelle: type.libelle },
+    });
+  }
+}
+
 export async function creerEmploiOuvert(
   prisma: PrismaClient,
   salarieId: string,
@@ -108,6 +120,38 @@ export async function creerEmploiOuvert(
   moisEffet = '2025-01',
   dateDebut = new Date('2025-01-01')
 ) {
+  return creerEmploiAvecTypeContrat(prisma, salarieId, etablissementId, numeroOrdre, 'CDI', {
+    moisEffet,
+    dateDebut,
+  });
+}
+
+/** Emploi en contrat d insertion : seul type sur lequel IDMAJ peut etre saisi. */
+export async function creerEmploiInsertion(
+  prisma: PrismaClient,
+  salarieId: string,
+  etablissementId: string,
+  numeroOrdre: number,
+  moisEffet = '2025-01',
+  dateDebut = new Date('2025-01-01')
+) {
+  await assurerTypesContrat(prisma);
+  return creerEmploiAvecTypeContrat(prisma, salarieId, etablissementId, numeroOrdre, 'INSERTION', {
+    moisEffet,
+    dateDebut,
+  });
+}
+
+export async function creerEmploiAvecTypeContrat(
+  prisma: PrismaClient,
+  salarieId: string,
+  etablissementId: string,
+  numeroOrdre: number,
+  typeContratCode: string,
+  options: { moisEffet?: string; dateDebut?: Date; dateSortie?: Date | null } = {}
+) {
+  const moisEffet = options.moisEffet ?? '2025-01';
+  const dateDebut = options.dateDebut ?? new Date('2025-01-01');
   const emploi = await prisma.emploi.create({
     data: { salarieId, numeroOrdre },
   });
@@ -118,7 +162,8 @@ export async function creerEmploiOuvert(
       moisEffet,
       libellePoste: 'Comptable',
       dateDebut,
-      typeContratCode: 'CDI',
+      dateSortie: options.dateSortie ?? null,
+      typeContratCode,
     },
   });
 

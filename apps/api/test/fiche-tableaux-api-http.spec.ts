@@ -18,6 +18,7 @@ import { SocleTestModule } from '../src/modules/salaries/test/socle-test.module.
 import { ligneLisiblePourMois } from '../src/modules/salaries/historisation-temporelle.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
 import {
+  creerEmploiInsertion,
   creerEmploiOuvert,
   creerSalarieMin,
   creerSocieteTest,
@@ -572,7 +573,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-CHEV`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -610,7 +616,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-PROP`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const statut = await prisma.statutParticulierLigne.create({
       data: {
@@ -937,7 +948,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-HORS`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -1648,7 +1664,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-DATE-FIN-REFUS`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -1675,7 +1696,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-DATE-FIN-OK`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const reponse = await fetch(urlLocale(app, `/emplois/${emploi.id}/statuts-particuliers`), {
       method: 'POST',
@@ -1834,7 +1860,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-DATE-FIN-REFUS-MODIF`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
     const statut = await prisma.statutParticulierLigne.create({
       data: {
         emploiId: emploi.id,
@@ -1872,7 +1903,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-K2-STATUT`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
     const statut = await prisma.statutParticulierLigne.create({
       data: {
         emploiId: emploi.id,
@@ -1980,7 +2016,12 @@ describe('API fiche salarie — tableaux repetables (2.1.b-4)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-STATUT-INCONNUE-MODIF`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
 
     const statut = await prisma.statutParticulierLigne.create({
       data: {

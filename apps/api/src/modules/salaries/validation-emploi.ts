@@ -3,6 +3,7 @@ import { Decimal } from 'decimal.js';
 import type { PrismaClient } from '../../generated/prisma/client.js';
 import { emploiEstOuvert } from './deductions-salarie.js';
 import { resoudreLigneHistorique } from '../companies/historisation.js';
+import { CODE_TYPE_CONTRAT_INSERTION } from './codes-type-contrat.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { comparerDates, dateDansIntervalle, versDate } from './deductions-emploi.js';
 import type { ReferentielNationalPort } from './referentiel-national/referentiel-national.port.js';
@@ -26,6 +27,28 @@ export function assertDateFinApresDebut(dateDebut: Date, dateFin: Date | null | 
       CODES_REPONSE.DATE_FIN_ANTERIEURE_DEBUT.code,
       CODES_REPONSE.DATE_FIN_ANTERIEURE_DEBUT.message,
       'dateFin'
+    );
+  }
+}
+
+/**
+ * Refuse tout changement de type vers ou depuis INSERTION sur un emploi
+ * existant, que l ecriture ecrase la version courante ou en cree une.
+ */
+export function assertTypeContratInsertionImmuable(
+  typeEnvoye: string,
+  typesExistants: readonly string[]
+): void {
+  const changement = typesExistants.some(
+    (type) =>
+      type !== typeEnvoye &&
+      (type === CODE_TYPE_CONTRAT_INSERTION || typeEnvoye === CODE_TYPE_CONTRAT_INSERTION)
+  );
+  if (changement) {
+    throw new ValidationBloquanteEmploiError(
+      CODES_REPONSE.CHANGEMENT_TYPE_CONTRAT_INSERTION.code,
+      CODES_REPONSE.CHANGEMENT_TYPE_CONTRAT_INSERTION.message,
+      'typeContratCode'
     );
   }
 }

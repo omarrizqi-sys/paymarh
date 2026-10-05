@@ -89,6 +89,14 @@ export const CODES_REPONSE = {
     code: 'STATUT_PROPAGE_LECTURE_SEULE',
     message: 'Ce statut particulier ne peut pas être modifié depuis la fiche salarié.',
   },
+  STATUT_RESERVE_CONTRAT_INSERTION: {
+    code: 'STATUT_RESERVE_CONTRAT_INSERTION',
+    message: 'Le statut IDMAJ ne peut être saisi que sur un emploi en contrat d’insertion.',
+  },
+  CHANGEMENT_TYPE_CONTRAT_INSERTION: {
+    code: 'CHANGEMENT_TYPE_CONTRAT_INSERTION',
+    message: 'Un contrat d’insertion ne peut pas changer de type : créez un nouvel emploi.',
+  },
   RIB_DEJA_UTILISE: {
     code: 'RIB_DEJA_UTILISE',
     message: 'Ce RIB est déjà utilisé dans la société.',

@@ -11,6 +11,7 @@ import { EmploisService } from '../src/modules/salaries/emplois.service.js';
 import { SocleTestModule } from '../src/modules/salaries/test/socle-test.module.js';
 import { creerAppHttp, urlLocale } from './support/app-http.js';
 import {
+  creerEmploiInsertion,
   creerEmploiOuvert,
   creerSalarieMin,
   creerSocieteTest,
@@ -367,7 +368,12 @@ describe('Controle ecriture remuneration — emploi (2.1.c-3)', () => {
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-RE6-NON-DEB`,
     });
-    const emploi = await creerEmploiOuvert(prisma, salarie.id, societe.etablissementPrincipalId, 1);
+    const emploi = await creerEmploiInsertion(
+      prisma,
+      salarie.id,
+      societe.etablissementPrincipalId,
+      1
+    );
     const sansEcriture = entetesSansEcritureRemuneration(utilisateurId, societe.companyId);
 
     const contrat = await fetch(urlLocale(app, `/emplois/${emploi.id}/contrat`), {

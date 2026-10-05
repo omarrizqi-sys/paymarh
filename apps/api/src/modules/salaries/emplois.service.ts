@@ -20,7 +20,6 @@ import { accountScope, companyScope } from '../../common/tenancy/tenant-scope.js
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
 import { incrementerCompteurNumeroOrdre } from './compteurs-salarie.js';
 import { versDate } from './deductions-emploi.js';
-import { emploiEstOuvert } from './deductions-salarie.js';
 import type {
   AffectationEmploiSaisieDto,
   ContratEmploiSaisieDto,
@@ -52,6 +51,7 @@ import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
 import {
   assertDateFinApresDebut,
+  assertTypeContratInsertionImmuable,
   collecterAlerteDureeContractuelleTotale,
   collecterAlerteSalaireSmig,
   collecterAlertesContrat,
@@ -156,7 +156,6 @@ export class EmploisService {
     if (alerteC24 !== null) alertes.push(alerteC24);
 
     const montant = new Decimal(dto.remuneration.montant);
-    const dateSortieInitiale = parseDateNullable(dto.contrat.dateSortie ?? undefined) ?? null;
 
     const emploi = await this.prisma.$transaction(async (tx) => {
       const numeroOrdre = await incrementerCompteurNumeroOrdre(tx, salarieId);
@@ -174,12 +173,7 @@ export class EmploisService {
         data: this.donneesAffectation(dto.affectation, moisEffet, cree.id),
       });
 
-      await this.tahfiz.poserSurNouvelEmploi(
-        tx,
-        salarie.companyId,
-        cree.id,
-        emploiEstOuvert(dateSortieInitiale)
-      );
+      await this.tahfiz.synchroniserEmploiDansTransaction(tx, salarie.companyId, cree.id);
 
       return cree;
     });
@@ -230,6 +224,16 @@ export class EmploisService {
   ) {
     refuserChampMoisEffet(dto);
     const emploi = await this.trouverEmploi(id);
+    if (dto.typeContratCode !== undefined) {
+      try {
+        assertTypeContratInsertionImmuable(
+          dto.typeContratCode,
+          emploi.contratVersions.map((v) => v.typeContratCode)
+        );
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contratCourant = this.contratAuMois(emploi, moisEnCours);
     const dateDebut =
@@ -287,6 +291,10 @@ export class EmploisService {
       this.moisEnCours,
       emploi.contratVersions
     );
+    const { companyId } = await this.prisma.salarie.findUniqueOrThrow({
+      where: { id: emploi.salarieId },
+      select: { companyId: true },
+    });
 
     await this.prisma.$transaction(async (tx) => {
       if (decision.mode === 'ecraser' && decision.versionId !== undefined) {
@@ -327,6 +335,8 @@ export class EmploisService {
           },
         });
       }
+
+      await this.tahfiz.synchroniserEmploiDansTransaction(tx, companyId, id);
     });
 
     await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });

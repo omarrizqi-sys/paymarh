@@ -91,11 +91,13 @@ Permission d'écriture : `emploi.modifier`. Lecture via `GET /emplois/:id` ou em
 
 ### Contrôles emploi
 
-| Code                            | Type        | Objet                                   |
-| ------------------------------- | ----------- | --------------------------------------- |
-| `CHEVAUCHEMENT_STATUTS`         | Blocage     | Deux périodes qui se chevauchent (B7)   |
-| `STATUT_PROPAGE_LECTURE_SEULE`  | Blocage 409 | Ligne propagée par la société (A17, B8) |
-| `STATUT_HORS_INTERVALLE_EMPLOI` | Alerte      | Dates hors emploi (C7)                  |
+| Code                                | Type        | Objet                                                                                    |
+| ----------------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `CHEVAUCHEMENT_STATUTS`             | Blocage     | Deux périodes qui se chevauchent (B7)                                                    |
+| `STATUT_PROPAGE_LECTURE_SEULE`      | Blocage 409 | Ligne propagée par la société (A17, B8)                                                  |
+| `STATUT_HORS_INTERVALLE_EMPLOI`     | Alerte      | Dates hors emploi (C7)                                                                   |
+| `STATUT_RESERVE_CONTRAT_INSERTION`  | Blocage     | IDMAJ sur un emploi qui n'est pas en contrat d’insertion (ADR 0033)                      |
+| `CHANGEMENT_TYPE_CONTRAT_INSERTION` | Blocage     | Type de contrat changé vers ou depuis INSERTION, `PATCH /emplois/:id/contrat` (ADR 0033) |
 
 ---
 

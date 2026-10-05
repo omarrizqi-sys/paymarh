@@ -44,6 +44,7 @@ import {
   assertPasChevauchementStatuts,
   assertPrimeRefConnue,
   assertStatutCodeConnu,
+  assertStatutReserveContratInsertion,
   collecterAlerteStatutHorsEmploi,
   refuserChampMoisEffetEmploi,
   refuserStatutNonSaisissable,
@@ -317,6 +318,11 @@ export class TableauxEmploiService {
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contrat = this.contratAuMois(emploi, moisEnCours);
+    try {
+      assertStatutReserveContratInsertion(dto.statutCode, contrat.typeContratCode);
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
 
     const dateDebut = versDate(dto.dateDebut);
     const dateFin = parseDateNullable(dto.dateFin);
@@ -382,6 +388,13 @@ export class TableauxEmploiService {
     const emploi = await this.trouverEmploi(emploiId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const contrat = this.contratAuMois(emploi, moisEnCours);
+    if (dto.statutCode !== undefined && dto.statutCode !== existant.statutCode) {
+      try {
+        assertStatutReserveContratInsertion(dto.statutCode, contrat.typeContratCode);
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+    }
 
     const dateDebut = dto.dateDebut !== undefined ? versDate(dto.dateDebut) : existant.dateDebut;
     const dateFin = dto.dateFin !== undefined ? parseDateNullable(dto.dateFin) : existant.dateFin;

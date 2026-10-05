@@ -1,6 +1,7 @@
 import type { AlerteApi } from '@paymarh/shared-types';
 import { Decimal } from 'decimal.js';
 import type { PrismaService } from '../../common/prisma/prisma.service.js';
+import { CODE_STATUT_IDMAJ, CODE_TYPE_CONTRAT_INSERTION } from './codes-type-contrat.js';
 import { CODES_REPONSE } from './reponses/codes-reponse.js';
 
 export class ValidationBloquanteTableauEmploiError extends Error {
@@ -64,6 +65,19 @@ export function refuserStatutNonSaisissable(statutCode: string | undefined): voi
     throw new ValidationBloquanteTableauEmploiError(
       CODES_REPONSE.CHAMP_INTERDIT.code,
       CODES_REPONSE.CHAMP_INTERDIT.message,
+      'statutCode'
+    );
+  }
+}
+
+export function assertStatutReserveContratInsertion(
+  statutCode: string,
+  typeContratCode: string
+): void {
+  if (statutCode === CODE_STATUT_IDMAJ && typeContratCode !== CODE_TYPE_CONTRAT_INSERTION) {
+    throw new ValidationBloquanteTableauEmploiError(
+      CODES_REPONSE.STATUT_RESERVE_CONTRAT_INSERTION.code,
+      CODES_REPONSE.STATUT_RESERVE_CONTRAT_INSERTION.message,
       'statutCode'
     );
   }

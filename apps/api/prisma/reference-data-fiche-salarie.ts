@@ -208,7 +208,8 @@ export const TYPES_CONTRAT = [
   { ordre: 4, code: 'INT_CDI', libelle: 'Intérimaire — contrat à durée indéterminée' },
   { ordre: 5, code: 'OBJ', libelle: 'Contrat à objet défini' },
   { ordre: 6, code: 'STAGE', libelle: 'Convention de stage' },
-  { ordre: 7, code: 'MANDAT', libelle: 'Mandataire social' },
+  { ordre: 7, code: 'INSERTION', libelle: 'Contrat d’insertion' },
+  { ordre: 8, code: 'MANDAT', libelle: 'Mandataire social' },
 ] as const;
 
 export const MOTIFS_SORTIE = [
