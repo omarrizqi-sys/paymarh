@@ -261,4 +261,41 @@ describe('EnveloppeTableauRepetable', () => {
     expect(contenu).not.toMatch(/CONFIRMATION_OBSOLETE|CONFLIT_VERSION|AppelApiEchoue/i);
     expect(contenu).not.toMatch(/suppression.*fiche|supprimerSalarie|impactSuppressionSalarie/i);
   });
+
+  function propsLigneInactive(surcharges: Record<string, unknown> = {}) {
+    return propsCommunes({
+      lignes: [ligne('inact', { etat: 'CLOTUREE', moisFin: '08/2026' })],
+      estInactive: (l: LigneTest) => l.etat === 'CLOTUREE',
+      libelleEtatLigne: () => 'inactive depuis 08/2026',
+      formulaireOuvertId: 'inact',
+      renderFormulaire: (_l: LigneTest, actions: { lectureSeule: boolean }) => (
+        <div data-testid="formulaire-mode">{actions.lectureSeule ? 'lecture' : 'edit'}</div>
+      ),
+      lignesInactivesModifiables: true,
+      ...surcharges,
+    });
+  }
+
+  it('TB04 — lignesInactivesModifiables : ligne inactive grisee, marquee, modifiable et supprimable', () => {
+    render(<EnveloppeTableauRepetable {...propsLigneInactive()} />);
+
+    expect(screen.getByTestId('ligne-inact').classList.contains('opacity-60')).toBe(true);
+    expect(screen.getByTestId('etat-ligne-inact').textContent).toBe('inactive depuis 08/2026');
+    expect(screen.getByTestId('formulaire-mode').textContent).toBe('edit');
+    expect(screen.getByTestId('supprimer-inact')).toBeTruthy();
+  });
+
+  it('TB05 — lignesInactivesModifiables sans droit de modification : lecture seule sans Supprimer', () => {
+    render(<EnveloppeTableauRepetable {...propsLigneInactive({ peutModifier: false })} />);
+
+    expect(screen.getByTestId('formulaire-mode').textContent).toBe('lecture');
+    expect(screen.queryByTestId('supprimer-inact')).toBeNull();
+  });
+
+  it('TB06 — lignesInactivesModifiables avec saisie bloquee : lecture seule', () => {
+    render(<EnveloppeTableauRepetable {...propsLigneInactive({ verrouille: true })} />);
+
+    expect(screen.getByTestId('formulaire-mode').textContent).toBe('lecture');
+    expect(screen.getByTestId('supprimer-inact').hasAttribute('disabled')).toBe(true);
+  });
 });

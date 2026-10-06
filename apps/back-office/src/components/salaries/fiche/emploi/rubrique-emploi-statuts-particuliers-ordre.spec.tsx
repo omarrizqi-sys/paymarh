@@ -44,6 +44,7 @@ vi.mock('next/navigation', () => ({
 
 const TYPES_CONTRAT = [
   { id: 'tc-1', ordre: 1, code: 'CDI', libelle: 'Contrat à durée indéterminée' },
+  { id: 'tc-7', ordre: 7, code: 'INSERTION', libelle: 'Contrat d’insertion' },
 ] as const;
 
 const MOTIFS_SORTIE = [{ id: 'ms-1', ordre: 1, code: 'DEMISSION', libelle: 'Démission' }] as const;
@@ -59,7 +60,7 @@ function emploiAvecStatuts(id: string): EmploiFiche {
       libellePoste: 'Responsable paie',
       dateDebut: '2022-03-01',
       dateFin: null,
-      typeContratCode: 'CDI',
+      typeContratCode: 'INSERTION',
       periodeEssaiDateFin: null,
       periodeEssaiDureeJours: null,
       renouvellementEssaiDateFin: null,

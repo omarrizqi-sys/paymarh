@@ -481,6 +481,7 @@ export function RubriqueEmploiStatutsParticuliers({
         suppression={suppression}
         onAttenteSuppressionChange={gererAttenteSuppression}
         peutModifier={peutModifier}
+        lignesInactivesModifiables
         testId={`statuts-particuliers-${emploiId}`}
         onAjouter={() => {
           if (enregistrementEnCours || !peutModifier) return;

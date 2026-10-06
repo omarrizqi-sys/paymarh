@@ -27,8 +27,15 @@ const STATUTS: readonly StatutParticulier[] = [
   { id: 'st-ref-1', ordre: 1, code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
 ];
 
+/** Code fictif : le référentiel réel n'offre qu'IDMAJ, refusé hors contrat d'insertion. */
+const STATUTS_AVEC_CODE_FICTIF: readonly StatutParticulier[] = [
+  ...STATUTS,
+  { id: 'st-ref-fictif', ordre: 2, code: 'FICTIF_CDI', libelle: 'Statut fictif CDI' },
+];
+
 const TYPES_CONTRAT = [
   { id: 'tc-1', ordre: 1, code: 'CDI', libelle: 'Contrat à durée indéterminée' },
+  { id: 'tc-7', ordre: 7, code: 'INSERTION', libelle: 'Contrat d’insertion' },
 ] as const;
 
 const MOTIFS_SORTIE = [{ id: 'ms-1', ordre: 1, code: 'DEMISSION', libelle: 'Démission' }] as const;
@@ -101,16 +108,32 @@ function ligneStatut(surcharges: Partial<StatutParticulierFiche> = {}): StatutPa
   };
 }
 
-function emploiYoussef(
-  id: string,
-  surcharges: {
-    readonly version?: number;
-    readonly libellePoste?: string;
-    readonly statutsParticuliers?: readonly StatutParticulierFiche[];
-    readonly sansRemuneration?: boolean;
-    readonly operationsEmploi?: readonly Permission[];
-  } = {}
-): EmploiFiche {
+function ligneTahfizPropagee(
+  surcharges: Partial<StatutParticulierFiche> = {}
+): StatutParticulierFiche {
+  return ligneStatut({
+    id: 'st-tahfiz-propage',
+    statutCode: 'TAHFIZ',
+    dateDebut: '2025-07-01',
+    dateFin: null,
+    origine: 'PROPAGE_SOCIETE',
+    etat: 'PAS_ENCORE_EFFECTIVE',
+    ...surcharges,
+  });
+}
+
+interface SurchargesEmploi {
+  readonly version?: number;
+  readonly numeroOrdre?: number;
+  readonly libellePoste?: string;
+  readonly typeContratCode?: string;
+  readonly statutsParticuliers?: readonly StatutParticulierFiche[];
+  readonly sansRemuneration?: boolean;
+  readonly operationsEmploi?: readonly Permission[];
+}
+
+/** Emploi en contrat d'insertion portant les lignes IDMAJ (ADR 0033 : jamais de TAHFIZ). */
+function emploiYoussef(id: string, surcharges: SurchargesEmploi = {}): EmploiFiche {
   const statuts = surcharges.statutsParticuliers ?? [
     ligneStatut({
       id: 'st-idmaj-cloture',
@@ -124,25 +147,17 @@ function emploiYoussef(
       dateFin: null,
       etat: 'PAS_ENCORE_EFFECTIVE',
     }),
-    ligneStatut({
-      id: 'st-tahfiz-propage',
-      statutCode: 'TAHFIZ',
-      dateDebut: '2025-07-01',
-      dateFin: null,
-      origine: 'PROPAGE_SOCIETE',
-      etat: 'PAS_ENCORE_EFFECTIVE',
-    }),
   ];
 
   const base: EmploiFiche = {
     id,
     version: surcharges.version ?? 5,
-    numeroOrdre: 1,
+    numeroOrdre: surcharges.numeroOrdre ?? 1,
     contrat: {
       libellePoste: surcharges.libellePoste ?? 'Responsable paie',
       dateDebut: '2022-03-01',
       dateFin: null,
-      typeContratCode: 'CDI',
+      typeContratCode: surcharges.typeContratCode ?? 'INSERTION',
       periodeEssaiDateFin: null,
       periodeEssaiDureeJours: null,
       renouvellementEssaiDateFin: null,
@@ -200,6 +215,17 @@ function emploiYoussef(
   );
 }
 
+/** Emploi en CDI portant la ligne TAHFIZ propagée, sans aucune ligne IDMAJ (ADR 0033). */
+function emploiCdiTahfiz(id: string, surcharges: SurchargesEmploi = {}): EmploiFiche {
+  return emploiYoussef(id, {
+    numeroOrdre: 2,
+    libellePoste: 'Gestionnaire paie',
+    statutsParticuliers: [ligneTahfizPropagee()],
+    ...surcharges,
+    typeContratCode: 'CDI',
+  });
+}
+
 function DeclarerGarde() {
   const { aModificationsNonEnregistrees, libellesRubriquesModifiees } = useRegistreFiche();
   useDeclarerSaisiePerdable(aModificationsNonEnregistrees, libellesRubriquesModifiees);
@@ -211,11 +237,13 @@ function Harness({
   operations,
   children,
   onEmploisChangeCapture,
+  statutsReferentiel = STATUTS,
 }: {
   readonly emploisInitiaux: EmploiFiche[];
   readonly operations: readonly Permission[];
   readonly children?: ReactNode;
   readonly onEmploisChangeCapture?: (emplois: readonly EmploiFiche[]) => void;
+  readonly statutsReferentiel?: readonly StatutParticulier[];
 }) {
   const [emplois, setEmplois] = useState(emploisInitiaux);
 
@@ -248,7 +276,7 @@ function Harness({
           comptesBancaires: [],
           naturesAvantageEnNature: [],
           primesReferentiel: [],
-          statutsParticuliersReferentiel: STATUTS,
+          statutsParticuliersReferentiel: statutsReferentiel,
           onEmploisChange: (maj) => {
             setEmplois((prev) => {
               const copie = [...(typeof maj === 'function' ? maj(prev) : maj)];
@@ -334,13 +362,14 @@ describe('Rubrique emploi — Statuts particuliers', () => {
   it('SP01 — deux lignes IDMAJ visibles, ligne propagee absente du DOM', () => {
     render(
       createElement(Harness, {
-        emploisInitiaux: [emploiYoussef('emp-1')],
+        emploisInitiaux: [emploiYoussef('emp-1'), emploiCdiTahfiz('emp-cdi')],
         operations: OPERATIONS_SALARIE_COMPLET,
       })
     );
 
     ouvrirAccordeon('emp-1');
 
+    expect(screen.getByTestId('statuts-particuliers-emp-cdi')).toBeTruthy();
     expect(screen.getAllByText('IDMAJ — ANAPEC')).toHaveLength(2);
     expect(screen.queryByText('TAHFIZ')).toBeNull();
     expect(screen.queryByTestId('ligne-st-tahfiz-propage')).toBeNull();
@@ -350,15 +379,8 @@ describe('Rubrique emploi — Statuts particuliers', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [
-          emploiYoussef('emp-2', {
-            statutsParticuliers: [
-              ligneStatut({
-                id: 'st-propage-seul',
-                statutCode: 'TAHFIZ',
-                origine: 'PROPAGE_SOCIETE',
-                dateDebut: '2025-07-01',
-              }),
-            ],
+          emploiCdiTahfiz('emp-2', {
+            statutsParticuliers: [ligneTahfizPropagee({ id: 'st-propage-seul' })],
           }),
         ],
         operations: OPERATIONS_SALARIE_COMPLET,
@@ -391,7 +413,7 @@ describe('Rubrique emploi — Statuts particuliers', () => {
     expect(future.textContent).not.toMatch(/01\/01\/2023.*—/);
   });
 
-  it('SP05 — ligne CLOTUREE grisee, inactive depuis, lecture seule sans Supprimer', () => {
+  it('SP05 — ligne CLOTUREE grisee, inactive depuis, modifiable et supprimable', () => {
     render(
       createElement(Harness, {
         emploisInitiaux: [emploiYoussef('emp-1')],
@@ -409,8 +431,11 @@ describe('Rubrique emploi — Statuts particuliers', () => {
     );
 
     fireEvent.click(screen.getByTestId('ligne-st-idmaj-cloture'));
-    expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
-    expect(screen.queryByTestId('supprimer-st-idmaj-cloture')).toBeNull();
+    expect(screen.queryByTestId('formulaire-lecture-seule')).toBeNull();
+    expect(
+      within(screen.getByTestId('formulaire-st-idmaj-cloture')).getByTestId('valider-ligne')
+    ).toBeTruthy();
+    expect(screen.getByTestId('supprimer-st-idmaj-cloture')).toBeTruthy();
   });
 
   it('SP06 — ligne PAS_ENCORE_EFFECTIVE sans mention et modifiable', () => {
@@ -622,15 +647,7 @@ describe('Rubrique emploi — Statuts particuliers', () => {
       donnees: {
         ...emploiYoussef('emp-1'),
         version: 6,
-        statutsParticuliers: [
-          ligneStatut({ id: 'st-idmaj-cloture' }),
-          ligneStatut({
-            id: 'st-tahfiz-propage',
-            statutCode: 'TAHFIZ',
-            origine: 'PROPAGE_SOCIETE',
-            dateDebut: '2025-07-01',
-          }),
-        ],
+        statutsParticuliers: [ligneStatut({ id: 'st-idmaj-cloture' })],
       },
       alertes: [],
     });
@@ -812,16 +829,23 @@ describe('Rubrique emploi — Statuts particuliers', () => {
   });
 
   it('SP16 — apres enregistrement le parent conserve la ligne propagee', async () => {
-    const emploi = emploiYoussef('emp-1', { version: 3 });
+    const emploi = emploiCdiTahfiz('emp-cdi', { version: 3 });
     const historique: EmploiFiche[][] = [];
 
-    modifierStatutParticulier.mockResolvedValueOnce({
+    creerStatutParticulier.mockResolvedValueOnce({
       donnees: {
         ...emploi,
         version: 4,
-        statutsParticuliers: emploi.statutsParticuliers.map((l) =>
-          l.id === 'st-idmaj-futur' ? { ...l, dateDebut: '2023-03-01' } : l
-        ),
+        statutsParticuliers: [
+          ...emploi.statutsParticuliers,
+          ligneStatut({
+            id: 'st-fictif-serveur',
+            statutCode: 'FICTIF_CDI',
+            dateDebut: '2023-03-01',
+            dateFin: null,
+            etat: 'ACTIVE',
+          }),
+        ],
       },
       alertes: [],
     });
@@ -830,20 +854,32 @@ describe('Rubrique emploi — Statuts particuliers', () => {
       createElement(Harness, {
         emploisInitiaux: [emploi],
         operations: OPERATIONS_SALARIE_COMPLET,
+        statutsReferentiel: STATUTS_AVEC_CODE_FICTIF,
         onEmploisChangeCapture: (e) => historique.push(e.map((x) => structuredClone(x))),
       })
     );
 
-    ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ligne-st-idmaj-futur'));
-    const formulaire = screen.getByTestId('formulaire-st-idmaj-futur');
+    ouvrirAccordeon('emp-cdi');
+    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    const formulaire = screen.getByTestId('formulaire-local-1');
+    fireEvent.change(within(formulaire).getByLabelText('Statut'), {
+      target: { value: 'FICTIF_CDI' },
+    });
     fireEvent.change(within(formulaire).getByLabelText('Date de début'), {
       target: { value: '2023-03-01' },
     });
     fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
     fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
 
-    await waitFor(() => expect(modifierStatutParticulier).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(creerStatutParticulier).toHaveBeenCalledWith(
+        'soc-test',
+        'emp-cdi',
+        3,
+        expect.objectContaining({ statutCode: 'FICTIF_CDI' })
+      )
+    );
+    await waitFor(() => expect(historique.at(-1)?.[0]?.version).toBe(4));
 
     const parent = historique.at(-1)?.[0];
     expect(parent?.statutsParticuliers.some((l) => l.id === 'st-tahfiz-propage')).toBe(true);
@@ -929,12 +965,6 @@ describe('Rubrique emploi — Statuts particuliers', () => {
           dateFin: null,
           etat: 'ACTIVE',
         }),
-        ligneStatut({
-          id: 'st-tahfiz-propage',
-          statutCode: 'TAHFIZ',
-          origine: 'PROPAGE_SOCIETE',
-          dateDebut: '2025-07-01',
-        }),
       ],
     });
     const historique: EmploiFiche[][] = [];
@@ -954,12 +984,6 @@ describe('Rubrique emploi — Statuts particuliers', () => {
         version: 5,
         statutsParticuliers: [
           ligneStatut({ id: 'st-a', dateDebut: '2022-01-01', dateFin: null, etat: 'ACTIVE' }),
-          ligneStatut({
-            id: 'st-tahfiz-propage',
-            statutCode: 'TAHFIZ',
-            origine: 'PROPAGE_SOCIETE',
-            dateDebut: '2025-07-01',
-          }),
         ],
       },
       alertes: [],
@@ -1136,5 +1160,139 @@ describe('Rubrique emploi — Statuts particuliers', () => {
         'jeton-nouveau'
       )
     );
+  });
+
+  it('SP23 — ligne CLOTUREE modifiee : PATCH avec la nouvelle date de fin, etat repris de la reponse', async () => {
+    const cloturee = ligneStatut({
+      id: 'st-idmaj-cloture',
+      dateDebut: '2021-06-01',
+      dateFin: '2022-12-31',
+      etat: 'CLOTUREE',
+    });
+    const emploi = emploiYoussef('emp-1', { version: 5, statutsParticuliers: [cloturee] });
+    modifierStatutParticulier.mockResolvedValueOnce({
+      donnees: {
+        ...emploi,
+        version: 6,
+        statutsParticuliers: [{ ...cloturee, dateFin: '2026-12-31', etat: 'ACTIVE' }],
+      },
+      alertes: [],
+    });
+
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [emploi],
+        operations: OPERATIONS_SALARIE_COMPLET,
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+    fireEvent.click(screen.getByTestId('ligne-st-idmaj-cloture'));
+    expect(screen.queryByTestId('formulaire-lecture-seule')).toBeNull();
+    const formulaire = screen.getByTestId('formulaire-st-idmaj-cloture');
+    fireEvent.change(within(formulaire).getByLabelText('Date de fin'), {
+      target: { value: '2026-12-31' },
+    });
+    fireEvent.click(within(formulaire).getByTestId('valider-ligne'));
+
+    expect(screen.getByTestId('etat-ligne-st-idmaj-cloture').textContent).toBe(
+      'inactive depuis 12/2022'
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
+
+    await waitFor(() =>
+      expect(modifierStatutParticulier).toHaveBeenCalledWith(
+        'soc-test',
+        'emp-1',
+        'st-idmaj-cloture',
+        5,
+        expect.objectContaining({ dateFin: '2026-12-31' })
+      )
+    );
+    await waitFor(() => expect(screen.queryByTestId('etat-ligne-st-idmaj-cloture')).toBeNull());
+    expect(screen.getByTestId('ligne-st-idmaj-cloture').classList.contains('opacity-60')).toBe(
+      false
+    );
+    expect(screen.getByTestId('ligne-st-idmaj-cloture').textContent).toContain('31/12/2026');
+  });
+
+  it('SP24 — ligne CLOTUREE supprimee : apercu, DELETE avec jeton, ligne retiree', async () => {
+    impactSuppressionStatutParticulier.mockResolvedValueOnce({
+      donnees: {
+        emploiId: 'emp-1',
+        ligneId: 'st-idmaj-cloture',
+        mode: 'supprimer',
+        message: 'Ce statut sera supprimé définitivement.',
+        jetonConfirmation: 'jeton-cloture',
+      },
+    });
+    supprimerStatutParticulier.mockResolvedValueOnce({
+      donnees: {
+        ...emploiYoussef('emp-1'),
+        version: 6,
+        statutsParticuliers: [
+          ligneStatut({
+            id: 'st-idmaj-futur',
+            dateDebut: '2023-01-01',
+            dateFin: null,
+            etat: 'PAS_ENCORE_EFFECTIVE',
+          }),
+        ],
+      },
+      alertes: [],
+    });
+
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [emploiYoussef('emp-1', { version: 5 })],
+        operations: OPERATIONS_SALARIE_COMPLET,
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+    fireEvent.click(screen.getByTestId('supprimer-st-idmaj-cloture'));
+    await waitFor(() =>
+      expect(screen.getByText('Ce statut sera supprimé définitivement.')).toBeTruthy()
+    );
+    expect(impactSuppressionStatutParticulier).toHaveBeenCalledWith(
+      'soc-test',
+      'emp-1',
+      'st-idmaj-cloture'
+    );
+
+    fireEvent.click(screen.getByTestId('confirmer-suppression-ligne'));
+
+    await waitFor(() =>
+      expect(supprimerStatutParticulier).toHaveBeenCalledWith(
+        'soc-test',
+        'emp-1',
+        'st-idmaj-cloture',
+        5,
+        'jeton-cloture'
+      )
+    );
+    await waitFor(() => expect(screen.queryByTestId('ligne-st-idmaj-cloture')).toBeNull());
+    expect(screen.getByTestId('ligne-st-idmaj-futur')).toBeTruthy();
+  });
+
+  it('SP25 — sans emploi.modifier sur l emploi, droits complets sur la fiche : ligne CLOTUREE en lecture seule', () => {
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [
+          emploiYoussef('emp-1', {
+            operationsEmploi: ['salarie.remuneration.lire', 'salarie.remuneration.ecrire'],
+          }),
+        ],
+        operations: OPERATIONS_SALARIE_COMPLET,
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+
+    expect(screen.queryByTestId('supprimer-st-idmaj-cloture')).toBeNull();
+    fireEvent.click(screen.getByTestId('ligne-st-idmaj-cloture'));
+    expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
+    expect(screen.queryByTestId('valider-ligne')).toBeNull();
   });
 });

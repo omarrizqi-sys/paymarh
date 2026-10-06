@@ -54,6 +54,8 @@ export interface PropsEnveloppeTableauRepetable<T> {
   readonly suppression?: SuppressionTableauRepetable<T>;
   readonly onAttenteSuppressionChange?: (enAttente: boolean) => void;
   readonly peutModifier: boolean;
+  /** Une ligne inactive reste grisée et marquée, mais se modifie et se supprime comme une ligne active. */
+  readonly lignesInactivesModifiables?: boolean;
   readonly verrouille?: boolean;
   readonly testId?: string;
 }
@@ -77,6 +79,7 @@ export function EnveloppeTableauRepetable<T>({
   suppression,
   onAttenteSuppressionChange,
   peutModifier,
+  lignesInactivesModifiables = false,
   verrouille = false,
   testId = 'enveloppe-tableau',
 }: PropsEnveloppeTableauRepetable<T>) {
@@ -188,7 +191,8 @@ export function EnveloppeTableauRepetable<T>({
             const ouvert = formulaireOuvertId === id;
             const etatLibelle = libelleEtatLigne(ligne);
             const enErreur = ligneEnErreur?.(ligne) ?? false;
-            const lectureSeule = inactive || saisieBloquee || !peutModifier;
+            const figeeParInactivite = inactive && !lignesInactivesModifiables;
+            const lectureSeule = figeeParInactivite || saisieBloquee || !peutModifier;
 
             return (
               <Fragment key={id}>
@@ -241,7 +245,7 @@ export function EnveloppeTableauRepetable<T>({
                   ))}
                   {peutModifier ? (
                     <TableCell>
-                      {!inactive ? (
+                      {!figeeParInactivite ? (
                         <Button
                           type="button"
                           variant="ghost"

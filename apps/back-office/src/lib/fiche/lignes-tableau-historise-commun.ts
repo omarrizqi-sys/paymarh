@@ -26,7 +26,10 @@ export function formaterMoisFin(moisEffetFin: string | null): string {
   return `${mois}/${annee}`;
 }
 
-/** Ligne terminee au mois en cours : plus modifiable, plus supprimable depuis l'ecran. */
+/**
+ * Ligne terminee au mois en cours : plus modifiable, plus supprimable depuis l'ecran,
+ * sauf dans un tableau qui le permet explicitement par `lignesInactivesModifiables` de l'enveloppe.
+ */
 export function estLigneTableauCloturee(ligne: LigneTableauHistoriseBase): boolean {
   return ligne.etat === 'CLOTUREE';
 }

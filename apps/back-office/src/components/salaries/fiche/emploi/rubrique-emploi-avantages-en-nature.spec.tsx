@@ -19,6 +19,7 @@ import { BlocEmplois } from '../bloc-emplois';
 import { RubriqueEmploiAvantagesEnNature } from './rubrique-emploi-avantages-en-nature';
 import { reinitialiserCompteurIdLocal } from '@/lib/fiche/avantages-en-nature-lignes';
 import {
+  OPERATIONS_EMPLOI_COMPLET,
   OPERATIONS_EMPLOI_REMUNERATION,
   OPERATIONS_SALARIE_COMPLET,
   avecOperationsEmploi,
@@ -909,6 +910,23 @@ describe('Rubrique emploi — Avantages en nature', () => {
         'jeton-nouveau'
       )
     );
+  });
+
+  it('AN18 — ligne cloturee B03 : lecture seule et sans Supprimer malgre les droits', () => {
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [emploiBase('emp-1', { operationsEmploi: OPERATIONS_EMPLOI_COMPLET })],
+        operations: OPERATIONS_SALARIE_COMPLET,
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+
+    expect(screen.getByTestId('supprimer-av-voiture')).toBeTruthy();
+    expect(screen.queryByTestId('supprimer-av-nourriture')).toBeNull();
+    fireEvent.click(screen.getByTestId('ligne-av-nourriture'));
+    expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
+    expect(screen.queryByTestId('valider-ligne')).toBeNull();
   });
 });
 
