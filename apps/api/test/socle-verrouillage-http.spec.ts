@@ -13,6 +13,7 @@ describe('socle 2.1.b — verrouillage optimiste HTTP', () => {
   let compteId: string;
   let utilisateurId: string;
   let salarieId: string;
+  let companyId: string;
 
   beforeAll(async () => {
     app = await creerAppHttp();
@@ -36,6 +37,7 @@ describe('socle 2.1.b — verrouillage optimiste HTTP', () => {
     utilisateurId = utilisateur.id;
 
     const societe = await creerSocieteTest(prisma, formeId, compteId, PREFIXE);
+    companyId = societe.companyId;
     const salarie = await creerSalarieMin(prisma, societe.companyId, {
       matricule: `${PREFIXE}-001`,
     });
@@ -52,6 +54,7 @@ describe('socle 2.1.b — verrouillage optimiste HTTP', () => {
       method: 'PATCH',
       headers: {
         'x-paymarh-user-id': utilisateurId,
+        'x-paymarh-company-id': companyId,
         'content-type': 'application/json',
       },
       body: JSON.stringify({ nom: 'Benjelloun' }),
@@ -69,6 +72,7 @@ describe('socle 2.1.b — verrouillage optimiste HTTP', () => {
       method: 'PATCH',
       headers: {
         'x-paymarh-user-id': utilisateurId,
+        'x-paymarh-company-id': companyId,
         'content-type': 'application/json',
         'if-match': '999',
       },
@@ -93,6 +97,7 @@ describe('socle 2.1.b — verrouillage optimiste HTTP', () => {
     const url = urlLocale(app, `/socle-test/salaries/${salarieId}`);
     const entetes = {
       'x-paymarh-user-id': utilisateurId,
+      'x-paymarh-company-id': companyId,
       'content-type': 'application/json',
       'if-match': '0',
     };

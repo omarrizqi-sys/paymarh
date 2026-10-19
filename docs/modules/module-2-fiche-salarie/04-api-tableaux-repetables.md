@@ -28,6 +28,12 @@ Permission d'écriture : `salarie.modifier`. Lecture via `GET /salaries/:id` (`s
 | GET     | `/salaries/:id/saisies-sur-salaire/:ligneId/impact-suppression` | —                          |                                                              |
 | DELETE  | `/salaries/:id/saisies-sur-salaire/:ligneId?confirmationJeton=` | Historisé                  |                                                              |
 
+### Périmètre société et conflit de version (ADR 0034, note du 2026-10-19)
+
+- **Périmètre** — ces 13 routes n'agissent que sur un salarié de la société active. Salarié d'une autre société ou d'un autre compte : `404`, « Ressource introuvable. », jamais `403`, même sans droit d'écriture ; la réponse ne contient aucune donnée de ce salarié. Une ligne est recherchée par son identifiant et par son salarié.
+- **409 sans écriture** — sur les 10 écritures (POST, PATCH, DELETE des personnes à charge, prêts et saisies ; PUT des comptes bancaires), la version du salarié est contrôlée et incrémentée dans la transaction, avant l'écriture. Un `If-Match` périmé rend `409 CONFLIT_VERSION` et **rien n'est écrit** : aucune ligne créée, modifiée ou supprimée, aucun compte bancaire remplacé.
+- **Compte bancaire étranger** — `PUT /salaries/:id/comptes-bancaires` avec un `comptes[i].id` qui n'est pas un compte de ce salarié : `400`, `{ code: "VALEUR_INDISPONIBLE", message: "Cette valeur n’est pas disponible.", champ: "id", indexLigne: i }`, avant toute écriture. `indexLigne` est la position dans le tableau envoyé, comme pour les alertes de ce PUT.
+
 ### Saisies sur salaire (2.c-0)
 
 Chaque ligne porte un **`typeSaisieCode`** obligatoire, référence au référentiel `GET /referentiels/types-saisie-sur-salaire` (`PENSION_ALIMENTAIRE`, `TIERS_DETENTEUR`). Les obligations varient selon le type ; un champ interdit envoyé est refusé (`CHAMP_INTERDIT`), un champ obligatoire absent sur l'état résultant aussi (`CHAMP_OBLIGATOIRE`). En modification, les règles s'apprécient sur l'état fusionné (corps + ligne existante), y compris lors d'un changement de type.

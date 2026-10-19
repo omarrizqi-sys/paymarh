@@ -132,22 +132,24 @@ export class TableauxSalarieService {
       situationHandicap,
     });
 
-    await this.prisma.personneACharge.create({
-      data: {
-        salarieId,
-        lienParenteCode: dto.lienParenteCode,
-        prenom: dto.prenom,
-        nom: dto.nom,
-        sexe: dto.sexe,
-        dateNaissance,
-        aCharge: dto.aCharge,
-        situationHandicap,
-        moisEffetDebut: moisEnCours,
-        moisEffetFin: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      await tx.personneACharge.create({
+        data: {
+          salarieId,
+          lienParenteCode: dto.lienParenteCode,
+          prenom: dto.prenom,
+          nom: dto.nom,
+          sexe: dto.sexe,
+          dateNaissance,
+          aCharge: dto.aCharge,
+          situationHandicap,
+          moisEffetDebut: moisEnCours,
+          moisEffetFin: null,
+        },
+      });
     });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId, alertes);
   }
 
@@ -184,17 +186,17 @@ export class TableauxSalarieService {
 
     const mode = await this.historisation.deciderModification(salarieId, moisEnCours);
 
-    if (mode === 'ecraser') {
-      await this.prisma.personneACharge.update({
-        where: { id: ligneId },
-        data: fusion,
-      });
-    } else {
-      const moisFin = this.historisation.moisFinClotureLigneRemplacee(moisEnCours);
-      await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'ecraser') {
         await tx.personneACharge.update({
           where: { id: ligneId },
-          data: { moisEffetFin: moisFin },
+          data: fusion,
+        });
+      } else {
+        await tx.personneACharge.update({
+          where: { id: ligneId },
+          data: { moisEffetFin: this.historisation.moisFinClotureLigneRemplacee(moisEnCours) },
         });
         await tx.personneACharge.create({
           data: {
@@ -204,10 +206,9 @@ export class TableauxSalarieService {
             moisEffetFin: null,
           },
         });
-      });
-    }
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId, alertes);
   }
 
@@ -236,16 +237,18 @@ export class TableauxSalarieService {
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
 
-    if (mode === 'supprimer') {
-      await this.prisma.personneACharge.delete({ where: { id: ligneId } });
-    } else {
-      await this.prisma.personneACharge.update({
-        where: { id: ligneId },
-        data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'supprimer') {
+        await tx.personneACharge.delete({ where: { id: ligneId } });
+      } else {
+        await tx.personneACharge.update({
+          where: { id: ligneId },
+          data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
+        });
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId);
   }
 
@@ -314,11 +317,13 @@ export class TableauxSalarieService {
       });
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      const idsConserves = donneesComptes
-        .map((c) => c.id)
-        .filter((id): id is string => id !== undefined);
+    const idsConserves = donneesComptes
+      .map((c) => c.id)
+      .filter((id): id is string => id !== undefined);
+    await this.exigerComptesDuSalarie(salarieId, dto.comptes);
 
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
       await tx.compteBancaireSalarie.deleteMany({
         where: {
           salarieId,
@@ -338,7 +343,7 @@ export class TableauxSalarieService {
         };
         if (compte.id !== undefined) {
           await tx.compteBancaireSalarie.update({
-            where: { id: compte.id },
+            where: { id: compte.id, salarieId },
             data: payload,
           });
         } else {
@@ -349,12 +354,12 @@ export class TableauxSalarieService {
       }
     });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId, alertes);
   }
 
   async creerPret(salarieId: string, dto: CreerPretDto, versionAttendue: number) {
     refuserChampMoisEffet(dto);
+    await this.trouverSalarie(salarieId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const montantTotal = new Decimal(dto.montantTotal);
     const mensualite = new Decimal(dto.mensualite);
@@ -363,21 +368,23 @@ export class TableauxSalarieService {
     const alertePret = collecterAlertePretIncoherent(montantTotal, mensualite, dto.nombreEcheances);
     if (alertePret !== null) alertes.push(alertePret);
 
-    await this.prisma.pret.create({
-      data: {
-        salarieId,
-        libelleObjet: dto.libelleObjet,
-        libelleBulletin: dto.libelleBulletin,
-        montantTotal,
-        moisDebut: dto.moisDebut,
-        mensualite,
-        nombreEcheances: dto.nombreEcheances,
-        moisEffetDebut: moisEnCours,
-        moisEffetFin: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      await tx.pret.create({
+        data: {
+          salarieId,
+          libelleObjet: dto.libelleObjet,
+          libelleBulletin: dto.libelleBulletin,
+          montantTotal,
+          moisDebut: dto.moisDebut,
+          mensualite,
+          nombreEcheances: dto.nombreEcheances,
+          moisEffetDebut: moisEnCours,
+          moisEffetFin: null,
+        },
+      });
     });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId, alertes);
   }
 
@@ -415,14 +422,14 @@ export class TableauxSalarieService {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const mode = await this.historisation.deciderModification(salarieId, moisEnCours);
 
-    if (mode === 'ecraser') {
-      await this.prisma.pret.update({ where: { id: ligneId }, data: fusion });
-    } else {
-      const moisFin = this.historisation.moisFinClotureLigneRemplacee(moisEnCours);
-      await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'ecraser') {
+        await tx.pret.update({ where: { id: ligneId }, data: fusion });
+      } else {
         await tx.pret.update({
           where: { id: ligneId },
-          data: { moisEffetFin: moisFin },
+          data: { moisEffetFin: this.historisation.moisFinClotureLigneRemplacee(moisEnCours) },
         });
         await tx.pret.create({
           data: {
@@ -432,10 +439,9 @@ export class TableauxSalarieService {
             moisEffetFin: null,
           },
         });
-      });
-    }
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId, alertes);
   }
 
@@ -456,16 +462,18 @@ export class TableauxSalarieService {
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
 
-    if (mode === 'supprimer') {
-      await this.prisma.pret.delete({ where: { id: ligneId } });
-    } else {
-      await this.prisma.pret.update({
-        where: { id: ligneId },
-        data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'supprimer') {
+        await tx.pret.delete({ where: { id: ligneId } });
+      } else {
+        await tx.pret.update({
+          where: { id: ligneId },
+          data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
+        });
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId);
   }
 
@@ -475,6 +483,7 @@ export class TableauxSalarieService {
     versionAttendue: number
   ) {
     refuserChampMoisEffetClient(dto);
+    await this.trouverSalarie(salarieId);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
 
     let etat;
@@ -484,23 +493,25 @@ export class TableauxSalarieService {
       relancerValidation(erreur);
     }
 
-    await this.prisma.saisieSurSalaire.create({
-      data: {
-        salarieId,
-        typeSaisieCode: etat.typeSaisieCode,
-        referenceDecision: etat.referenceDecision,
-        creancier: etat.creancier,
-        libelleBulletin: etat.libelleBulletin,
-        montantTotal: etat.montantTotal !== null ? new Decimal(etat.montantTotal) : null,
-        montantMensuel: etat.montantMensuel !== null ? new Decimal(etat.montantMensuel) : null,
-        moisDebut: etat.moisDebut,
-        moisFin: etat.moisFin,
-        moisEffetDebut: moisEnCours,
-        moisEffetFin: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      await tx.saisieSurSalaire.create({
+        data: {
+          salarieId,
+          typeSaisieCode: etat.typeSaisieCode,
+          referenceDecision: etat.referenceDecision,
+          creancier: etat.creancier,
+          libelleBulletin: etat.libelleBulletin,
+          montantTotal: etat.montantTotal !== null ? new Decimal(etat.montantTotal) : null,
+          montantMensuel: etat.montantMensuel !== null ? new Decimal(etat.montantMensuel) : null,
+          moisDebut: etat.moisDebut,
+          moisFin: etat.moisFin,
+          moisEffetDebut: moisEnCours,
+          moisEffetFin: null,
+        },
+      });
     });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId);
   }
 
@@ -534,14 +545,14 @@ export class TableauxSalarieService {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const mode = await this.historisation.deciderModification(salarieId, moisEnCours);
 
-    if (mode === 'ecraser') {
-      await this.prisma.saisieSurSalaire.update({ where: { id: ligneId }, data: fusion });
-    } else {
-      const moisFin = this.historisation.moisFinClotureLigneRemplacee(moisEnCours);
-      await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'ecraser') {
+        await tx.saisieSurSalaire.update({ where: { id: ligneId }, data: fusion });
+      } else {
         await tx.saisieSurSalaire.update({
           where: { id: ligneId },
-          data: { moisEffetFin: moisFin },
+          data: { moisEffetFin: this.historisation.moisFinClotureLigneRemplacee(moisEnCours) },
         });
         await tx.saisieSurSalaire.create({
           data: {
@@ -551,10 +562,9 @@ export class TableauxSalarieService {
             moisEffetFin: null,
           },
         });
-      });
-    }
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId);
   }
 
@@ -575,16 +585,18 @@ export class TableauxSalarieService {
     const mode = await this.historisation.deciderSuppression(salarieId, ligne);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
 
-    if (mode === 'supprimer') {
-      await this.prisma.saisieSurSalaire.delete({ where: { id: ligneId } });
-    } else {
-      await this.prisma.saisieSurSalaire.update({
-        where: { id: ligneId },
-        data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'supprimer') {
+        await tx.saisieSurSalaire.delete({ where: { id: ligneId } });
+      } else {
+        await tx.saisieSurSalaire.update({
+          where: { id: ligneId },
+          data: { moisEffetFin: this.historisation.moisFinSuppressionLigneUtilisee(moisEnCours) },
+        });
+      }
+    });
 
-    await this.verrouillage.modifierSalarie({ id: salarieId, versionAttendue, donnees: {} });
     return this.reponseFiche(salarieId);
   }
 
@@ -642,7 +654,7 @@ export class TableauxSalarieService {
     }
   ): Promise<AlerteApi[]> {
     const lignes = await this.prisma.personneACharge.findMany({
-      where: { salarieId },
+      where: { salarieId, salarie: this.filtreSalarieSociete() },
       select: { id: true, nom: true, prenom: true, dateNaissance: true },
     });
 
@@ -665,10 +677,11 @@ export class TableauxSalarieService {
   }
 
   private async reponseFiche(salarieId: string, alertes: AlerteApi[] = []) {
-    const salarie = await this.prisma.salarie.findUniqueOrThrow({
-      where: { id: salarieId },
+    const salarie = await this.prisma.salarie.findFirst({
+      where: { id: salarieId, ...this.filtreSalarieSociete() },
       include: { ...INCLUDE_FICHE_SALARIE, ...INCLUDE_COLLECTIONS_SALARIE },
     });
+    if (salarie === null) throw new NotFoundException(MESSAGE_NEUTRE);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const bulletins = await this.bulletins.listerBulletinsParSalarie(salarieId);
     const emplois = await this.emplois.listerEmploisPourFicheSalarie(salarieId, moisEnCours);
@@ -680,10 +693,14 @@ export class TableauxSalarieService {
     return okEcriture(fiche, alertes);
   }
 
-  private async trouverSalarie(id: string) {
+  private filtreSalarieSociete() {
     const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
+    return { companyId, company: { accountId } };
+  }
+
+  private async trouverSalarie(id: string) {
     const salarie = await this.prisma.salarie.findFirst({
-      where: { id, companyId, company: { accountId } },
+      where: { id, ...this.filtreSalarieSociete() },
       select: { id: true, companyId: true },
     });
     if (salarie === null) throw new NotFoundException(MESSAGE_NEUTRE);
@@ -692,7 +709,7 @@ export class TableauxSalarieService {
 
   private async trouverPersonneACharge(salarieId: string, ligneId: string) {
     const ligne = await this.prisma.personneACharge.findFirst({
-      where: { id: ligneId, salarieId },
+      where: { id: ligneId, salarieId, salarie: this.filtreSalarieSociete() },
     });
     if (ligne === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return ligne;
@@ -700,7 +717,7 @@ export class TableauxSalarieService {
 
   private async trouverPret(salarieId: string, ligneId: string) {
     const ligne = await this.prisma.pret.findFirst({
-      where: { id: ligneId, salarieId },
+      where: { id: ligneId, salarieId, salarie: this.filtreSalarieSociete() },
     });
     if (ligne === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return ligne;
@@ -708,10 +725,32 @@ export class TableauxSalarieService {
 
   private async trouverSaisie(salarieId: string, ligneId: string) {
     const ligne = await this.prisma.saisieSurSalaire.findFirst({
-      where: { id: ligneId, salarieId },
+      where: { id: ligneId, salarieId, salarie: this.filtreSalarieSociete() },
     });
     if (ligne === null) throw new NotFoundException(MESSAGE_NEUTRE);
     return ligne;
+  }
+
+  private async exigerComptesDuSalarie(
+    salarieId: string,
+    comptes: readonly { id?: string }[]
+  ): Promise<void> {
+    const ids = comptes.map((c) => c.id).filter((id): id is string => id !== undefined);
+    if (ids.length === 0) return;
+    const connus = await this.prisma.compteBancaireSalarie.findMany({
+      where: { id: { in: ids }, salarieId, salarie: this.filtreSalarieSociete() },
+      select: { id: true },
+    });
+    const idsConnus = new Set(connus.map((c) => c.id));
+    const indexLigne = comptes.findIndex((c) => c.id !== undefined && !idsConnus.has(c.id));
+    if (indexLigne >= 0) {
+      throw new BadRequestException({
+        code: CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+        message: CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+        champ: 'id',
+        indexLigne,
+      });
+    }
   }
 }
 

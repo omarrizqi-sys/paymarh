@@ -67,7 +67,10 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
 
   it('renvoie 404 (pas 403) pour un salarie d un autre compte', async () => {
     const reponse = await fetch(urlLocale(app, `/socle-test/salaries/${salarieBId}`), {
-      headers: { 'x-paymarh-user-id': utilisateurAId },
+      headers: {
+        'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
+      },
     });
 
     expect(reponse.status).toBe(404);
@@ -80,6 +83,7 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
     const reponse = await fetch(urlLocale(app, `/socle-test/salaries/${salarieAId}`), {
       headers: {
         'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
         [HEADER_PERMISSIONS_REFUSEES]: 'salarie.lire',
       },
     });
@@ -91,6 +95,7 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
     const reponse = await fetch(urlLocale(app, `/socle-test/salaries/${salarieAId}`), {
       headers: {
         'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
         [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.lire',
       },
     });
@@ -109,6 +114,7 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
       method: 'PATCH',
       headers: {
         'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
         'content-type': 'application/json',
         'if-match': '0',
         [HEADER_PERMISSIONS_REFUSEES]: 'salarie.remuneration.ecrire',
@@ -121,7 +127,10 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
 
   it('expose moisEnCours dans la reponse salarie', async () => {
     const reponse = await fetch(urlLocale(app, `/socle-test/salaries/${salarieAId}`), {
-      headers: { 'x-paymarh-user-id': utilisateurAId },
+      headers: {
+        'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
+      },
     });
     const corps = (await reponse.json()) as { donnees: { moisEnCours?: string } };
     expect(corps.donnees.moisEnCours).toMatch(/^\d{4}-\d{2}$/);
@@ -141,7 +150,10 @@ describe('socle 2.1.b — permissions et masquage HTTP', () => {
     );
 
     const reponse = await fetch(urlLocale(app, `/socle-test/salaries/${salarie.id}`), {
-      headers: { 'x-paymarh-user-id': utilisateurAId },
+      headers: {
+        'x-paymarh-user-id': utilisateurAId,
+        'x-paymarh-company-id': societeA.companyId,
+      },
     });
     const corps = (await reponse.json()) as { donnees: { moisEnCours: string } };
     expect(corps.donnees.moisEnCours).toBe('2024-04');

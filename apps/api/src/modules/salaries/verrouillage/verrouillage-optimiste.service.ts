@@ -67,6 +67,20 @@ export class VerrouillageOptimisteService {
     return client.salarie.findUniqueOrThrow({ where: { id: params.id } });
   }
 
+  /** Controle sans incrementer : pour une ecriture qui ne modifie rien. */
+  async controlerVersionSalarie(params: { readonly id: string; readonly versionAttendue: number }) {
+    const count = await this.prisma.salarie.count({
+      where: { id: params.id, version: params.versionAttendue },
+    });
+
+    if (count === 0) {
+      throw new ConflictException({
+        code: CODES_REPONSE.CONFLIT_VERSION.code,
+        message: CODES_REPONSE.CONFLIT_VERSION.message,
+      });
+    }
+  }
+
   async modifierEmploi(
     params: MiseAJourOptimisteEmploi,
     client: { emploi: PrismaService['emploi'] } = this.prisma

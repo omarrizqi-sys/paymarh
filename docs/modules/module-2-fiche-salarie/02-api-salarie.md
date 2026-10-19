@@ -27,6 +27,12 @@ Les réponses de lecture ont la forme `{ donnees }`. Les réponses d'écriture :
 
 Les écritures (sauf création et pré-contrôle) exigent l'en-tête **If-Match** (version lue).
 
+### Périmètre société et conflit de version (ADR 0034, note du 2026-10-19)
+
+- **Périmètre** — toutes les routes `/salaries/:id` (rubriques, tableaux, impact, suppression, création d'emploi) n'agissent que sur un salarié de la société de l'en-tête `x-paymarh-company-id`. Salarié d'une autre société ou d'un autre compte : `404`, « Ressource introuvable. », jamais `403`, même sans droit d'écriture. La réponse ne contient aucune donnée de ce salarié. Sans en-tête de société : `403` (« Cette requête exige une société active… »).
+- **409 sans écriture** — un `If-Match` périmé rend `409 CONFLIT_VERSION` et rien n'est écrit (rubriques et tableaux, voir [04-api-tableaux-repetables.md](./04-api-tableaux-repetables.md)).
+- **PATCH sans changement** — sur `identite`, `coordonnees`, `identifiants-legaux` et `dates`, un corps qui ne porte aucun champ de la rubrique (par exemple `{}`) : avec un `If-Match` périmé, `409 CONFLIT_VERSION` ; avec un `If-Match` à jour, `200` et la version n'est **pas** incrémentée. Un corps qui renvoie des valeurs identiques à celles en base porte des champs : il est écrit et incrémente la version.
+
 ---
 
 ## Codes de réponse (registre salarié)

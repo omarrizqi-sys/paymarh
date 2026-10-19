@@ -618,7 +618,11 @@ export class SalariesService {
       where: { id, version: versionAttendue },
     });
     if (count === 0) {
-      const encoreLa = await this.prisma.salarie.findUnique({ where: { id } });
+      const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
+      const encoreLa = await this.prisma.salarie.findFirst({
+        where: { id, companyId, company: { accountId } },
+        select: { id: true },
+      });
       if (encoreLa !== null) {
         throw new ConflictException({
           code: CODES_REPONSE.CONFLIT_VERSION.code,
@@ -701,6 +705,8 @@ export class SalariesService {
       } else {
         await this.verrouillage.modifierSalarie({ id, versionAttendue, donnees });
       }
+    } else {
+      await this.verrouillage.controlerVersionSalarie({ id, versionAttendue });
     }
 
     const complet = await this.chargerFiche(id);
@@ -873,9 +879,14 @@ export class SalariesService {
   }
 
   private async chargerFiche(id: string) {
-    return this.prisma.salarie.findUniqueOrThrow({
-      where: { id },
+    const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
+    const salarie = await this.prisma.salarie.findFirst({
+      where: { id, companyId, company: { accountId } },
       include: { ...INCLUDE_FICHE_SALARIE, ...INCLUDE_COLLECTIONS_SALARIE },
     });
+    if (salarie === null) {
+      throw new NotFoundException(MESSAGE_NEUTRE);
+    }
+    return salarie;
   }
 }
