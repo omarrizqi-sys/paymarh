@@ -113,7 +113,7 @@ export function valeursRemunerationDepuisEmploi(
 ): ValeursRemunerationEmploi {
   return {
     modeDeterminationSalaire: remuneration.modeDeterminationSalaire,
-    montant: remuneration.montant,
+    montant: remuneration.montant ?? '',
     masquerNombreHeures: remuneration.masquerNombreHeures,
     masquerTauxHoraire: remuneration.masquerTauxHoraire,
     bulletinTousLesMois: remuneration.bulletinTousLesMois,

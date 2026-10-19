@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsDateString,
+  IsDefined,
   IsEnum,
   IsInt,
   IsOptional,
@@ -10,6 +11,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { EstDecimalBorne } from '../../../common/validation/est-decimal-borne.js';
 
 export class ContratEmploiSaisieDto {
   @IsString()
@@ -63,8 +65,10 @@ export class RemunerationEmploiSaisieDto {
   @IsEnum(['BRUT_MENSUEL', 'BRUT_HORAIRE', 'NET_CIBLE'])
   modeDeterminationSalaire!: 'BRUT_MENSUEL' | 'BRUT_HORAIRE' | 'NET_CIBLE';
 
+  @IsOptional()
   @IsString()
-  montant!: string;
+  @EstDecimalBorne(12)
+  montant?: string | null;
 
   @IsOptional()
   @IsBoolean()
@@ -96,6 +100,7 @@ export class RemunerationEmploiSaisieDto {
 
   @IsOptional()
   @IsString()
+  @EstDecimalBorne(12)
   teletravailMontant?: string | null;
 }
 
@@ -116,6 +121,7 @@ export class AffectationEmploiSaisieDto {
 
   @IsOptional()
   @IsString()
+  @EstDecimalBorne(6)
   dureeContractuelle?: string | null;
 
   @IsOptional()
@@ -137,14 +143,17 @@ export class AffectationEmploiSaisieDto {
 }
 
 export class CreerEmploiDto {
+  @IsDefined()
   @ValidateNested()
   @Type(() => ContratEmploiSaisieDto)
   contrat!: ContratEmploiSaisieDto;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => RemunerationEmploiSaisieDto)
   remuneration!: RemunerationEmploiSaisieDto;
 
+  @IsDefined()
   @ValidateNested()
   @Type(() => AffectationEmploiSaisieDto)
   affectation!: AffectationEmploiSaisieDto;
@@ -208,7 +217,8 @@ export class ModifierRemunerationEmploiDto {
 
   @IsOptional()
   @IsString()
-  montant?: string;
+  @EstDecimalBorne(12)
+  montant?: string | null;
 
   @IsOptional()
   @IsBoolean()
@@ -240,6 +250,7 @@ export class ModifierRemunerationEmploiDto {
 
   @IsOptional()
   @IsString()
+  @EstDecimalBorne(12)
   teletravailMontant?: string | null;
 }
 
@@ -262,6 +273,7 @@ export class ModifierAffectationEmploiDto {
 
   @IsOptional()
   @IsString()
+  @EstDecimalBorne(6)
   dureeContractuelle?: string | null;
 
   @IsOptional()

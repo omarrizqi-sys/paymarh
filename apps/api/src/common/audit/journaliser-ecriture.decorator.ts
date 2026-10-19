@@ -9,6 +9,11 @@ export interface OptionsJournalEcriture {
   readonly action: string;
   /** Nom du parametre de route portant l identifiant de l entite. */
   readonly idParam?: string;
+  /**
+   * Creation : l entite visee n existe pas avant l ecriture. L identifiant
+   * consigne est `donnees.id` de la reponse ; aucun etat avant, aucun ecart.
+   */
+  readonly idDepuisReponse?: boolean;
   /** Chargeur personnalise de l etat avant ecriture. */
   readonly chargerAvant?: (id: string) => Promise<Record<string, unknown> | null>;
 }

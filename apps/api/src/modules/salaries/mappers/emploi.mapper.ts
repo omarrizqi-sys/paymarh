@@ -52,7 +52,7 @@ function versContrat(version: ContratVersion) {
 function versRemuneration(version: RemunerationVersion) {
   return {
     modeDeterminationSalaire: version.modeDeterminationSalaire,
-    montant: version.montant.toString(),
+    montant: version.montant !== null ? version.montant.toString() : null,
     masquerNombreHeures: version.masquerNombreHeures,
     masquerTauxHoraire: version.masquerTauxHoraire,
     bulletinTousLesMois: version.bulletinTousLesMois,

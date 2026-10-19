@@ -33,7 +33,8 @@ export interface ContratEmploiFiche {
 
 export interface RemunerationEmploiFiche {
   readonly modeDeterminationSalaire: ModeDeterminationSalaire;
-  readonly montant: string;
+  /** `null` = montant non saisi (valeur vide, pas un masquage). */
+  readonly montant: string | null;
   readonly masquerNombreHeures: boolean;
   readonly masquerTauxHoraire: boolean;
   readonly bulletinTousLesMois: boolean;

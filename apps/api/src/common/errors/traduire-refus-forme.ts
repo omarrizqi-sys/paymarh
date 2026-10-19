@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { ValidationError } from 'class-validator';
+import { CONTRAINTE_DECIMAL_BORNE } from '../validation/est-decimal-borne.js';
 import { CODES_REFUS_FORME } from './codes-refus-forme.js';
 
 export interface RefusForme {
@@ -32,7 +33,8 @@ function contraintesDuNoeud(erreur: ValidationError): string[] {
  * contraintes, puis noeud suivant). Cet ordre suit, pour un DTO plat, l ordre
  * de declaration des proprietes — c est la regle retenue (ADR 0029).
  *
- * Priorite des contraintes d un meme champ : hors liste, puis absence/vide,
+ * Priorite des contraintes d un meme champ : hors liste, puis decimal borne
+ * (la chaine vide y est non conforme, seul null vaut vide), puis absence/vide,
  * puis le reste (type, format, bornes).
  */
 function traduireContraintes(champ: string, erreur: ValidationError): RefusForme {
@@ -41,6 +43,13 @@ function traduireContraintes(champ: string, erreur: ValidationError): RefusForme
     return {
       code: CODES_REFUS_FORME.CHAMP_INTERDIT.code,
       message: CODES_REFUS_FORME.CHAMP_INTERDIT.message,
+      champ,
+    };
+  }
+  if (contraintes.includes(CONTRAINTE_DECIMAL_BORNE)) {
+    return {
+      code: CODES_REFUS_FORME.CARACTERE_NON_CONFORME.code,
+      message: CODES_REFUS_FORME.CARACTERE_NON_CONFORME.message,
       champ,
     };
   }

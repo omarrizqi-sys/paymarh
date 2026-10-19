@@ -75,7 +75,7 @@ export class SalariesController {
 
   @Post()
   @RequiertPermission('salarie.creer')
-  @JournaliserEcriture({ entite: 'Salarie', action: 'CREER_SALARIE' })
+  @JournaliserEcriture({ entite: 'Salarie', action: 'CREER_SALARIE', idDepuisReponse: true })
   @SansIfMatch()
   creer(@Body() dto: CreerSalarieDto) {
     return this.salaries.creer(dto);
@@ -84,7 +84,7 @@ export class SalariesController {
   @Post(':salarieId/emplois')
   @RequiertPermission('emploi.creer')
   @PerimetreSalarie('salarieId')
-  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_EMPLOI' })
+  @JournaliserEcriture({ entite: 'Emploi', action: 'CREER_EMPLOI', idDepuisReponse: true })
   @SansIfMatch()
   creerEmploi(@Param('salarieId', ParseUUIDPipe) salarieId: string, @Body() dto: CreerEmploiDto) {
     return this.emplois.creer(salarieId, dto);

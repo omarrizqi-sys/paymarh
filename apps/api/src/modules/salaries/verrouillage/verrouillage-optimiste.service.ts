@@ -67,8 +67,11 @@ export class VerrouillageOptimisteService {
     return client.salarie.findUniqueOrThrow({ where: { id: params.id } });
   }
 
-  async modifierEmploi(params: MiseAJourOptimisteEmploi) {
-    const { count } = await this.prisma.emploi.updateMany({
+  async modifierEmploi(
+    params: MiseAJourOptimisteEmploi,
+    client: { emploi: PrismaService['emploi'] } = this.prisma
+  ) {
+    const { count } = await client.emploi.updateMany({
       where: { id: params.id, version: params.versionAttendue },
       data: {
         ...params.donnees,
@@ -83,6 +86,6 @@ export class VerrouillageOptimisteService {
       });
     }
 
-    return this.prisma.emploi.findUniqueOrThrow({ where: { id: params.id } });
+    return client.emploi.findUniqueOrThrow({ where: { id: params.id } });
   }
 }

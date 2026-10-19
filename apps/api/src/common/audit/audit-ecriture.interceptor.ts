@@ -68,6 +68,27 @@ export class AuditEcritureInterceptor implements NestInterceptor {
       return next.handle();
     }
 
+    if (options.idDepuisReponse === true) {
+      return next.handle().pipe(
+        switchMap(async (reponse) => {
+          const cible = extraireDonnees(reponse)?.id;
+          if (typeof cible === 'string') {
+            const ctx = this.tenantContext.getOrThrow();
+            await this.audit.record({
+              userId: ctx.userId,
+              accountId: ctx.accountId,
+              companyId: ctx.companyId,
+              action: options.action,
+              targetType: options.entite,
+              targetId: cible,
+              ecart: null,
+            });
+          }
+          return reponse;
+        })
+      );
+    }
+
     const http = context.switchToHttp();
     const request = http.getRequest<{ params?: Record<string, string> }>();
     const idParam = options.idParam ?? 'id';

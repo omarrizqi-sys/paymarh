@@ -632,7 +632,7 @@ model CompteurNumeroOrdreEmploi {
   salarieId     String @id @db.Uuid
   dernierNumero Int
 
-  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Restrict)
+  salarie Salarie @relation(fields: [salarieId], references: [id], onDelete: Cascade)
 }
 
 // ---------------------------------------------------------------------------
@@ -768,7 +768,8 @@ model EmploiRemunerationVersion {
   updatedAt DateTime @updatedAt
 
   modeDeterminationSalaire ModeDeterminationSalaire
-  montant                  Decimal @db.Decimal(14, 2)
+  /// Nullable = montant non encore saisi (aucun controle SMIG).
+  montant                  Decimal? @db.Decimal(14, 2)
   masquerNombreHeures      Boolean @default(false)
   masquerTauxHoraire       Boolean @default(false)
   bulletinTousLesMois      Boolean @default(true)

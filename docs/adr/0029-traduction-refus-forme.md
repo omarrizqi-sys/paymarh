@@ -58,3 +58,15 @@ On ne rend jamais une liste.
 
 - `main.ts` et tous les `creerAppHttp` des tests HTTP partagent `creerPipeValidationGlobale()`.
 - Le back-office n’a rien de nouveau à apprendre : il lisait déjà `{ code, message, champ }`. Un filet de sécurité reste dans `extraireErreur` pour l’ancienne forme tableau, afin de ne jamais afficher l’anglais ni le message de panne si un mock ou un relais la reproduisait.
+
+## Note du 2026-10-19 — bloc imbriqué absent
+
+`@ValidateNested` ignore une propriété `undefined` : un bloc imbriqué absent passait la validation sans aucun refus. Un bloc obligatoire porte donc aussi `@IsDefined()`, dont la contrainte `isDefined` est traduite en `CHAMP_OBLIGATOIRE` avec `champ` égal au nom du bloc. Premier usage sur des blocs : `contrat`, `remuneration` et `affectation` de `CreerEmploiDto`.
+
+## Note du 2026-10-19 — décimaux : la chaîne vide est non conforme
+
+Un champ décimal facultatif distingue deux cas : `null` vaut « vide », la chaîne `''` est une saisie non conforme. La règle « vide → `CHAMP_OBLIGATOIRE` » ne s’y applique donc pas.
+
+La contrainte `estDecimalBorne` (`common/validation/est-decimal-borne.ts`, décorateur `@EstDecimalBorne(chiffres)`) exige une chaîne non signée, à point décimal, d’au plus deux décimales, sans exposant, dont la partie entière ne dépasse pas la précision de la colonne. Le traducteur la classe **avant** l’absence/vide : tout échec rend `CARACTERE_NON_CONFORME`, y compris sur `''`. Une troisième décimale est refusée, jamais arrondie. Ordre des priorités d’un même champ : hors liste, décimal borné, absence/vide, le reste.
+
+Champs concernés (DTO emploi) : `montant` et `teletravailMontant` (colonnes `Decimal(14, 2)`, 12 chiffres avant la virgule), `dureeContractuelle` (`Decimal(8, 2)`, 6 chiffres).

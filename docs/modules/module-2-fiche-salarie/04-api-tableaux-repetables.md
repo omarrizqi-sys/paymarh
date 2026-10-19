@@ -99,6 +99,21 @@ Permission d'écriture : `emploi.modifier`. Lecture via `GET /emplois/:id` ou em
 | `STATUT_RESERVE_CONTRAT_INSERTION`  | Blocage     | IDMAJ sur un emploi qui n'est pas en contrat d’insertion (ADR 0033)                      |
 | `CHANGEMENT_TYPE_CONTRAT_INSERTION` | Blocage     | Type de contrat changé vers ou depuis INSERTION, `PATCH /emplois/:id/contrat` (ADR 0033) |
 
+### Création et rubriques de l'emploi (2026-10-19)
+
+`POST /salaries/:salarieId/emplois`, `PATCH /emplois/:id/contrat`, `PATCH /emplois/:id/remuneration`, `PATCH /emplois/:id/affectation`.
+
+- **Blocs obligatoires à la création** — `contrat`, `remuneration` et `affectation` sont exigés. Bloc absent : `400`, `{ code: "CHAMP_OBLIGATOIRE", message: "Ce champ est obligatoire.", champ: "<nom du bloc>" }` (forme ADR 0029).
+- **Montant facultatif** — `remuneration.montant` peut être omis à la création ; `PATCH /emplois/:id/remuneration` avec `montant: null` le vide. Montant vide : aucun contrôle SMIG (pas d'alerte C24), lecture `montant: null`. `null` signifie « non saisi » ; ce n'est pas un masquage. Le masquage de la rémunération est inchangé.
+- **Format des décimaux** — `montant`, `teletravailMontant` (au plus 12 chiffres avant la virgule) et `dureeContractuelle` (au plus 6) : chaîne non signée, point décimal, au plus deux décimales, sans exposant. Toute autre valeur, chaîne vide comprise, rend `400`, `{ code: "CARACTERE_NON_CONFORME", champ }` (sur la création, `champ` est le chemin, par exemple `remuneration.montant`). Seul `null` vaut « vide » (ADR 0029, note du 2026-10-19).
+- **Références inconnues** — `typeContratCode`, `motifSortieCode` (création, PATCH contrat) et `compteBancaireId` (création, PATCH rémunération) sont contrôlés avant toute écriture. Valeur inconnue, ou compte bancaire qui n'appartient pas à ce salarié : `400`, `{ code: "VALEUR_INDISPONIBLE", message: "Cette valeur n’est pas disponible.", champ: "<champ>" }`. Rien n'est écrit.
+- **Audit** — la création d'un emploi écrit une entrée `CREER_EMPLOI` dont la cible est l'identifiant du nouvel emploi.
+
+### Périmètre société et conflit de version (ADR 0034)
+
+- **Périmètre** — toutes les routes `/emplois/:id` (rubriques, tableaux, impact, suppression) filtrent l'emploi par société active. Emploi d'une autre société ou d'un autre compte : `404`, « Ressource introuvable. », jamais `403`, même sans droit d'écriture.
+- **409 sans écriture** — sur les 12 écritures à `If-Match` (3 PATCH de rubrique, 9 écritures de tableaux), la version est contrôlée et incrémentée dans la transaction, avant l'écriture. Un `If-Match` périmé rend `409 CONFLIT_VERSION` et **rien n'est écrit**, synchronisation TAHFIZ comprise. Le chevauchement des statuts particuliers est contrôlé dans cette même transaction, après le verrou.
+
 ---
 
 ## Masquage rémunération

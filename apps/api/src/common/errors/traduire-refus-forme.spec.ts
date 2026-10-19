@@ -1,5 +1,6 @@
 import { ValidationError } from 'class-validator';
 import { describe, expect, it } from 'vitest';
+import { CONTRAINTE_DECIMAL_BORNE } from '../validation/est-decimal-borne.js';
 import { CODES_REFUS_FORME } from './codes-refus-forme.js';
 import { traduireRefusForme } from './traduire-refus-forme.js';
 
@@ -81,6 +82,17 @@ describe('traduireRefusForme', () => {
     ]);
     expect(refus.code).toBe('CHAMP_OBLIGATOIRE');
     expect(refus.champ).toBe('dateNaissance');
+  });
+
+  it('decimal borne vide → CARACTERE_NON_CONFORME (seul null vaut vide)', () => {
+    const refus = traduireRefusForme([
+      noeud('montant', { [CONTRAINTE_DECIMAL_BORNE]: CONTRAINTE_DECIMAL_BORNE }, ''),
+    ]);
+    expect(refus).toEqual({
+      code: CODES_REFUS_FORME.CARACTERE_NON_CONFORME.code,
+      message: CODES_REFUS_FORME.CARACTERE_NON_CONFORME.message,
+      champ: 'montant',
+    });
   });
 
   it('un seul champ designe : le premier du tableau, enfants d abord', () => {

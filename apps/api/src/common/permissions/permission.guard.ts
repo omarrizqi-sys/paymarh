@@ -10,7 +10,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Permission } from '@paymarh/shared-types';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { accountScope } from '../tenancy/tenant-scope.js';
+import { accountScope, companyScope } from '../tenancy/tenant-scope.js';
 import { TenantContextService } from '../tenancy/tenant-context.service.js';
 import type { Request } from 'express';
 import { PERMISSION_SERVICE, type PermissionService } from './permission.service.js';
@@ -112,11 +112,11 @@ export class PermissionGuard implements CanActivate {
       throw new NotFoundException(MESSAGE_NEUTRE);
     }
 
-    const ctx = this.tenantContext.getOrThrow();
+    const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
     const emploi = await this.prisma.emploi.findFirst({
       where: {
         id,
-        salarie: { company: accountScope(ctx) },
+        salarie: { companyId, company: { accountId } },
       },
       select: { id: true },
     });

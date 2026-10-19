@@ -16,7 +16,7 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { assertEcritureRemunerationSalarie } from '../../common/remuneration/assert-ecriture-remuneration-salarie.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
-import { accountScope, companyScope } from '../../common/tenancy/tenant-scope.js';
+import { companyScope } from '../../common/tenancy/tenant-scope.js';
 import { BULLETIN_PORT, type BulletinPort } from './bulletin/bulletin.port.js';
 import { incrementerCompteurNumeroOrdre } from './compteurs-salarie.js';
 import { versDate } from './deductions-emploi.js';
@@ -51,6 +51,7 @@ import { CODES_REPONSE } from './reponses/codes-reponse.js';
 import { okEcriture } from './reponses/enveloppe-ecriture.js';
 import {
   assertDateFinApresDebut,
+  assertReferencesEmploiConnues,
   assertTypeContratInsertionImmuable,
   collecterAlerteDureeContractuelleTotale,
   collecterAlerteSalaireSmig,
@@ -105,16 +106,26 @@ export class EmploisService {
 
     try {
       assertDateFinApresDebut(dateDebut, dateFin);
+      await assertReferencesEmploiConnues(this.prisma, salarieId, {
+        typeContratCode: dto.contrat.typeContratCode,
+        motifSortieCode: dto.contrat.motifSortieCode,
+        compteBancaireId: dto.remuneration.compteBancaireId,
+      });
     } catch (erreur) {
       relancerValidation(erreur);
     }
+
+    const montant =
+      dto.remuneration.montant !== undefined && dto.remuneration.montant !== null
+        ? new Decimal(dto.remuneration.montant)
+        : null;
 
     const contratCtx = this.contexteContratDepuisSaisie(dto.contrat, dateDebut, dateFin);
     const moisEffet = moisDepuisDate(dateDebut);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(salarieId);
     const alertes: AlerteApi[] = [
       ...collecterAlertesContrat(contratCtx),
-      ...(await this.alertesRemuneration(salarieId, dto.remuneration, null)),
+      ...(await this.alertesRemuneration(salarieId, montant, null)),
       ...(await this.alertesAffectation(
         salarieId,
         dto.affectation.dureeContractuelle ?? null,
@@ -154,8 +165,6 @@ export class EmploisService {
       moisEnCours
     );
     if (alerteC24 !== null) alertes.push(alerteC24);
-
-    const montant = new Decimal(dto.remuneration.montant);
 
     const emploi = await this.prisma.$transaction(async (tx) => {
       const numeroOrdre = await incrementerCompteurNumeroOrdre(tx, salarieId);
@@ -243,6 +252,10 @@ export class EmploisService {
 
     try {
       assertDateFinApresDebut(dateDebut, dateFin);
+      await assertReferencesEmploiConnues(this.prisma, emploi.salarieId, {
+        typeContratCode: dto.typeContratCode,
+        motifSortieCode: dto.motifSortieCode,
+      });
     } catch (erreur) {
       relancerValidation(erreur);
     }
@@ -297,6 +310,8 @@ export class EmploisService {
     });
 
     await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} }, tx);
+
       if (decision.mode === 'ecraser' && decision.versionId !== undefined) {
         await tx.emploiContratVersion.update({
           where: { id: decision.versionId },
@@ -339,8 +354,6 @@ export class EmploisService {
       await this.tahfiz.synchroniserEmploiDansTransaction(tx, companyId, id);
     });
 
-    await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
-
     const complet = await this.chargerEmploi(id);
     return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
   }
@@ -356,16 +369,22 @@ export class EmploisService {
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
     const courante = this.remunerationAuMois(emploi, moisEnCours);
 
-    const montant = dto.montant !== undefined ? new Decimal(dto.montant) : courante.montant;
+    try {
+      await assertReferencesEmploiConnues(this.prisma, emploi.salarieId, {
+        compteBancaireId: dto.compteBancaireId,
+      });
+    } catch (erreur) {
+      relancerValidation(erreur);
+    }
 
-    const alertes = await this.alertesRemuneration(
-      emploi.salarieId,
-      {
-        modeDeterminationSalaire: dto.modeDeterminationSalaire ?? courante.modeDeterminationSalaire,
-        montant: montant.toString(),
-      },
-      id
-    );
+    const montant =
+      dto.montant === undefined
+        ? courante.montant
+        : dto.montant === null
+          ? null
+          : new Decimal(dto.montant);
+
+    const alertes = await this.alertesRemuneration(emploi.salarieId, montant, id);
 
     const decision = await this.historisation.deciderEcritureRemuneration(
       emploi.salarieId,
@@ -397,6 +416,8 @@ export class EmploisService {
     };
 
     await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} }, tx);
+
       if (decision.mode === 'ecraser' && decision.versionId !== undefined) {
         await tx.emploiRemunerationVersion.update({
           where: { id: decision.versionId },
@@ -408,8 +429,6 @@ export class EmploisService {
         });
       }
     });
-
-    await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
 
     const complet = await this.chargerEmploi(id);
     return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
@@ -484,6 +503,8 @@ export class EmploisService {
     if (alerteC24 !== null) alertes.push(alerteC24);
 
     await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} }, tx);
+
       if (decision.mode === 'ecraser' && decision.versionId !== undefined) {
         await tx.emploiAffectationVersion.update({
           where: { id: decision.versionId },
@@ -495,8 +516,6 @@ export class EmploisService {
         });
       }
     });
-
-    await this.verrouillage.modifierEmploi({ id, versionAttendue, donnees: {} });
 
     const complet = await this.chargerEmploi(id);
     return okEcriture(await this.avecResolutions(complet, moisEnCours), alertes);
@@ -616,17 +635,13 @@ export class EmploisService {
 
   private async alertesRemuneration(
     salarieId: string,
-    saisie: Pick<RemunerationEmploiSaisieDto, 'modeDeterminationSalaire' | 'montant'>,
+    montant: Decimal | null,
     exclureEmploiId: string | null
   ): Promise<AlerteApi[]> {
     void exclureEmploiId;
     const mois = await this.moisEnCours.calculerPourSalarie(salarieId);
     const alertes: AlerteApi[] = [];
-    const smig = await collecterAlerteSalaireSmig(
-      this.referentiel,
-      mois,
-      new Decimal(saisie.montant)
-    );
+    const smig = await collecterAlerteSalaireSmig(this.referentiel, mois, montant);
     if (smig !== null) alertes.push(smig);
     return alertes;
   }
@@ -693,7 +708,7 @@ export class EmploisService {
 
   private donneesRemuneration(
     dto: RemunerationEmploiSaisieDto,
-    montant: Decimal,
+    montant: Decimal | null,
     moisEffet: string,
     emploiId: string
   ) {
@@ -767,11 +782,11 @@ export class EmploisService {
   }
 
   private async trouverEmploi(id: string) {
-    const ctx = this.tenantContext.getOrThrow();
+    const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
     const emploi = await this.prisma.emploi.findFirst({
       where: {
         id,
-        salarie: { company: accountScope(ctx) },
+        salarie: { companyId, company: { accountId } },
       },
       include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });

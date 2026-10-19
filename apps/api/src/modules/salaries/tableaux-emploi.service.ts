@@ -16,7 +16,7 @@ import {
 import { PrismaService } from '../../common/prisma/prisma.service.js';
 import { assertEcritureRemunerationSalarie } from '../../common/remuneration/assert-ecriture-remuneration-salarie.js';
 import { TenantContextService } from '../../common/tenancy/tenant-context.service.js';
-import { accountScope } from '../../common/tenancy/tenant-scope.js';
+import { companyScope } from '../../common/tenancy/tenant-scope.js';
 import type {
   CreerAvantageEnNatureDto,
   CreerPrimeContractuelleDto,
@@ -101,15 +101,17 @@ export class TableauxEmploiService {
       relancerValidation(erreur);
     }
 
-    await this.prisma.primeContractuelle.create({
-      data: {
-        emploiId,
-        primeRef: dto.primeRef,
-        moisApplication: dto.moisApplication,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      await tx.primeContractuelle.create({
+        data: {
+          emploiId,
+          primeRef: dto.primeRef,
+          moisApplication: dto.moisApplication,
+        },
+      });
     });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -136,12 +138,14 @@ export class TableauxEmploiService {
     if (dto.primeRef !== undefined) donnees.primeRef = dto.primeRef;
     if (dto.moisApplication !== undefined) donnees.moisApplication = dto.moisApplication;
 
-    await this.prisma.primeContractuelle.update({
-      where: { id: ligneId },
-      data: donnees,
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      await tx.primeContractuelle.update({
+        where: { id: ligneId },
+        data: donnees,
+      });
     });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -150,8 +154,10 @@ export class TableauxEmploiService {
     await this.trouverPrime(emploiId, ligneId);
     const emploi = await this.trouverEmploi(emploiId);
 
-    await this.prisma.primeContractuelle.delete({ where: { id: ligneId } });
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      await tx.primeContractuelle.delete({ where: { id: ligneId } });
+    });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -176,18 +182,20 @@ export class TableauxEmploiService {
       relancerValidation(erreur);
     }
 
-    await this.prisma.avantageEnNature.create({
-      data: {
-        emploiId,
-        natureRef: dto.natureRef,
-        montant: new Decimal(dto.montant),
-        moisApplication: dto.moisApplication,
-        moisEffetDebut: moisEnCours,
-        moisEffetFin: null,
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      await tx.avantageEnNature.create({
+        data: {
+          emploiId,
+          natureRef: dto.natureRef,
+          montant: new Decimal(dto.montant),
+          moisApplication: dto.moisApplication,
+          moisEffetDebut: moisEnCours,
+          moisEffetFin: null,
+        },
+      });
     });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -227,14 +235,15 @@ export class TableauxEmploiService {
 
     const mode = await this.historisationLigne.deciderModification(emploi.salarieId, moisEnCours);
 
-    if (mode === 'ecraser') {
-      await this.prisma.avantageEnNature.update({
-        where: { id: ligneId },
-        data: fusion,
-      });
-    } else {
-      const moisFin = this.historisationLigne.moisFinClotureLigneRemplacee(moisEnCours);
-      await this.prisma.$transaction(async (tx) => {
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'ecraser') {
+        await tx.avantageEnNature.update({
+          where: { id: ligneId },
+          data: fusion,
+        });
+      } else {
+        const moisFin = this.historisationLigne.moisFinClotureLigneRemplacee(moisEnCours);
         await tx.avantageEnNature.update({
           where: { id: ligneId },
           data: { moisEffetFin: moisFin },
@@ -247,10 +256,9 @@ export class TableauxEmploiService {
             moisEffetFin: null,
           },
         });
-      });
-    }
+      }
+    });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -288,18 +296,20 @@ export class TableauxEmploiService {
     const mode = await this.historisationLigne.deciderSuppression(emploi.salarieId, ligne);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
 
-    if (mode === 'supprimer') {
-      await this.prisma.avantageEnNature.delete({ where: { id: ligneId } });
-    } else {
-      await this.prisma.avantageEnNature.update({
-        where: { id: ligneId },
-        data: {
-          moisEffetFin: this.historisationLigne.moisFinSuppressionLigneUtilisee(moisEnCours),
-        },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'supprimer') {
+        await tx.avantageEnNature.delete({ where: { id: ligneId } });
+      } else {
+        await tx.avantageEnNature.update({
+          where: { id: ligneId },
+          data: {
+            moisEffetFin: this.historisationLigne.moisFinSuppressionLigneUtilisee(moisEnCours),
+          },
+        });
+      }
+    });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -333,17 +343,6 @@ export class TableauxEmploiService {
       relancerValidation(erreur);
     }
 
-    const lignes = await this.prisma.statutParticulierLigne.findMany({
-      where: { emploiId },
-      select: { id: true, dateDebut: true, dateFin: true },
-    });
-
-    try {
-      assertPasChevauchementStatuts(lignes, { dateDebut, dateFin });
-    } catch (erreur) {
-      relancerValidation(erreur);
-    }
-
     const alertes: AlerteApi[] = [];
     const alerteIntervalle = collecterAlerteStatutHorsEmploi(
       contrat.dateDebut,
@@ -353,17 +352,30 @@ export class TableauxEmploiService {
     );
     if (alerteIntervalle !== null) alertes.push(alerteIntervalle);
 
-    await this.prisma.statutParticulierLigne.create({
-      data: {
-        emploiId,
-        statutCode: dto.statutCode,
-        dateDebut,
-        dateFin,
-        origine: 'SAISIE_MANUELLE',
-      },
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+
+      const lignes = await tx.statutParticulierLigne.findMany({
+        where: { emploiId },
+        select: { id: true, dateDebut: true, dateFin: true },
+      });
+      try {
+        assertPasChevauchementStatuts(lignes, { dateDebut, dateFin });
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+
+      await tx.statutParticulierLigne.create({
+        data: {
+          emploiId,
+          statutCode: dto.statutCode,
+          dateDebut,
+          dateFin,
+          origine: 'SAISIE_MANUELLE',
+        },
+      });
     });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId, alertes);
   }
 
@@ -405,17 +417,6 @@ export class TableauxEmploiService {
       relancerValidation(erreur);
     }
 
-    const lignes = await this.prisma.statutParticulierLigne.findMany({
-      where: { emploiId },
-      select: { id: true, dateDebut: true, dateFin: true },
-    });
-
-    try {
-      assertPasChevauchementStatuts(lignes, { id: ligneId, dateDebut, dateFin });
-    } catch (erreur) {
-      relancerValidation(erreur);
-    }
-
     const alertes: AlerteApi[] = [];
     const alerteIntervalle = collecterAlerteStatutHorsEmploi(
       contrat.dateDebut,
@@ -428,12 +429,25 @@ export class TableauxEmploiService {
     const donnees: Record<string, unknown> = { dateDebut, dateFin };
     if (dto.statutCode !== undefined) donnees.statutCode = dto.statutCode;
 
-    await this.prisma.statutParticulierLigne.update({
-      where: { id: ligneId },
-      data: donnees,
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+
+      const lignes = await tx.statutParticulierLigne.findMany({
+        where: { emploiId },
+        select: { id: true, dateDebut: true, dateFin: true },
+      });
+      try {
+        assertPasChevauchementStatuts(lignes, { id: ligneId, dateDebut, dateFin });
+      } catch (erreur) {
+        relancerValidation(erreur);
+      }
+
+      await tx.statutParticulierLigne.update({
+        where: { id: ligneId },
+        data: donnees,
+      });
     });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId, alertes);
   }
 
@@ -473,16 +487,18 @@ export class TableauxEmploiService {
     const mode = await this.deciderSuppressionStatut(emploi.salarieId, existant);
     const moisEnCours = await this.moisEnCours.calculerPourSalarie(emploi.salarieId);
 
-    if (mode === 'supprimer') {
-      await this.prisma.statutParticulierLigne.delete({ where: { id: ligneId } });
-    } else {
-      await this.prisma.statutParticulierLigne.update({
-        where: { id: ligneId },
-        data: { dateFin: dateFinDepuisMois(moisEnCours) },
-      });
-    }
+    await this.prisma.$transaction(async (tx) => {
+      await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} }, tx);
+      if (mode === 'supprimer') {
+        await tx.statutParticulierLigne.delete({ where: { id: ligneId } });
+      } else {
+        await tx.statutParticulierLigne.update({
+          where: { id: ligneId },
+          data: { dateFin: dateFinDepuisMois(moisEnCours) },
+        });
+      }
+    });
 
-    await this.verrouillage.modifierEmploi({ id: emploiId, versionAttendue, donnees: {} });
     return this.reponseEmploi(emploi.salarieId, emploiId);
   }
 
@@ -578,11 +594,11 @@ export class TableauxEmploiService {
   }
 
   private async trouverEmploi(id: string) {
-    const ctx = this.tenantContext.getOrThrow();
+    const { companyId, accountId } = companyScope(this.tenantContext.getOrThrow());
     const emploi = await this.prisma.emploi.findFirst({
       where: {
         id,
-        salarie: { company: accountScope(ctx) },
+        salarie: { companyId, company: { accountId } },
       },
       include: { ...INCLUDE_EMPLOI_COMPLET, ...INCLUDE_COLLECTIONS_EMPLOI },
     });

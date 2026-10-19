@@ -106,11 +106,64 @@ export function collecterAlertesContrat(contrat: ContexteContratEmploi): AlerteA
   return alertes;
 }
 
+function refusValeurIndisponible(champ: string): ValidationBloquanteEmploiError {
+  return new ValidationBloquanteEmploiError(
+    CODES_REPONSE.VALEUR_INDISPONIBLE.code,
+    CODES_REPONSE.VALEUR_INDISPONIBLE.message,
+    champ
+  );
+}
+
+type ClientReferencesEmploi = Pick<
+  PrismaClient,
+  'typeContrat' | 'motifSortie' | 'compteBancaireSalarie'
+>;
+
+/**
+ * Codes et compte references par les versions contrat et remuneration :
+ * refus metier avant toute ecriture, jamais une violation de cle etrangere.
+ * Une valeur `undefined` ou `null` n est pas controlee (champ non envoye ou vide).
+ */
+export async function assertReferencesEmploiConnues(
+  prisma: ClientReferencesEmploi,
+  salarieId: string,
+  references: {
+    typeContratCode?: string | null;
+    motifSortieCode?: string | null;
+    compteBancaireId?: string | null;
+  }
+): Promise<void> {
+  const { typeContratCode, motifSortieCode, compteBancaireId } = references;
+  if (typeContratCode !== undefined && typeContratCode !== null) {
+    const connu = await prisma.typeContrat.findUnique({
+      where: { code: typeContratCode },
+      select: { code: true },
+    });
+    if (connu === null) throw refusValeurIndisponible('typeContratCode');
+  }
+  if (motifSortieCode !== undefined && motifSortieCode !== null) {
+    const connu = await prisma.motifSortie.findUnique({
+      where: { code: motifSortieCode },
+      select: { code: true },
+    });
+    if (connu === null) throw refusValeurIndisponible('motifSortieCode');
+  }
+  if (compteBancaireId !== undefined && compteBancaireId !== null) {
+    const compte = await prisma.compteBancaireSalarie.findFirst({
+      where: { id: compteBancaireId, salarieId },
+      select: { id: true },
+    });
+    if (compte === null) throw refusValeurIndisponible('compteBancaireId');
+  }
+}
+
+/** Montant vide : aucun controle SMIG, aucune alerte. */
 export async function collecterAlerteSalaireSmig(
   referentiel: ReferentielNationalPort,
   mois: string,
-  montant: Decimal
+  montant: Decimal | null
 ): Promise<AlerteApi | null> {
+  if (montant === null) return null;
   const smig = await referentiel.lireValeur('SMIG', mois);
   if (smig === null) return null;
   if (montant.lessThan(smig)) {
