@@ -29,13 +29,6 @@ export function filtrerLignesStatutsParticuliersVisibles<
   return lignes.filter(estLigneStatutParticulierVisibleFiche);
 }
 
-/** Reformate AAAA-MM-JJ en JJ/MM/AAAA sans objet Date. */
-export function afficherDateStatutParticulier(date: string): string {
-  if (date === '') return '';
-  const [annee, mois, jour] = date.split('-');
-  return `${jour}/${mois}/${annee}`;
-}
-
 function moisEffetFinDepuisDateFin(dateFin: string | null): string | null {
   if (dateFin === null || dateFin === '') return null;
   return dateFin.slice(0, 7);

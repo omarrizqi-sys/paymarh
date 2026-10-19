@@ -46,7 +46,7 @@ import {
 import { estLigneTableauCloturee } from '@/lib/fiche/lignes-tableau-historise-commun';
 import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
 import type { MiseAJourEmploiFiche } from '@/lib/fiche/valeurs-emploi';
-import { possedePermission } from '@/lib/permissions';
+import { peutEcrireRemunerationEmploi } from '@/lib/permissions';
 import { useFormulaireTableau } from '../contexte-formulaire-tableau';
 import { EnveloppeTableauRepetable } from '../enveloppe-tableau-repetable';
 import { useRegistreFiche } from '../registre-fiche-provider';
@@ -79,7 +79,7 @@ export function RubriqueEmploiAvantagesEnNature({
 }: Props) {
   const emploiId = emploi.id;
   const libellePoste = emploi.contrat.libellePoste;
-  const peutEcrire = possedePermission(operations, 'salarie.remuneration.ecrire');
+  const peutEcrire = peutEcrireRemunerationEmploi(operations);
 
   const {
     enregistrerRubrique,

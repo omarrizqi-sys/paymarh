@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import type {
   Banque,
   CompteBancaireSalarie,
@@ -31,10 +31,12 @@ import {
   booleanNullableDepuisSelect,
   chaineOuNull,
   valeursRemunerationDepuisEmploi,
+  type MiseAJourEmploiFiche,
   type ValeursRemunerationEmploi,
 } from '@/lib/fiche/valeurs-emploi';
+import { fusionnerReponseEmploi } from '@/lib/fiche/remontee-emploi';
 import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
-import { possedePermission } from '@/lib/permissions';
+import { peutEcrireRemunerationEmploi } from '@/lib/permissions';
 import { TeteRubriqueFiche } from '../tete-rubrique-fiche';
 import { useRubriqueFiche } from '../use-rubrique-fiche';
 import { LigneHeritageChamp } from './ligne-heritage-champ';
@@ -47,7 +49,7 @@ interface Props {
   readonly comptesBancaires?: readonly CompteBancaireSalarie[];
   readonly banques: readonly Banque[];
   readonly operations: readonly Permission[];
-  readonly onEmploiChange: (emploi: EmploiFiche) => void;
+  readonly onEmploiChange: (maj: MiseAJourEmploiFiche) => void;
 }
 
 const MOIS_PRODUCTION = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -114,10 +116,7 @@ export function RubriqueEmploiRemuneration({
   operations,
   onEmploiChange,
 }: Props) {
-  const emploiRef = useRef(emploi);
-  emploiRef.current = emploi;
-
-  const peutEcrire = possedePermission(operations, 'salarie.remuneration.ecrire');
+  const peutEcrire = peutEcrireRemunerationEmploi(operations);
   const { id: emploiId, contrat, resolutions } = emploi;
   const libellePoste = contrat.libellePoste;
   const valeursServeur = valeursRemunerationDepuisEmploi(remuneration, paiement);
@@ -139,29 +138,33 @@ export function RubriqueEmploiRemuneration({
 
   const onServeurChange = useCallback(
     (valeurs: ValeursRemunerationEmploi, version: number) => {
-      const base = emploiRef.current;
-      onEmploiChange({
-        ...base,
-        version,
-        remuneration: {
-          modeDeterminationSalaire: valeurs.modeDeterminationSalaire,
-          montant: valeurs.montant,
-          masquerNombreHeures: valeurs.masquerNombreHeures,
-          masquerTauxHoraire: valeurs.masquerTauxHoraire,
-          bulletinTousLesMois: valeurs.bulletinTousLesMois,
-          moisProduction: [...valeurs.moisProduction],
-          teletravailIndemniteVersee: booleanNullableDepuisSelect(
-            valeurs.teletravailIndemniteVersee
-          ),
-          teletravailMontant: chaineOuNull(valeurs.teletravailMontant),
-        },
-        paiement: {
-          modePaiement: (chaineOuNull(valeurs.modePaiement) as ModePaiement | null) ?? null,
-          compteBancaireId: chaineOuNull(valeurs.compteBancaireId),
-        },
+      onEmploiChange((courant) => {
+        if (courant.id !== emploiId) {
+          return courant;
+        }
+        return {
+          ...courant,
+          version,
+          remuneration: {
+            modeDeterminationSalaire: valeurs.modeDeterminationSalaire,
+            montant: chaineOuNull(valeurs.montant),
+            masquerNombreHeures: valeurs.masquerNombreHeures,
+            masquerTauxHoraire: valeurs.masquerTauxHoraire,
+            bulletinTousLesMois: valeurs.bulletinTousLesMois,
+            moisProduction: [...valeurs.moisProduction],
+            teletravailIndemniteVersee: booleanNullableDepuisSelect(
+              valeurs.teletravailIndemniteVersee
+            ),
+            teletravailMontant: chaineOuNull(valeurs.teletravailMontant),
+          },
+          paiement: {
+            modePaiement: (chaineOuNull(valeurs.modePaiement) as ModePaiement | null) ?? null,
+            compteBancaireId: chaineOuNull(valeurs.compteBancaireId),
+          },
+        };
       });
     },
-    [onEmploiChange]
+    [emploiId, onEmploiChange]
   );
 
   const rubrique = useRubriqueFiche({
@@ -173,7 +176,7 @@ export function RubriqueEmploiRemuneration({
     envoyer: async (version, courant) => {
       const reponse = await modifierRemunerationEmploi(companyId, emploiId, version, {
         modeDeterminationSalaire: courant.modeDeterminationSalaire,
-        montant: courant.montant,
+        montant: chaineOuNull(courant.montant),
         masquerNombreHeures: courant.masquerNombreHeures,
         masquerTauxHoraire: courant.masquerTauxHoraire,
         bulletinTousLesMois: courant.bulletinTousLesMois,
@@ -183,7 +186,9 @@ export function RubriqueEmploiRemuneration({
         modePaiement: (chaineOuNull(courant.modePaiement) as ModePaiement | null) ?? null,
         compteBancaireId: chaineOuNull(courant.compteBancaireId),
       });
-      onEmploiChange(reponse.donnees);
+      onEmploiChange((emploiCourant) =>
+        fusionnerReponseEmploi(emploiCourant, reponse.donnees, 'remuneration')
+      );
       return { version: reponse.donnees.version, alertes: reponse.alertes };
     },
     onServeurChange,

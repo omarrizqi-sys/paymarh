@@ -15,6 +15,7 @@ import type {
 import { ChevronDown } from 'lucide-react';
 import type { MiseAJourEmploiFiche } from '@/lib/fiche/valeurs-emploi';
 import { possedePermission } from '@/lib/permissions';
+import { afficherDate } from '@/lib/affichage/dates';
 import { libelleReferentielParCode } from '@/lib/affichage/libelles-emploi';
 import { RubriqueEmploiAffectation } from './rubrique-emploi-affectation';
 import { RubriqueEmploiContrat } from './rubrique-emploi-contrat';
@@ -44,10 +45,10 @@ function ligneRepliée(emploi: EmploiFiche, typesContrat: readonly TypeContrat[]
   const segments = [
     emploi.contrat.libellePoste,
     libelleReferentielParCode(typesContrat, emploi.contrat.typeContratCode),
-    emploi.contrat.dateDebut,
+    afficherDate(emploi.contrat.dateDebut),
   ];
   if (emploi.contrat.dateSortie !== null) {
-    segments.push(emploi.contrat.dateSortie);
+    segments.push(afficherDate(emploi.contrat.dateSortie));
   }
   return segments.join(' · ');
 }
@@ -94,12 +95,14 @@ export function AccordeonEmploi({
           emploi={emploi}
           typesContrat={typesContrat}
           motifsSortie={motifsSortie}
+          operations={operations}
           onEmploiChange={onEmploiChange}
         />
         <RubriqueEmploiAffectation
           companyId={companyId}
           emploi={emploi}
           etablissements={etablissements}
+          operations={operations}
           onEmploiChange={onEmploiChange}
         />
         {peutLireRemuneration &&

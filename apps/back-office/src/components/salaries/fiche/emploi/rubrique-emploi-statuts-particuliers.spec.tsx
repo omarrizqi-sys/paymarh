@@ -22,6 +22,7 @@ import {
   OPERATIONS_SALARIE_COMPLET,
   avecOperationsEmploi,
 } from '@/test/operations-harnais-fiche-emploi';
+import { reponseEcritureEmploi } from '@/test/reponse-ecriture-emploi';
 
 const STATUTS: readonly StatutParticulier[] = [
   { id: 'st-ref-1', ordre: 1, code: 'IDMAJ', libelle: 'IDMAJ — ANAPEC' },
@@ -892,14 +893,12 @@ describe('Rubrique emploi — Statuts particuliers', () => {
     const emploi = emploiYoussef('emp-1', { version: 7 });
     const historique: EmploiFiche[][] = [];
 
-    modifierContratEmploi.mockResolvedValueOnce({
-      donnees: {
-        ...emploi,
+    modifierContratEmploi.mockResolvedValueOnce(
+      reponseEcritureEmploi(emploi, {
         version: 8,
         contrat: { ...emploi.contrat, libellePoste: 'Directeur paie' },
-      },
-      alertes: [],
-    });
+      })
+    );
     modifierStatutParticulier.mockResolvedValueOnce({
       donnees: {
         ...emploi,

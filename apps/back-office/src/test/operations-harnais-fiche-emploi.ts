@@ -18,8 +18,15 @@ export const OPERATIONS_EMPLOI_COMPLET: readonly Permission[] = [
   'salarie.remuneration.ecrire',
 ];
 
-/** Droits emploi liés à la rémunération (sans emploi.modifier). */
+/** Écriture de la rémunération d'un emploi : les deux droits exigés par le serveur, sans emploi.supprimer. */
 export const OPERATIONS_EMPLOI_REMUNERATION: readonly Permission[] = [
+  'emploi.modifier',
+  'salarie.remuneration.lire',
+  'salarie.remuneration.ecrire',
+];
+
+/** salarie.remuneration.ecrire sans emploi.modifier : rémunération, primes et avantages en lecture seule. */
+export const OPERATIONS_EMPLOI_REMUNERATION_SANS_MODIFIER: readonly Permission[] = [
   'salarie.remuneration.lire',
   'salarie.remuneration.ecrire',
 ];

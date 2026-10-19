@@ -13,6 +13,7 @@ import {
   OPERATIONS_EMPLOI_COMPLET,
   avecOperationsEmploi,
 } from '@/test/operations-harnais-fiche-emploi';
+import { reponseEcritureEmploi } from '@/test/reponse-ecriture-emploi';
 import { BlocEmplois } from '../bloc-emplois';
 import { FormulaireTableauProvider } from '../contexte-formulaire-tableau';
 
@@ -259,10 +260,12 @@ describe('Rubriques emploi — enregistrement', () => {
 
   it('E01 — une rubrique d emploi modifiee est envoyee avec le numero de version de son emploi', async () => {
     const emploi = emploiBase('emp-1', { version: 7 });
-    modifierContratEmploi.mockResolvedValueOnce({
-      donnees: { ...emploi, version: 8, contrat: { ...emploi.contrat, libellePoste: 'Nouveau' } },
-      alertes: [],
-    });
+    modifierContratEmploi.mockResolvedValueOnce(
+      reponseEcritureEmploi(emploi, {
+        version: 8,
+        contrat: { ...emploi.contrat, libellePoste: 'Nouveau' },
+      })
+    );
 
     render(
       createElement(HarnessEmplois, { emploisInitiaux: [emploi], operations: ['salarie.lire'] })
@@ -287,17 +290,15 @@ describe('Rubriques emploi — enregistrement', () => {
     const empA = emploiBase('emp-a', { version: 3, numeroOrdre: 1 });
     const empB = emploiBase('emp-b', { version: 9, numeroOrdre: 2, libellePoste: 'Poste B' });
 
-    modifierContratEmploi.mockImplementation(async (_c, id, version) => ({
-      donnees: {
-        ...(id === 'emp-a' ? empA : empB),
+    modifierContratEmploi.mockImplementation(async (_c, id, version) =>
+      reponseEcritureEmploi(id === 'emp-a' ? empA : empB, {
         version: version + 1,
         contrat: {
           ...(id === 'emp-a' ? empA : empB).contrat,
           libellePoste: id === 'emp-a' ? 'A modifie' : 'B modifie',
         },
-      },
-      alertes: [],
-    }));
+      })
+    );
 
     render(
       createElement(HarnessEmplois, {
@@ -336,14 +337,12 @@ describe('Rubriques emploi — enregistrement', () => {
   it('E03 — vider un champ heritable envoie null explicite', async () => {
     const emploi = emploiBase('emp-1', { version: 4, dureeContractuelle: '40' });
 
-    modifierAffectationEmploi.mockResolvedValueOnce({
-      donnees: {
-        ...emploi,
+    modifierAffectationEmploi.mockResolvedValueOnce(
+      reponseEcritureEmploi(emploi, {
         version: 5,
         affectation: { ...emploi.affectation, dureeContractuelle: null },
-      },
-      alertes: [],
-    });
+      })
+    );
 
     render(
       createElement(HarnessEmplois, { emploisInitiaux: [emploi], operations: ['salarie.lire'] })
@@ -371,14 +370,12 @@ describe('Rubriques emploi — enregistrement', () => {
         champ: 'libellePoste',
       })
     );
-    modifierAffectationEmploi.mockResolvedValueOnce({
-      donnees: {
-        ...emploi,
+    modifierAffectationEmploi.mockResolvedValueOnce(
+      reponseEcritureEmploi(emploi, {
         version: 6,
         affectation: { ...emploi.affectation, dureeContractuelle: '35' },
-      },
-      alertes: [],
-    });
+      })
+    );
 
     render(
       createElement(HarnessEmplois, { emploisInitiaux: [emploi], operations: ['salarie.lire'] })
@@ -432,10 +429,7 @@ describe('Rubriques emploi — enregistrement', () => {
       donnees: { version: 11 },
       alertes: [],
     });
-    modifierContratEmploi.mockResolvedValueOnce({
-      donnees: { ...emploi, version: 6 },
-      alertes: [],
-    });
+    modifierContratEmploi.mockResolvedValueOnce(reponseEcritureEmploi(emploi, { version: 6 }));
 
     render(
       createElement(HarnessEmplois, {

@@ -21,9 +21,11 @@ import { reinitialiserCompteurIdLocal } from '@/lib/fiche/avantages-en-nature-li
 import {
   OPERATIONS_EMPLOI_COMPLET,
   OPERATIONS_EMPLOI_REMUNERATION,
+  OPERATIONS_EMPLOI_REMUNERATION_SANS_MODIFIER,
   OPERATIONS_SALARIE_COMPLET,
   avecOperationsEmploi,
 } from '@/test/operations-harnais-fiche-emploi';
+import { reponseEcritureEmploi } from '@/test/reponse-ecriture-emploi';
 
 const NATURES: readonly NatureAvantageEnNature[] = [
   { id: 'n1', ordre: 1, code: 'B01', libelle: 'Logement de fonction' },
@@ -544,7 +546,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
     ouvrirAccordeon('emp-2');
 
     expect(screen.getByTestId('avantages-en-nature-emp-2')).toBeTruthy();
-    expect(screen.getByTestId('ajouter-ligne')).toBeTruthy();
+    expect(
+      within(screen.getByTestId('avantages-en-nature-emp-2')).getByTestId('ajouter-ligne')
+    ).toBeTruthy();
     expect(screen.queryByTestId(/ligne-av-/)).toBeNull();
   });
 
@@ -575,6 +579,26 @@ describe('Rubrique emploi — Avantages en nature', () => {
     expect(screen.getByText('Voiture de fonction')).toBeTruthy();
     expect(screen.queryByTestId('ajouter-ligne')).toBeNull();
     expect(screen.queryByTestId('supprimer-av-voiture')).toBeNull();
+  });
+
+  it('DR06 — salarie.remuneration.ecrire sans emploi.modifier : lecture seule, pas d ajout', () => {
+    render(
+      createElement(Harness, {
+        emploisInitiaux: [
+          emploiBase('emp-1', { operationsEmploi: OPERATIONS_EMPLOI_REMUNERATION_SANS_MODIFIER }),
+        ],
+        operations: OPERATIONS_SALARIE_COMPLET,
+      })
+    );
+
+    ouvrirAccordeon('emp-1');
+
+    const rubrique = screen.getByTestId('avantages-en-nature-emp-1');
+    expect(within(rubrique).getByText('Voiture de fonction')).toBeTruthy();
+    expect(within(rubrique).queryByTestId('ajouter-ligne')).toBeNull();
+    expect(within(rubrique).queryByTestId('supprimer-av-voiture')).toBeNull();
+    fireEvent.click(screen.getByTestId('ligne-av-voiture'));
+    expect(screen.getByTestId('formulaire-lecture-seule')).toBeTruthy();
   });
 
   it('AN12 — ligne cloturee se deplie en lecture seule', () => {
@@ -625,14 +649,12 @@ describe('Rubrique emploi — Avantages en nature', () => {
     const emploi = emploiBase('emp-1', { version: 7 });
     const historiqueEmplois: EmploiFiche[][] = [];
 
-    modifierContratEmploi.mockResolvedValueOnce({
-      donnees: {
-        ...emploi,
+    modifierContratEmploi.mockResolvedValueOnce(
+      reponseEcritureEmploi(emploi, {
         version: 8,
         contrat: { ...emploi.contrat, libellePoste: 'Directeur paie' },
-      },
-      alertes: [],
-    });
+      })
+    );
     modifierAvantageEnNature.mockResolvedValueOnce({
       donnees: {
         ...emploi,
@@ -799,7 +821,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    fireEvent.click(
+      within(screen.getByTestId('avantages-en-nature-emp-1')).getByTestId('ajouter-ligne')
+    );
     const formulaireCreation = screen.getByTestId(/formulaire-/);
     fireEvent.change(within(formulaireCreation).getByLabelText('Montant'), {
       target: { value: '1500.00' },
@@ -877,7 +901,9 @@ describe('Rubrique emploi — Avantages en nature', () => {
     );
 
     ouvrirAccordeon('emp-1');
-    fireEvent.click(screen.getByTestId('ajouter-ligne'));
+    fireEvent.click(
+      within(screen.getByTestId('avantages-en-nature-emp-1')).getByTestId('ajouter-ligne')
+    );
     const formulaireCreation = screen.getByTestId(/formulaire-/);
     fireEvent.change(within(formulaireCreation).getByLabelText('Montant'), {
       target: { value: '1200.00' },

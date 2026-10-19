@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import type {
   ContratEmploiFiche,
   EmploiFiche,
   MotifSortie,
+  Permission,
   TypeContrat,
 } from '@paymarh/shared-types';
 import { Rubrique } from '@/components/formulaire/rubrique';
@@ -13,24 +14,29 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { MessagesAlerteChamp } from '@/components/salaries/formulaire/messages-alerte-salarie';
 import { modifierContratEmploi } from '@/lib/api/emplois';
-import { libelleStatutCadre } from '@/lib/affichage/libelles-emploi';
+import { afficherDate } from '@/lib/affichage/dates';
+import { libelleReferentielParCode, libelleStatutCadre } from '@/lib/affichage/libelles-emploi';
 import {
   chaineOuNull,
   statutCadreDepuisSelect,
   valeursContratDepuisEmploi,
+  type MiseAJourEmploiFiche,
   type ValeursContratEmploi,
 } from '@/lib/fiche/valeurs-emploi';
+import { fusionnerReponseEmploi } from '@/lib/fiche/remontee-emploi';
 import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
+import { possedePermission } from '@/lib/permissions';
 import { TeteRubriqueFiche } from '../tete-rubrique-fiche';
 import { useRubriqueFiche } from '../use-rubrique-fiche';
-import { ChampLectureEmploi } from './champ-lecture-emploi';
+import { ChampLectureEmploi, ValeurLectureEmploi } from './champ-lecture-emploi';
 
 interface Props {
   readonly companyId: string;
   readonly emploi: EmploiFiche;
   readonly typesContrat: readonly TypeContrat[];
   readonly motifsSortie: readonly MotifSortie[];
-  readonly onEmploiChange: (emploi: EmploiFiche) => void;
+  readonly operations: readonly Permission[];
+  readonly onEmploiChange: (maj: MiseAJourEmploiFiche) => void;
 }
 
 function estContratModifie(courant: ValeursContratEmploi, serveur: ValeursContratEmploi): boolean {
@@ -57,44 +63,56 @@ function afficherNombre(valeur: number | null): string {
   return String(valeur);
 }
 
+function afficherStatutCadre(valeur: string): string {
+  const statut = statutCadreDepuisSelect(valeur);
+  return statut === null ? '' : libelleStatutCadre(statut);
+}
+
+function afficherMotifSortie(code: string, motifs: readonly MotifSortie[]): string {
+  return code === '' ? '' : libelleReferentielParCode(motifs, code);
+}
+
 export function RubriqueEmploiContrat({
   companyId,
   emploi,
   typesContrat,
   motifsSortie,
+  operations,
   onEmploiChange,
 }: Props) {
-  const emploiRef = useRef(emploi);
-  emploiRef.current = emploi;
-
+  const peutModifier = possedePermission(operations, 'emploi.modifier');
   const { id: emploiId, contrat } = emploi;
   const libellePoste = contrat.libellePoste;
   const valeursServeur = valeursContratDepuisEmploi(contrat);
 
   const onServeurChange = useCallback(
     (valeurs: ValeursContratEmploi, version: number) => {
-      const base = emploiRef.current;
-      onEmploiChange({
-        ...base,
-        version,
-        contrat: {
-          ...base.contrat,
-          libellePoste: valeurs.libellePoste,
-          dateDebut: valeurs.dateDebut,
-          dateFin: chaineOuNull(valeurs.dateFin),
-          typeContratCode: valeurs.typeContratCode,
-          periodeEssaiDateFin: chaineOuNull(valeurs.periodeEssaiDateFin),
-          renouvellementEssaiDateFin: chaineOuNull(valeurs.renouvellementEssaiDateFin),
-          statutCadre: statutCadreDepuisSelect(valeurs.statutCadre),
-          coefficient: chaineOuNull(valeurs.coefficient),
-          position: chaineOuNull(valeurs.position),
-          indice: chaineOuNull(valeurs.indice),
-          dateSortie: chaineOuNull(valeurs.dateSortie),
-          motifSortieCode: chaineOuNull(valeurs.motifSortieCode),
-        },
+      onEmploiChange((courant) => {
+        if (courant.id !== emploiId) {
+          return courant;
+        }
+        return {
+          ...courant,
+          version,
+          contrat: {
+            ...courant.contrat,
+            libellePoste: valeurs.libellePoste,
+            dateDebut: valeurs.dateDebut,
+            dateFin: chaineOuNull(valeurs.dateFin),
+            typeContratCode: valeurs.typeContratCode,
+            periodeEssaiDateFin: chaineOuNull(valeurs.periodeEssaiDateFin),
+            renouvellementEssaiDateFin: chaineOuNull(valeurs.renouvellementEssaiDateFin),
+            statutCadre: statutCadreDepuisSelect(valeurs.statutCadre),
+            coefficient: chaineOuNull(valeurs.coefficient),
+            position: chaineOuNull(valeurs.position),
+            indice: chaineOuNull(valeurs.indice),
+            dateSortie: chaineOuNull(valeurs.dateSortie),
+            motifSortieCode: chaineOuNull(valeurs.motifSortieCode),
+          },
+        };
       });
     },
-    [onEmploiChange]
+    [emploiId, onEmploiChange]
   );
 
   const rubrique = useRubriqueFiche({
@@ -102,7 +120,7 @@ export function RubriqueEmploiContrat({
     libelle: libelleRubriqueEmploi('contrat', libellePoste),
     entite: { kind: 'emploi', emploiId },
     valeursServeur,
-    estModifiee: estContratModifie,
+    estModifiee: (courant, serveur) => peutModifier && estContratModifie(courant, serveur),
     envoyer: async (version, courant) => {
       const reponse = await modifierContratEmploi(companyId, emploiId, version, {
         libellePoste: courant.libellePoste,
@@ -118,13 +136,16 @@ export function RubriqueEmploiContrat({
         dateSortie: chaineOuNull(courant.dateSortie),
         motifSortieCode: chaineOuNull(courant.motifSortieCode),
       });
-      onEmploiChange(reponse.donnees);
+      onEmploiChange((emploiCourant) =>
+        fusionnerReponseEmploi(emploiCourant, reponse.donnees, 'contrat')
+      );
       return { version: reponse.donnees.version, alertes: reponse.alertes };
     },
     onServeurChange,
   });
 
   const contratServeur: ContratEmploiFiche = emploi.contrat;
+  const courant = rubrique.courant;
 
   return (
     <Rubrique id={idRubriqueEmploi(emploiId, 'contrat')} titre={`Contrat — ${libellePoste}`}>
@@ -137,62 +158,97 @@ export function RubriqueEmploiContrat({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-libelle-poste`}>Libellé du poste</Label>
-          <Input
-            id={`${emploiId}-libelle-poste`}
-            value={rubrique.courant.libellePoste}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ libellePoste: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-libelle-poste`}
+              value={courant.libellePoste}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ libellePoste: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={courant.libellePoste}
+              testId={`${emploiId}-libelle-poste`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="libellePoste" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-type-contrat`}>Type de contrat</Label>
-          <Select
-            id={`${emploiId}-type-contrat`}
-            value={rubrique.courant.typeContratCode}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ typeContratCode: e.target.value })}
-            data-testid={`${emploiId}-type-contrat-select`}
-          >
-            {typesContrat.map((type) => (
-              <option key={type.code} value={type.code}>
-                {type.libelle}
-              </option>
-            ))}
-          </Select>
+          {peutModifier ? (
+            <Select
+              id={`${emploiId}-type-contrat`}
+              value={courant.typeContratCode}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ typeContratCode: e.target.value })}
+              data-testid={`${emploiId}-type-contrat-select`}
+            >
+              {typesContrat.map((type) => (
+                <option key={type.code} value={type.code}>
+                  {type.libelle}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <ValeurLectureEmploi
+              valeur={libelleReferentielParCode(typesContrat, courant.typeContratCode)}
+              testId={`${emploiId}-type-contrat`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="typeContratCode" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-date-debut`}>Date de début</Label>
-          <Input
-            id={`${emploiId}-date-debut`}
-            type="date"
-            value={rubrique.courant.dateDebut.slice(0, 10)}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ dateDebut: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-date-debut`}
+              type="date"
+              value={courant.dateDebut.slice(0, 10)}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ dateDebut: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherDate(courant.dateDebut)}
+              testId={`${emploiId}-date-debut`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateDebut" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-date-fin`}>Date de fin</Label>
-          <Input
-            id={`${emploiId}-date-fin`}
-            type="date"
-            value={rubrique.courant.dateFin.slice(0, 10)}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ dateFin: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-date-fin`}
+              type="date"
+              value={courant.dateFin.slice(0, 10)}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ dateFin: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherDate(courant.dateFin)}
+              testId={`${emploiId}-date-fin`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateFin" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-fin-essai`}>Fin de période d’essai</Label>
-          <Input
-            id={`${emploiId}-fin-essai`}
-            type="date"
-            value={rubrique.courant.periodeEssaiDateFin.slice(0, 10)}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ periodeEssaiDateFin: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-fin-essai`}
+              type="date"
+              value={courant.periodeEssaiDateFin.slice(0, 10)}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ periodeEssaiDateFin: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherDate(courant.periodeEssaiDateFin)}
+              testId={`${emploiId}-fin-essai`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="periodeEssaiDateFin" />
         </div>
         <ChampLectureEmploi
@@ -203,86 +259,126 @@ export function RubriqueEmploiContrat({
           <Label htmlFor={`${emploiId}-fin-renouvellement-essai`}>
             Fin du renouvellement d’essai
           </Label>
-          <Input
-            id={`${emploiId}-fin-renouvellement-essai`}
-            type="date"
-            value={rubrique.courant.renouvellementEssaiDateFin.slice(0, 10)}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ renouvellementEssaiDateFin: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-fin-renouvellement-essai`}
+              type="date"
+              value={courant.renouvellementEssaiDateFin.slice(0, 10)}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ renouvellementEssaiDateFin: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherDate(courant.renouvellementEssaiDateFin)}
+              testId={`${emploiId}-fin-renouvellement-essai`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="renouvellementEssaiDateFin" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-statut-cadre`}>Statut cadre</Label>
-          <Select
-            id={`${emploiId}-statut-cadre`}
-            value={rubrique.courant.statutCadre}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ statutCadre: e.target.value })}
-          >
-            <option value=""></option>
-            <option value="CADRE">{libelleStatutCadre('CADRE')}</option>
-            <option value="NON_CADRE">{libelleStatutCadre('NON_CADRE')}</option>
-          </Select>
+          {peutModifier ? (
+            <Select
+              id={`${emploiId}-statut-cadre`}
+              value={courant.statutCadre}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ statutCadre: e.target.value })}
+            >
+              <option value=""></option>
+              <option value="CADRE">{libelleStatutCadre('CADRE')}</option>
+              <option value="NON_CADRE">{libelleStatutCadre('NON_CADRE')}</option>
+            </Select>
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherStatutCadre(courant.statutCadre)}
+              testId={`${emploiId}-statut-cadre`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="statutCadre" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-coefficient`}>Coefficient</Label>
-          <Input
-            id={`${emploiId}-coefficient`}
-            value={rubrique.courant.coefficient}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ coefficient: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-coefficient`}
+              value={courant.coefficient}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ coefficient: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi valeur={courant.coefficient} testId={`${emploiId}-coefficient`} />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="coefficient" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-position`}>Position</Label>
-          <Input
-            id={`${emploiId}-position`}
-            value={rubrique.courant.position}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ position: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-position`}
+              value={courant.position}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ position: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi valeur={courant.position} testId={`${emploiId}-position`} />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="position" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-indice`}>Indice</Label>
-          <Input
-            id={`${emploiId}-indice`}
-            value={rubrique.courant.indice}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ indice: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-indice`}
+              value={courant.indice}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ indice: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi valeur={courant.indice} testId={`${emploiId}-indice`} />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="indice" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-date-sortie`}>Date de sortie</Label>
-          <Input
-            id={`${emploiId}-date-sortie`}
-            type="date"
-            value={rubrique.courant.dateSortie.slice(0, 10)}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ dateSortie: e.target.value })}
-          />
+          {peutModifier ? (
+            <Input
+              id={`${emploiId}-date-sortie`}
+              type="date"
+              value={courant.dateSortie.slice(0, 10)}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ dateSortie: e.target.value })}
+            />
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherDate(courant.dateSortie)}
+              testId={`${emploiId}-date-sortie`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="dateSortie" />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`${emploiId}-motif-sortie`}>Motif de sortie</Label>
-          <Select
-            id={`${emploiId}-motif-sortie`}
-            value={rubrique.courant.motifSortieCode}
-            disabled={rubrique.verrouille}
-            onChange={(e) => rubrique.modifier({ motifSortieCode: e.target.value })}
-            data-testid={`${emploiId}-motif-sortie-select`}
-          >
-            <option value=""></option>
-            {motifsSortie.map((motif) => (
-              <option key={motif.code} value={motif.code}>
-                {motif.libelle}
-              </option>
-            ))}
-          </Select>
+          {peutModifier ? (
+            <Select
+              id={`${emploiId}-motif-sortie`}
+              value={courant.motifSortieCode}
+              disabled={rubrique.verrouille}
+              onChange={(e) => rubrique.modifier({ motifSortieCode: e.target.value })}
+              data-testid={`${emploiId}-motif-sortie-select`}
+            >
+              <option value=""></option>
+              {motifsSortie.map((motif) => (
+                <option key={motif.code} value={motif.code}>
+                  {motif.libelle}
+                </option>
+              ))}
+            </Select>
+          ) : (
+            <ValeurLectureEmploi
+              valeur={afficherMotifSortie(courant.motifSortieCode, motifsSortie)}
+              testId={`${emploiId}-motif-sortie`}
+            />
+          )}
           <MessagesAlerteChamp alertes={rubrique.alertes} champ="motifSortieCode" />
         </div>
       </div>

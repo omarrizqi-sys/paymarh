@@ -47,7 +47,7 @@ export async function modifierRemunerationEmploi(
   version: number,
   corps: {
     modeDeterminationSalaire?: ModeDeterminationSalaire;
-    montant?: string;
+    montant?: string | null;
     masquerNombreHeures?: boolean;
     masquerTauxHoraire?: boolean;
     bulletinTousLesMois?: boolean;

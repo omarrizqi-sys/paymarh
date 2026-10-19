@@ -24,11 +24,11 @@ import {
   modifierStatutParticulier,
   supprimerStatutParticulier,
 } from '@/lib/api/emplois';
+import { afficherDate } from '@/lib/affichage/dates';
 import { libelleReferentielParCode } from '@/lib/affichage/libelles-emploi';
 import { envoyerLignesTableau } from '@/lib/fiche/envoi-lignes-tableau';
 import type { EnvoiRubriqueResultat } from '@/lib/fiche/orchestrateur-enregistrement';
 import {
-  afficherDateStatutParticulier,
   creerLigneVide,
   depuisServeur,
   estModifieeContreReference,
@@ -339,13 +339,12 @@ export function RubriqueEmploiStatutsParticuliers({
       {
         id: 'dateDebut',
         libelle: 'Date de début',
-        render: (l: LigneStatutParticulierLocale) => afficherDateStatutParticulier(l.dateDebut),
+        render: (l: LigneStatutParticulierLocale) => afficherDate(l.dateDebut),
       },
       {
         id: 'dateFin',
         libelle: 'Date de fin',
-        render: (l: LigneStatutParticulierLocale) =>
-          l.dateFin === null ? '' : afficherDateStatutParticulier(l.dateFin),
+        render: (l: LigneStatutParticulierLocale) => afficherDate(l.dateFin),
       },
     ],
     [statutsReferentiel]
@@ -541,10 +540,8 @@ function FormulaireStatutParticulier({
     return (
       <div className="space-y-4" data-testid="formulaire-lecture-seule">
         <p>Statut : {libelleStatut(ligne.statutCode, statuts)}</p>
-        <p>Date de début : {afficherDateStatutParticulier(ligne.dateDebut)}</p>
-        <p>
-          Date de fin : {ligne.dateFin === null ? '' : afficherDateStatutParticulier(ligne.dateFin)}
-        </p>
+        <p>Date de début : {afficherDate(ligne.dateDebut)}</p>
+        <p>Date de fin : {afficherDate(ligne.dateFin)}</p>
       </div>
     );
   }

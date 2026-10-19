@@ -218,6 +218,10 @@ On compose directement les composants shadcn `Table` (`TableHeader`, `TableBody`
 
 **Exception — comptes bancaires (PUT groupé) :** le `PUT /salaries/:id/comptes-bancaires` remplace toute la liste ; il n'existe pas « une » ligne concernée. Pour cette rubrique seule, l'écran retient le **numéro de version** et **l'intégralité du bloc `comptesBancaires`** de la réponse. Rien d'autre. Voir ADR 0023.
 
+_Note du 2026-10-19 — PATCH contrat, affectation et rémunération d'un emploi :_ la réponse est l'emploi relu, **sans `operations`** (posé seulement sur `GET /salaries/:id`). L'écran part de l'emploi **courant** (mise à jour fonctionnelle, jamais une capture du rendu) et n'en remplace que : le numéro de version, le ou les blocs de la rubrique (`contrat`, `affectation`, ou `remuneration` et `paiement`) et `resolutions`. Pour le PATCH contrat seulement, il remplace aussi les lignes de statut **propagées** (filtre sur `origine === 'PROPAGE_SOCIETE'`, jamais sur le code), que TAHFIZ a pu resynchroniser ; les lignes saisies restent celles de l'état courant. `operations`, primes et avantages ne sont jamais repris, ni les blocs des autres rubriques. Fonction unique : `fusionnerReponseEmploi` (`lib/fiche/remontee-emploi.ts`).
+
+_Note du 2026-10-19 — droits des rubriques d'emploi :_ les droits se lisent sur `emploi.operations`, jamais sur la fiche. Contrat et Affectation sont modifiables avec `emploi.modifier` ; sans lui, elles restent affichées, valeurs en texte, et ne comptent jamais comme modifiées. Rémunération, Primes et Avantages sont modifiables seulement avec **à la fois** `salarie.remuneration.ecrire` et `emploi.modifier` (le serveur exige les deux) ; leur affichage reste conditionné à `salarie.remuneration.lire` / la présence de la clé. Règle unique : `peutEcrireRemunerationEmploi` (`lib/permissions.ts`). Statuts particuliers : `emploi.modifier` seul, inchangé.
+
 ---
 
 ## 13. Enveloppe générique des tableaux répétables (module 2)

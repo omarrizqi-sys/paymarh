@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { StatutParticulierFiche } from '@paymarh/shared-types';
+import { afficherDate } from '@/lib/affichage/dates';
 import {
-  afficherDateStatutParticulier,
   estLigneStatutParticulierVisibleFiche,
   libelleEtatLigne,
 } from './statuts-particuliers-lignes';
@@ -40,10 +40,10 @@ describe('statuts-particuliers-lignes', () => {
     );
   });
 
-  it('SP-L04 — afficherDateStatutParticulier formate JJ/MM/AAAA et une fin vide reste vide', () => {
-    expect(afficherDateStatutParticulier('2021-06-01')).toBe('01/06/2021');
-    expect(afficherDateStatutParticulier('2022-12-31')).toBe('31/12/2022');
-    expect(afficherDateStatutParticulier('')).toBe('');
+  it('SP-L04 — afficherDate formate JJ/MM/AAAA et une fin vide reste vide', () => {
+    expect(afficherDate('2021-06-01')).toBe('01/06/2021');
+    expect(afficherDate('2022-12-31')).toBe('31/12/2022');
+    expect(afficherDate('')).toBe('');
   });
 
   it('SP-L05 — libelleEtatLigne inactive depuis le mois de fin deduit de la date', () => {

@@ -39,7 +39,7 @@ import {
 } from '@/lib/fiche/primes-contractuelles-lignes';
 import { idRubriqueEmploi, libelleRubriqueEmploi } from '@/lib/fiche/ordre-rubriques-fiche-salarie';
 import type { MiseAJourEmploiFiche } from '@/lib/fiche/valeurs-emploi';
-import { possedePermission } from '@/lib/permissions';
+import { peutEcrireRemunerationEmploi } from '@/lib/permissions';
 import type { TextesConfirmationSuppression } from '@/components/navigation/textes-suppression-tableau-historise';
 import { SaisieMoisApplication } from '@/components/salaries/fiche/saisie-mois-application';
 import { useFormulaireTableau } from '../contexte-formulaire-tableau';
@@ -85,7 +85,7 @@ export function RubriqueEmploiPrimesContractuelles({
 }: Props) {
   const emploiId = emploi.id;
   const libellePoste = emploi.contrat.libellePoste;
-  const peutEcrire = possedePermission(operations, 'salarie.remuneration.ecrire');
+  const peutEcrire = peutEcrireRemunerationEmploi(operations);
 
   const {
     enregistrerRubrique,
